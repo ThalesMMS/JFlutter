@@ -8,7 +8,6 @@ import 'package:jflutter/core/models/settings_model.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
 import 'package:jflutter/core/repositories/settings_repository.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/settings_provider.dart';
@@ -55,18 +54,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() async {
-    await getIt.reset();
+    await resetDependencies();
   });
 
   group('Cold start state', () {
-    test('AutomatonService starts with an empty automata list', () {
-      final service = AutomatonService();
-      final result = service.listAutomata();
-
-      expect(result.isSuccess, isTrue);
-      expect(result.data, isEmpty);
-    });
-
     test('SettingsNotifier exposes defaults before async load completes',
         () async {
       final completer = Completer<SettingsModel>();

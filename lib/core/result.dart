@@ -10,7 +10,6 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
-import 'entities/automaton_entity.dart';
 import 'entities/grammar_entity.dart';
 
 /// Standardized Result type for consistent error handling across the application
@@ -127,13 +126,13 @@ extension ResultListExtension<T> on List<Result<T>> {
 
   /// Collects all successful data
   List<T> get successfulData => where(
-    (result) => result.isSuccess,
-  ).map((result) => result.data!).toList();
+        (result) => result.isSuccess,
+      ).map((result) => result.data!).toList();
 
   /// Collects all error messages
   List<String> get errorMessages => where(
-    (result) => result.isFailure,
-  ).map((result) => result.error!).toList();
+        (result) => result.isFailure,
+      ).map((result) => result.error!).toList();
 
   /// Returns the first failure, or success if all are successful
   Result<List<T>> collect() {
@@ -146,7 +145,6 @@ extension ResultListExtension<T> on List<Result<T>> {
 }
 
 /// Specific result types for common operations
-typedef AutomatonResult = Result<AutomatonEntity>;
 typedef GrammarResult = Result<GrammarEntity>;
 typedef StringResult = Result<String>;
 typedef BoolResult = Result<bool>;

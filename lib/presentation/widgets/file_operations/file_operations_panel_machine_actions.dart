@@ -134,20 +134,19 @@ extension _FileOperationsPanelMachineActions on _FileOperationsPanelState {
   Future<void> _exportGrammarAsSVG() async {
     if (widget.grammar == null) return;
     final grammar = widget.grammar!;
-    final grammarEntity = _convertGrammarToEntity(grammar);
     final fileName = '${grammar.name}.svg';
 
     await _performTextFileAction(
       dialogTitle: 'Export Grammar as SVG',
       fileName: fileName,
       allowedExtensions: const ['svg'],
-      contentsProvider: () => _fileService.exportGrammarToSvgString(
-        grammarEntity,
+      contentsProvider: () => _fileService.exportGrammarModelToSvgString(
+        grammar,
       ),
       webSaveCall: (targetName) =>
-          _fileService.exportGrammarToSVG(grammarEntity, targetName),
-      writeToPath: (path) => _fileService.exportGrammarToSVG(
-        grammarEntity,
+          _fileService.exportGrammarModelToSVG(grammar, targetName),
+      writeToPath: (path) => _fileService.exportGrammarModelToSVG(
+        grammar,
         path,
       ),
       cancelMessage: 'Export canceled.',
@@ -163,20 +162,21 @@ extension _FileOperationsPanelMachineActions on _FileOperationsPanelState {
   Future<void> _exportPdaAsSVG() async {
     if (widget.pda == null) return;
     final pda = widget.pda!;
-    final automatonEntity = _convertPdaToAutomatonEntity(pda);
     final fileName = '${pda.name}.svg';
 
     await _performTextFileAction(
       dialogTitle: 'Export PDA as SVG',
       fileName: fileName,
       allowedExtensions: const ['svg'],
-      contentsProvider: () => _fileService.exportAutomatonToSvgString(
-        automatonEntity,
+      contentsProvider: () => _fileService.exportPdaToSvgString(
+        pda,
       ),
-      webSaveCall: (targetName) =>
-          _fileService.exportAutomatonToSVG(automatonEntity, targetName),
-      writeToPath: (path) => _fileService.exportAutomatonToSVG(
-        automatonEntity,
+      webSaveCall: (targetName) => _fileService.exportPdaToSVG(
+        pda,
+        targetName,
+      ),
+      writeToPath: (path) => _fileService.exportPdaToSVG(
+        pda,
         path,
       ),
       cancelMessage: 'Export canceled.',

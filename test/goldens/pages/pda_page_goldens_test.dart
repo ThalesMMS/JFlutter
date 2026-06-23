@@ -26,6 +26,7 @@ import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 import 'package:jflutter/presentation/widgets/pda/stack_drawer.dart';
@@ -34,6 +35,8 @@ import 'package:jflutter/presentation/widgets/pda_canvas_graphview.dart';
 class _TestPdaEditorNotifier extends PDAEditorNotifier {
   _TestPdaEditorNotifier() : super();
 }
+
+late SharedPreferences _prefs;
 
 // Widget that composes toolbar + canvas like PDA page does
 class _PDAPageTestWidget extends StatefulWidget {
@@ -146,6 +149,7 @@ Future<void> _pumpPDAPageComponents(
 
   await tester.pumpWidgetBuilder(
     ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(_prefs)],
       child: MaterialApp(
         home: _PDAPageTestWidget(automaton: automaton, isMobile: isMobile),
       ),
@@ -160,7 +164,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
+    _prefs = await initializeSharedPreferences();
   });
 
   tearDownAll(() async {

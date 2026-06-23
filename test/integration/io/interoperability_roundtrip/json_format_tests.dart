@@ -4,7 +4,7 @@ void _runJsonFormatTests() {
   group('JSON Format Tests', () {
     test('JSON round-trip preserves automaton structure', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Convert to JSON format
       final jsonString = _serializeAutomatonToJson(
@@ -43,7 +43,7 @@ void _runJsonFormatTests() {
 
     test('JSON handles complex automatons correctly', () {
       final complexAutomaton = _createComplexDFA();
-      final automatonData = _convertEntityToData(complexAutomaton);
+      final automatonData = _copyAutomatonData(complexAutomaton);
 
       // Convert to JSON format
       final jsonString = _serializeAutomatonToJson(
@@ -79,7 +79,7 @@ void _runJsonFormatTests() {
       ];
 
       for (final automaton in testCases) {
-        final automatonData = _convertEntityToData(automaton);
+        final automatonData = _copyAutomatonData(automaton);
 
         // Convert to JSON format
         final jsonString = _serializeAutomatonToJson(
@@ -94,7 +94,7 @@ void _runJsonFormatTests() {
         expect(
           parseResult.isSuccess,
           true,
-          reason: 'JSON parsing should succeed for ${automaton.type}',
+          reason: 'JSON parsing should succeed for ${automaton['type']}',
         );
       }
     });

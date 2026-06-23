@@ -1,5 +1,3 @@
-import '../../core/repositories/automaton_repository.dart';
-
 /// Typed asset example loaded from jflutter_js/examples.
 class AssetExample<TPayload> {
   final String name;
@@ -19,6 +17,30 @@ class AssetExample<TPayload> {
     required List<String> tags,
     required this.payload,
   }) : tags = List<String>.unmodifiable(tags);
+}
+
+/// Difficulty levels for bundled examples.
+enum DifficultyLevel {
+  easy('Fácil', 'Conceitos básicos, adequado para iniciantes'),
+  medium('Médio', 'Conceitos intermediários, requer algum conhecimento prévio'),
+  hard('Difícil', 'Conceitos avançados, recomendado para estudantes avançados');
+
+  const DifficultyLevel(this.displayName, this.description);
+
+  final String displayName;
+  final String description;
+}
+
+/// Complexity estimation for bundled examples.
+enum ComplexityLevel {
+  low('Baixa', 'Poucos estados e transições simples'),
+  medium('Média', 'Número moderado de estados e transições'),
+  high('Alta', 'Muitos estados e transições complexas');
+
+  const ComplexityLevel(this.displayName, this.description);
+
+  final String displayName;
+  final String description;
 }
 
 /// Categories of examples.

@@ -13,18 +13,17 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 
 void main() {
-  group('AutomatonStateNotifier.updateAutomaton', () {
+  group('AutomatonStateNotifier', () {
     late ProviderContainer container;
 
     setUp(() {
       container = ProviderContainer(
         overrides: [
           automatonStateProvider.overrideWith((ref) {
-            return AutomatonStateNotifier(automatonService: AutomatonService());
+            return AutomatonStateNotifier();
           }),
         ],
       );
@@ -34,7 +33,50 @@ void main() {
       container.dispose();
     });
 
-    test('sets currentAutomaton to the provided automaton', () {
+    test('createAutomaton builds an initial FSA with sequential ids', () async {
+      final notifier = container.read(automatonStateProvider.notifier);
+
+      await notifier.createAutomaton(
+        name: 'First DFA',
+        alphabet: const ['a', 'b'],
+      );
+
+      var state = container.read(automatonStateProvider);
+      var automaton = state.currentAutomaton!;
+      expect(state.isLoading, isFalse);
+      expect(state.error, isNull);
+      expect(automaton.id, '1');
+      expect(automaton.name, 'First DFA');
+      expect(automaton.alphabet, {'a', 'b'});
+      expect(automaton.states, hasLength(1));
+      expect(automaton.initialState?.id, 'q0');
+      expect(automaton.initialState?.position, Vector2(100, 100));
+      expect(automaton.acceptingStates, isEmpty);
+
+      await notifier.createAutomaton(
+        name: 'Second DFA',
+        alphabet: const ['0'],
+      );
+
+      state = container.read(automatonStateProvider);
+      automaton = state.currentAutomaton!;
+      expect(automaton.id, '2');
+      expect(automaton.name, 'Second DFA');
+      expect(automaton.alphabet, {'0'});
+    });
+
+    test('createAutomaton reports empty-name failures', () async {
+      final notifier = container.read(automatonStateProvider.notifier);
+
+      await notifier.createAutomaton(name: '', alphabet: const ['a']);
+
+      final state = container.read(automatonStateProvider);
+      expect(state.currentAutomaton, isNull);
+      expect(state.isLoading, isFalse);
+      expect(state.error, contains('Automaton name cannot be empty'));
+    });
+
+    test('updateAutomaton sets currentAutomaton to the provided automaton', () {
       final notifier = container.read(automatonStateProvider.notifier);
 
       final q0 = automaton_state.State(

@@ -19,14 +19,12 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 
 class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
-  _RecordingAutomatonStateNotifier()
-      : super(automatonService: AutomatonService());
+  _RecordingAutomatonStateNotifier() : super();
 
   final List<Map<String, Object?>> addStateCalls = [];
   final List<Map<String, Object?>> updateLabelCalls = [];

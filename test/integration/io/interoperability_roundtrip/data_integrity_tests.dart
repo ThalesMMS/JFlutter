@@ -4,7 +4,7 @@ void _runDataIntegrityTests() {
   group('Data Integrity Validation Tests', () {
     test('Round-trip preserves automaton properties', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Test JSON round-trip
       final jsonString = _serializeAutomatonToJson(
@@ -29,7 +29,7 @@ void _runDataIntegrityTests() {
 
     test('Round-trip preserves state information', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Test JSON round-trip
       final jsonString = _serializeAutomatonToJson(
@@ -63,7 +63,7 @@ void _runDataIntegrityTests() {
 
     test('Round-trip preserves transition information', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Test JSON round-trip
       final jsonString = _serializeAutomatonToJson(
@@ -103,7 +103,7 @@ void _runDataIntegrityTests() {
       ];
 
       for (final automaton in edgeCases) {
-        final automatonData = _convertEntityToData(automaton);
+        final automatonData = _copyAutomatonData(automaton);
 
         // Test JSON round-trip
         final jsonString = _serializeAutomatonToJson(

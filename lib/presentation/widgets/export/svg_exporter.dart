@@ -14,9 +14,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Colors;
 import 'package:vector_math/vector_math_64.dart';
 
-import '../../../core/entities/automaton_entity.dart';
 import '../../../core/entities/grammar_entity.dart';
 import '../../../core/entities/turing_machine_entity.dart';
+import '../../../core/models/fsa.dart';
+import '../../../core/models/pda.dart';
+import '../../../core/models/pda_transition.dart';
 import '../../../core/utils/epsilon_utils.dart';
 
 /// Enhanced SVG exporter for automata visualizations
@@ -49,9 +51,38 @@ class SvgExporter {
     return text;
   }
 
-  /// Exports automaton to SVG format
-  static String exportAutomatonToSvg(
-    AutomatonEntity automaton, {
+  /// Exports an FSA to SVG format.
+  static String exportFsaToSvg(
+    FSA automaton, {
+    double width = _defaultWidth,
+    double height = _defaultHeight,
+    SvgExportOptions? options,
+  }) {
+    return _exportAutomatonDiagramToSvg(
+      _fsaToDiagram(automaton),
+      width: width,
+      height: height,
+      options: options,
+    );
+  }
+
+  /// Exports a PDA to SVG format.
+  static String exportPdaToSvg(
+    PDA pda, {
+    double width = _defaultWidth,
+    double height = _defaultHeight,
+    SvgExportOptions? options,
+  }) {
+    return _exportAutomatonDiagramToSvg(
+      _pdaToDiagram(pda),
+      width: width,
+      height: height,
+      options: options,
+    );
+  }
+
+  static String _exportAutomatonDiagramToSvg(
+    _SvgAutomaton automaton, {
     double width = _defaultWidth,
     double height = _defaultHeight,
     SvgExportOptions? options,
@@ -93,8 +124,8 @@ class SvgExporter {
     SvgExportOptions? options,
   }) {
     // Convert grammar to automaton for visualization
-    final automaton = _grammarToAutomaton(grammar);
-    return exportAutomatonToSvg(
+    final automaton = _grammarToDiagram(grammar);
+    return _exportAutomatonDiagramToSvg(
       automaton,
       width: width,
       height: height,
@@ -211,16 +242,14 @@ class SvgExporter {
     final tapeTop = math.max(40.0, height * 0.12);
     final availableWidth = width * 0.8;
     final cellsCount = math.max(7, (availableWidth / minCellWidth).floor());
-    final cellWidth = cellsCount > 0
-        ? availableWidth / cellsCount
-        : minCellWidth;
+    final cellWidth =
+        cellsCount > 0 ? availableWidth / cellsCount : minCellWidth;
     final tapeStartX = (width - cellWidth * cellsCount) / 2;
 
     final colorScheme = options.colorScheme;
     final tapeFill =
         colorScheme?.surfaceContainerHighest ?? const Color(0xFFF5F5F5);
-    final tapeStroke =
-        colorScheme?.outlineVariant ??
+    final tapeStroke = colorScheme?.outlineVariant ??
         colorScheme?.outline ??
         const Color(0xFF424242);
     final textColor = colorScheme?.onSurface ?? const Color(0xFF000000);
@@ -407,8 +436,7 @@ class SvgExporter {
         continue;
       }
 
-      final label =
-          '${transition.readSymbol}/${transition.writeSymbol}, '
+      final label = '${transition.readSymbol}/${transition.writeSymbol}, '
           '${_directionLabel(transition.moveDirection)}';
 
       if (from == to) {
@@ -465,8 +493,7 @@ class SvgExporter {
     SvgExportOptions options,
   ) {
     final colorScheme = options.colorScheme;
-    final textColor =
-        colorScheme?.onSurfaceVariant ??
+    final textColor = colorScheme?.onSurfaceVariant ??
         colorScheme?.onSurface ??
         const Color(0xFF424242);
     final legendY = height - 30;
@@ -500,7 +527,7 @@ class SvgExporter {
 
   static void _addAutomatonContent(
     StringBuffer buffer,
-    AutomatonEntity automaton,
+    _SvgAutomaton automaton,
     double width,
     double height,
     SvgExportOptions options,
@@ -533,7 +560,7 @@ class SvgExporter {
   }
 
   static Map<String, Vector2> _calculateStatePositions(
-    List<StateEntity> states,
+    List<_SvgState> states,
     double width,
     double height,
   ) {
@@ -565,7 +592,7 @@ class SvgExporter {
 
   static void _addStates(
     StringBuffer buffer,
-    AutomatonEntity automaton,
+    _SvgAutomaton automaton,
     Map<String, Vector2> positions,
     SvgExportOptions options,
   ) {
@@ -612,7 +639,7 @@ class SvgExporter {
 
   static void _addTransitions(
     StringBuffer buffer,
-    AutomatonEntity automaton,
+    _SvgAutomaton automaton,
     Map<String, Vector2> positions,
     SvgExportOptions options,
   ) {
@@ -766,20 +793,89 @@ class SvgExporter {
     buffer.writeln('  </g>');
   }
 
-  /// Converts grammar to automaton for visualization (simplified)
-  static AutomatonEntity _grammarToAutomaton(GrammarEntity grammar) {
+  static _SvgAutomaton _fsaToDiagram(FSA automaton) {
+    final transitions = <String, List<String>>{};
+
+    for (final transition in automaton.fsaTransitions) {
+      final symbols = transition.lambdaSymbol != null
+          ? <String>{transition.lambdaSymbol!}
+          : transition.inputSymbols;
+
+      for (final symbol in symbols) {
+        final label = normalizeToEpsilon(symbol);
+        final key = '${transition.fromState.id}|$label';
+        transitions.putIfAbsent(key, () => <String>[]).add(
+              transition.toState.id,
+            );
+      }
+    }
+
+    return _SvgAutomaton(
+      name: automaton.name,
+      states: automaton.states
+          .map(
+            (state) => _SvgState(
+              id: state.id,
+              name: state.label,
+              isInitial: state.isInitial,
+              isFinal: state.isAccepting,
+            ),
+          )
+          .toList(),
+      transitions: transitions,
+    );
+  }
+
+  static _SvgAutomaton _pdaToDiagram(PDA pda) {
+    final transitions = <String, List<String>>{};
+
+    for (final transition in pda.pdaTransitions) {
+      final label = _formatPdaTransitionLabel(transition);
+      final key = '${transition.fromState.id}|$label';
+      transitions.putIfAbsent(key, () => <String>[]).add(transition.toState.id);
+    }
+
+    return _SvgAutomaton(
+      name: pda.name,
+      states: pda.states
+          .map(
+            (state) => _SvgState(
+              id: state.id,
+              name: state.label,
+              isInitial: state.isInitial,
+              isFinal: state.isAccepting,
+            ),
+          )
+          .toList(),
+      transitions: transitions,
+    );
+  }
+
+  static String _formatPdaTransitionLabel(PDATransition transition) {
+    final read = normalizeToEpsilon(
+      transition.isLambdaInput ? '' : transition.inputSymbol,
+    );
+    final pop = normalizeToEpsilon(
+      transition.isLambdaPop ? '' : transition.popSymbol,
+    );
+    final push = normalizeToEpsilon(
+      transition.isLambdaPush ? '' : transition.pushSymbol,
+    );
+    return '$read,$pop->$push';
+  }
+
+  /// Converts grammar to automaton for visualization (simplified).
+  static _SvgAutomaton _grammarToDiagram(GrammarEntity grammar) {
     // This is a simplified conversion for visualization purposes
-    final states = <StateEntity>[];
+    final states = <_SvgState>[];
     final transitions = <String, List<String>>{};
 
     // Create states for each non-terminal
     for (final variable in grammar.nonTerminals) {
       states.add(
-        StateEntity(
+        _SvgState(
           id: variable,
           name: variable,
-          x: 0.0,
-          y: 0.0,
           isInitial: variable == grammar.startSymbol,
           isFinal: false,
         ),
@@ -788,31 +884,50 @@ class SvgExporter {
 
     // Create transitions based on productions (simplified)
     for (final production in grammar.productions) {
-      final from = production.leftSide.isNotEmpty
-          ? production.leftSide.first
-          : '';
+      final from =
+          production.leftSide.isNotEmpty ? production.leftSide.first : '';
       for (final symbol in production.rightSide) {
         if (symbol.isNotEmpty) {
-          final to = grammar.nonTerminals.contains(symbol)
-              ? symbol
-              : 'terminal';
+          final to =
+              grammar.nonTerminals.contains(symbol) ? symbol : 'terminal';
           transitions.putIfAbsent(from, () => []);
           transitions[from]!.add(to);
         }
       }
     }
 
-    return AutomatonEntity(
-      id: 'grammar_${grammar.id}',
+    return _SvgAutomaton(
       name: '${grammar.name} (Visualization)',
-      alphabet: grammar.terminals,
       states: states,
       transitions: transitions,
-      initialId: grammar.startSymbol,
-      nextId: states.length,
-      type: AutomatonType.dfa,
     );
   }
+}
+
+class _SvgAutomaton {
+  final String name;
+  final List<_SvgState> states;
+  final Map<String, List<String>> transitions;
+
+  const _SvgAutomaton({
+    required this.name,
+    required this.states,
+    required this.transitions,
+  });
+}
+
+class _SvgState {
+  final String id;
+  final String name;
+  final bool isInitial;
+  final bool isFinal;
+
+  const _SvgState({
+    required this.id,
+    required this.name,
+    required this.isInitial,
+    required this.isFinal,
+  });
 }
 
 class _TapeLayout {

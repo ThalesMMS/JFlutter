@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jflutter/presentation/pages/fsa_page.dart';
 import 'package:jflutter/presentation/pages/regex_page.dart';
@@ -10,8 +9,15 @@ import 'package:jflutter/presentation/pages/tm_page.dart';
 import 'package:jflutter/presentation/pages/pda_page.dart';
 import 'package:jflutter/presentation/widgets/tablet_layout_container.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:jflutter/presentation/pages/pumping_lemma_page.dart';
 import 'package:jflutter/l10n/app_localizations.dart';
+
+Future<Override> _sharedPreferencesOverride() async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  return sharedPreferencesProvider.overrideWithValue(prefs);
+}
 
 void main() {
   group('Tablet Layout Tests', () {
@@ -21,16 +27,11 @@ void main() {
       tester.view.physicalSize = const Size(1366, 1024);
       tester.view.devicePixelRatio = 1.0;
 
-      // FSAPage trace providers bridge startup SharedPreferences from GetIt.
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final getIt = GetIt.instance;
-      if (!getIt.isRegistered<SharedPreferences>()) {
-        getIt.registerSingleton<SharedPreferences>(prefs);
-      }
-
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: FSAPage())),
+        ProviderScope(
+          overrides: [await _sharedPreferencesOverride()],
+          child: const MaterialApp(home: FSAPage()),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -44,8 +45,9 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [await _sharedPreferencesOverride()],
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: RegexPage(),
@@ -65,7 +67,10 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [grammarProvider.overrideWith((ref) => GrammarProvider())],
+          overrides: [
+            await _sharedPreferencesOverride(),
+            grammarProvider.overrideWith((ref) => GrammarProvider()),
+          ],
           child: const MaterialApp(home: GrammarPage()),
         ),
       );
@@ -81,7 +86,10 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: TMPage())),
+        ProviderScope(
+          overrides: [await _sharedPreferencesOverride()],
+          child: const MaterialApp(home: TMPage()),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -95,7 +103,10 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: PDAPage())),
+        ProviderScope(
+          overrides: [await _sharedPreferencesOverride()],
+          child: const MaterialApp(home: PDAPage()),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -109,7 +120,10 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: PumpingLemmaPage())),
+        ProviderScope(
+          overrides: [await _sharedPreferencesOverride()],
+          child: const MaterialApp(home: PumpingLemmaPage()),
+        ),
       );
       await tester.pumpAndSettle();
 

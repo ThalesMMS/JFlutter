@@ -22,6 +22,9 @@ import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/pages/grammar_page.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
+
+late SharedPreferences _prefs;
 
 // Test wrapper that provides GrammarProvider with optional initial grammar
 class _GrammarPageTestWidget extends ConsumerWidget {
@@ -68,6 +71,7 @@ Future<void> _pumpGrammarPage(
 
   await tester.pumpWidgetBuilder(
     ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(_prefs)],
       child: MaterialApp(
         home: _GrammarPageTestWidget(grammar: grammar, isMobile: isMobile),
       ),
@@ -82,7 +86,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
+    _prefs = await initializeSharedPreferences();
   });
 
   tearDownAll(() async {

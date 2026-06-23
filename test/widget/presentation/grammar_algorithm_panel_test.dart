@@ -10,7 +10,6 @@ import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/production.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/result.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
@@ -21,7 +20,7 @@ import 'package:jflutter/presentation/widgets/grammar_algorithm_panel.dart';
 class _MockGrammarNotifier extends GrammarProvider {
   _MockGrammarNotifier({
     GrammarState? initialState,
-    this.convertToAutomatonResult,
+    this.convertToFsaResult,
     this.convertToPdaResult,
     this.convertToPdaStandardResult,
     this.convertToPdaGreibachResult,
@@ -31,7 +30,7 @@ class _MockGrammarNotifier extends GrammarProvider {
     }
   }
 
-  final Result<FSA>? convertToAutomatonResult;
+  final Result<FSA>? convertToFsaResult;
   final Result<PDA>? convertToPdaResult;
   final Result<PDA>? convertToPdaStandardResult;
   final Result<PDA>? convertToPdaGreibachResult;
@@ -67,7 +66,7 @@ class _MockGrammarNotifier extends GrammarProvider {
       isAccepting: false,
     );
 
-    final result = convertToAutomatonResult ??
+    final result = convertToFsaResult ??
         Success(
           FSA(
             id: 'test-fsa-${DateTime.now().millisecondsSinceEpoch}',
@@ -221,11 +220,6 @@ class _MockGrammarNotifier extends GrammarProvider {
   }
 }
 
-class _MockAutomatonService extends AutomatonService {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => Future.value();
-}
-
 class _MockPdaEditorNotifier extends PDAEditorNotifier {
   _MockPdaEditorNotifier() : super();
 
@@ -236,8 +230,7 @@ class _MockPdaEditorNotifier extends PDAEditorNotifier {
 }
 
 class _MockAutomatonStateNotifier extends AutomatonStateNotifier {
-  _MockAutomatonStateNotifier()
-      : super(automatonService: _MockAutomatonService());
+  _MockAutomatonStateNotifier() : super();
 
   @override
   void updateAutomaton(FSA automaton) {
@@ -267,7 +260,7 @@ class _MockHomeNavigationNotifier extends HomeNavigationNotifier {
 Future<void> _pumpGrammarAlgorithmPanel(
   WidgetTester tester, {
   GrammarState? grammarState,
-  Result<FSA>? convertToAutomatonResult,
+  Result<FSA>? convertToFsaResult,
   Result<PDA>? convertToPdaResult,
   Result<PDA>? convertToPdaStandardResult,
   Result<PDA>? convertToPdaGreibachResult,
@@ -276,7 +269,7 @@ Future<void> _pumpGrammarAlgorithmPanel(
 }) async {
   final mockGrammarNotifier = _MockGrammarNotifier(
     initialState: grammarState,
-    convertToAutomatonResult: convertToAutomatonResult,
+    convertToFsaResult: convertToFsaResult,
     convertToPdaResult: convertToPdaResult,
     convertToPdaStandardResult: convertToPdaStandardResult,
     convertToPdaGreibachResult: convertToPdaGreibachResult,
@@ -704,7 +697,7 @@ void main() {
             ),
           ],
         ),
-        convertToAutomatonResult: const Failure(errorMessage),
+        convertToFsaResult: const Failure(errorMessage),
       );
 
       await tester.ensureVisible(

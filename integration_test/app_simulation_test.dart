@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
-import 'package:jflutter/data/mappers/automaton_entity_mapper.dart';
 import 'package:jflutter/main.dart' as app;
+import 'package:jflutter/presentation/providers/automaton_simulation_provider.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,7 +32,7 @@ void main() {
     );
 
     final examplesDataSource = ExamplesAssetDataSource();
-    final exampleResult = await examplesDataSource.loadExample(
+    final exampleResult = await examplesDataSource.loadTypedFsaExample(
       'AFD - Termina com A',
     );
     expect(
@@ -41,15 +41,14 @@ void main() {
       reason: exampleResult.error ?? 'Expected example to load successfully.',
     );
 
-    final automaton = exampleResult.data?.automaton;
+    final automaton = exampleResult.data?.payload;
     expect(
       automaton,
       isNotNull,
       reason: 'The loaded example should contain an automaton.',
     );
 
-    final fsa = AutomatonEntityMapper.toFsa(automaton!);
-    container.read(automatonStateProvider.notifier).updateAutomaton(fsa);
+    container.read(automatonStateProvider.notifier).updateAutomaton(automaton!);
     await tester.pumpAndSettle();
 
     // Open the simulation sheet through the quick action.
@@ -60,20 +59,39 @@ void main() {
     final inputField = find.bySemanticsLabel('Simulation input string');
     expect(inputField, findsOneWidget);
 
-    Future<void> runSimulation(String input, String expectedLabel) async {
+    Future<void> runSimulation(String input, bool expectedAccepted) async {
+      await tester.ensureVisible(inputField);
+      await tester.pumpAndSettle();
+      await tester.tap(inputField);
       await tester.enterText(inputField, input);
       await tester.pumpAndSettle();
 
-      final simulateButton = find.bySemanticsLabel('Run simulation');
-      expect(simulateButton, findsWidgets);
+      final simulateButton = find.widgetWithText(ElevatedButton, 'Simulate');
+      expect(simulateButton, findsOneWidget);
 
-      await tester.tap(simulateButton.first);
+      await tester.ensureVisible(simulateButton);
       await tester.pumpAndSettle();
+      await tester.tap(simulateButton);
 
-      expect(find.text(expectedLabel), findsOneWidget);
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        final result =
+            container.read(automatonSimulationProvider).simulationResult;
+        if (result?.inputString == input) {
+          expect(result!.accepted, expectedAccepted);
+          return;
+        }
+      }
+
+      final state = container.read(automatonSimulationProvider);
+      fail(
+        'Simulation for "$input" did not finish. '
+        'Last result: ${state.simulationResult?.inputString}; '
+        'loading: ${state.isLoading}; error: ${state.error}',
+      );
     }
 
-    await runSimulation('ba', 'Accepted');
-    await runSimulation('bb', 'Rejected');
+    await runSimulation('ba', true);
+    await runSimulation('bb', false);
   });
 }

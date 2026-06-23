@@ -23,7 +23,6 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_label_field_editor.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_link_overlay_utils.dart';
@@ -32,8 +31,7 @@ import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
 class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
-  _RecordingAutomatonStateNotifier()
-      : super(automatonService: AutomatonService());
+  _RecordingAutomatonStateNotifier() : super();
 
   final List<Map<String, Object?>> transitionCalls = [];
   final List<String> removedTransitionIds = [];

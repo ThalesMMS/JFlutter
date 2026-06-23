@@ -82,17 +82,42 @@ void main() {
     });
 
     test('loads bundled examples without network access', () async {
-      final result = await _runOffline(() async {
+      final categories = await _runOffline(() async {
         harness = _AssetBundleHarness();
         harness!.install();
-        return ExamplesAssetDataSource().loadAllExamples();
+        final dataSource = ExamplesAssetDataSource();
+        final fsa = await dataSource.loadAllTypedFsaExamples();
+        final cfg = await dataSource.loadAllTypedCfgExamples();
+        final pda = await dataSource.loadAllTypedPdaExamples();
+        final tm = await dataSource.loadAllTypedTmExamples();
+
+        expect(fsa.isSuccess, isTrue, reason: fsa.error);
+        expect(cfg.isSuccess, isTrue, reason: cfg.error);
+        expect(pda.isSuccess, isTrue, reason: pda.error);
+        expect(tm.isSuccess, isTrue, reason: tm.error);
+
+        expect(fsa.data, hasLength(4));
+        expect(cfg.data, hasLength(2));
+        expect(pda.data, hasLength(3));
+        expect(tm.data, hasLength(5));
+
+        return {
+          ...fsa.data!.map((example) => example.category),
+          ...cfg.data!.map((example) => example.category),
+          ...pda.data!.map((example) => example.category),
+          ...tm.data!.map((example) => example.category),
+        };
       });
 
-      expect(result.isSuccess, isTrue);
-      expect(result.data, hasLength(14));
       expect(
-        result.data!.map((example) => example.category).toSet(),
-        equals(const {'DFA', 'NFA', 'CFG', 'PDA', 'TM'}),
+        categories,
+        equals({
+          ExampleCategory.dfa,
+          ExampleCategory.nfa,
+          ExampleCategory.cfg,
+          ExampleCategory.pda,
+          ExampleCategory.tm,
+        }),
       );
       expect(
         harness!.requestedAssetKeys.every(
@@ -108,7 +133,9 @@ void main() {
           missingAssets: const {'jflutter_js/examples/afd_ends_with_a.json'},
         );
         harness!.install();
-        return ExamplesAssetDataSource().loadExample('AFD - Termina com A');
+        return ExamplesAssetDataSource().loadTypedFsaExample(
+          'AFD - Termina com A',
+        );
       });
 
       expect(result.isFailure, isTrue);
@@ -125,11 +152,11 @@ void main() {
         harness!.install();
 
         final dataSource = ExamplesAssetDataSource();
-        return dataSource.loadExample('AFD - Termina com A');
+        return dataSource.loadTypedFsaExample('AFD - Termina com A');
       });
 
       expect(result.isFailure, isTrue);
-      expect(result.error, contains('invalid "states" data'));
+      expect(result.error, contains('must define states as a list'));
     });
 
     test('returns expected examples for every bundled category', () async {
@@ -138,19 +165,36 @@ void main() {
         harness!.install();
 
         final dataSource = ExamplesAssetDataSource();
+        final fsa = await dataSource.loadAllTypedFsaExamples();
+        final cfg = await dataSource.loadAllTypedCfgExamples();
+        final pda = await dataSource.loadAllTypedPdaExamples();
+        final tm = await dataSource.loadAllTypedTmExamples();
 
-        for (final category in ExampleCategory.values) {
-          final result = await dataSource.loadExamplesByCategory(category);
-          expect(result.isSuccess, isTrue, reason: 'category ${category.name}');
-          expect(result.data, isNotEmpty, reason: 'category ${category.name}');
-          expect(
-            result.data!.every(
-              (example) => example.category == category.displayName,
-            ),
-            isTrue,
-            reason: 'category ${category.name}',
-          );
-        }
+        expect(fsa.isSuccess, isTrue, reason: fsa.error);
+        expect(cfg.isSuccess, isTrue, reason: cfg.error);
+        expect(pda.isSuccess, isTrue, reason: pda.error);
+        expect(tm.isSuccess, isTrue, reason: tm.error);
+
+        expect(
+          fsa.data!.where((example) => example.category == ExampleCategory.dfa),
+          hasLength(3),
+        );
+        expect(
+          fsa.data!.where((example) => example.category == ExampleCategory.nfa),
+          hasLength(1),
+        );
+        expect(
+          cfg.data!.every((example) => example.category == ExampleCategory.cfg),
+          isTrue,
+        );
+        expect(
+          pda.data!.every((example) => example.category == ExampleCategory.pda),
+          isTrue,
+        );
+        expect(
+          tm.data!.every((example) => example.category == ExampleCategory.tm),
+          isTrue,
+        );
       });
     });
   });

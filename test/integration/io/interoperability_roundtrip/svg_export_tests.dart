@@ -5,7 +5,7 @@ void _runSvgExportTests() {
     test('SVG export produces valid structure', () {
       final testAutomaton = _createTestDFA();
 
-      final svg = SvgExporter.exportAutomatonToSvg(testAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(testAutomaton));
       expect(svg, isNotEmpty);
       expect(svg, contains('<?xml'));
       expect(svg, contains('<svg'));
@@ -25,7 +25,7 @@ void _runSvgExportTests() {
       ];
 
       for (final automaton in testCases) {
-        final svg = SvgExporter.exportAutomatonToSvg(automaton);
+        final svg = SvgExporter.exportFsaToSvg(_fsaFromData(automaton));
         expect(svg, isNotEmpty);
         expect(svg, contains('<?xml'));
         expect(svg, contains('<svg'));
@@ -36,16 +36,16 @@ void _runSvgExportTests() {
     test('SVG export handles different sizes', () {
       final testAutomaton = _createTestDFA();
 
-      final smallSvg = SvgExporter.exportAutomatonToSvg(
-        testAutomaton,
+      final smallSvg = SvgExporter.exportFsaToSvg(
+        _fsaFromData(testAutomaton),
         width: 400,
         height: 300,
       );
       expect(smallSvg, contains(_viewBoxPattern(400, 300)));
       expect(smallSvg, contains('<svg width="400px" height="300px"'));
 
-      final largeSvg = SvgExporter.exportAutomatonToSvg(
-        testAutomaton,
+      final largeSvg = SvgExporter.exportFsaToSvg(
+        _fsaFromData(testAutomaton),
         width: 1200,
         height: 900,
       );
@@ -56,8 +56,8 @@ void _runSvgExportTests() {
     test('SVG export formats dimensions without trailing decimals', () {
       final testAutomaton = _createTestDFA();
 
-      final svg = SvgExporter.exportAutomatonToSvg(
-        testAutomaton,
+      final svg = SvgExporter.exportFsaToSvg(
+        _fsaFromData(testAutomaton),
         width: 640.0,
         height: 480.0,
       );
@@ -71,7 +71,7 @@ void _runSvgExportTests() {
     test('SVG export includes proper styling', () {
       final testAutomaton = _createTestDFA();
 
-      final svg = SvgExporter.exportAutomatonToSvg(testAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(testAutomaton));
 
       // Validate styling elements
       expect(svg, contains('<defs>'));
@@ -85,7 +85,7 @@ void _runSvgExportTests() {
     test('SVG export renders placeholders for empty automatons', () {
       final emptyAutomaton = _createEmptyAutomaton();
 
-      final svg = SvgExporter.exportAutomatonToSvg(emptyAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(emptyAutomaton));
 
       expect(svg, contains('No states defined'));
       expect(svg, contains('<svg'));
@@ -93,29 +93,22 @@ void _runSvgExportTests() {
     });
 
     test('SVG export draws self-loop transitions without degenerating', () {
-      const loopAutomaton = AutomatonEntity(
+      final loopAutomaton = _automatonData(
         id: 'loop',
         name: 'Loop',
-        alphabet: {'a'},
+        type: 'nfa',
+        alphabet: const ['a'],
         states: [
-          StateEntity(
-            id: 'q0',
-            name: 'q0',
-            x: 0.0,
-            y: 0.0,
-            isInitial: true,
-            isFinal: true,
-          ),
+          _stateData('q0', isInitial: true, isFinal: true),
         ],
-        transitions: {
+        transitions: const {
           'q0|λ': ['q0'],
         },
         initialId: 'q0',
         nextId: 1,
-        type: AutomatonType.nfa,
       );
 
-      final svg = SvgExporter.exportAutomatonToSvg(loopAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(loopAutomaton));
 
       expect(svg, contains('<path'));
       expect(svg, contains('>ε<'));
@@ -125,7 +118,7 @@ void _runSvgExportTests() {
     test('SVG export handles complex automatons', () {
       final complexAutomaton = _createComplexDFA();
 
-      final svg = SvgExporter.exportAutomatonToSvg(complexAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(complexAutomaton));
       expect(svg, isNotEmpty);
       expect(svg, contains('<?xml'));
       expect(svg, contains('<svg'));

@@ -53,8 +53,7 @@ dependencies:
   graphview:
     path: graphview
 
-  # State management and dependency injection
-  get_it: ^8.0.0
+  # State management
   flutter_riverpod: ^2.5.1
   
   # XML parsing for JFLAP file import

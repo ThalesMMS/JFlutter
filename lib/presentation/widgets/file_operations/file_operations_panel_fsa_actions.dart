@@ -200,7 +200,7 @@ extension _FileOperationsPanelFsaActions on _FileOperationsPanelState {
     try {
       Result<String>? exportResult;
       if (kIsWeb) {
-        exportResult = await _fileService.exportLegacyAutomatonToSVG(
+        exportResult = await _fileService.exportFsaToSVG(
           widget.automaton!,
           '${widget.automaton!.name}.svg',
         );
@@ -209,11 +209,11 @@ extension _FileOperationsPanelFsaActions on _FileOperationsPanelState {
           dialogTitle: 'Export Automaton as SVG',
           fileName: '${widget.automaton!.name}.svg',
           allowedExtensions: ['svg'],
-          contents: _fileService.exportLegacyAutomatonToSvgString(
+          contents: _fileService.exportFsaToSvgString(
             widget.automaton!,
           ),
           writeToPath: (path) =>
-              _fileService.exportLegacyAutomatonToSVG(widget.automaton!, path),
+              _fileService.exportFsaToSVG(widget.automaton!, path),
           cancelMessage: 'Export canceled.',
         );
 

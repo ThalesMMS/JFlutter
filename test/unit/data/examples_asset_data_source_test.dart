@@ -2,35 +2,21 @@
 //  examples_asset_data_source_test.dart
 //  JFlutter
 //
-//  Conjunto de testes que inspeciona as fixtures JSON de ExamplesAssetDataSource,
-//  assegurando a presença de metadados obrigatórios, a estrutura esperada para
-//  cada categoria e a coerência entre os arquivos de exemplo e suas descrições
-//  utilizadas pelo aplicativo.
+//  Validates the typed examples catalog loaded from jflutter_js/examples.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
 import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jflutter/core/repositories/automaton_repository.dart';
+import 'package:jflutter/core/models/fsa.dart';
+import 'package:jflutter/core/models/grammar.dart';
+import 'package:jflutter/core/models/pda.dart';
+import 'package:jflutter/core/models/pda_transition.dart';
+import 'package:jflutter/core/models/tm.dart';
+import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
-
-class _PdaTransition {
-  const _PdaTransition({
-    required this.toState,
-    required this.inputSymbol,
-    required this.requiredStackTop,
-    required this.stackReplacement,
-  });
-
-  final String toState;
-  final String inputSymbol;
-  final String requiredStackTop;
-  final String stackReplacement;
-}
 
 class _PdaConfiguration {
   const _PdaConfiguration({
@@ -44,264 +30,205 @@ class _PdaConfiguration {
   final List<String> stack;
 }
 
+Future<AssetExample<T>> _expectLoaded<T>(
+  Future<Result<AssetExample<T>>> future,
+) async {
+  final result = await future;
+  expect(result.isSuccess, isTrue, reason: result.error);
+  return result.data!;
+}
+
+Future<List<AssetExample<T>>> _expectLoadedList<T>(
+  Future<ListResult<AssetExample<T>>> future,
+) async {
+  final result = await future;
+  expect(result.isSuccess, isTrue, reason: result.error);
+  return result.data!;
+}
+
+bool _runPda(PDA pda, String input) {
+  final transitionsByState = <String, List<PDATransition>>{};
+  for (final transition in pda.pdaTransitions) {
+    transitionsByState
+        .putIfAbsent(transition.fromState.id, () => [])
+        .add(transition);
+  }
+
+  final initialState = pda.initialState;
+  expect(initialState, isNotNull);
+
+  final acceptingStateIds =
+      pda.acceptingStates.map((state) => state.id).toSet();
+  final queue = ListQueue<_PdaConfiguration>()
+    ..add(
+      _PdaConfiguration(
+        state: initialState!.id,
+        index: 0,
+        stack: [pda.initialStackSymbol],
+      ),
+    );
+  final visited = <String>{};
+
+  while (queue.isNotEmpty) {
+    final config = queue.removeFirst();
+    final signature =
+        '${config.state}|${config.index}|${config.stack.join(',')}';
+    if (!visited.add(signature)) {
+      continue;
+    }
+
+    if (config.index == input.length &&
+        acceptingStateIds.contains(config.state)) {
+      return true;
+    }
+
+    for (final transition in transitionsByState[config.state] ?? const []) {
+      final nextStack = List<String>.from(config.stack);
+
+      if (!transition.isLambdaPop) {
+        if (nextStack.isEmpty || nextStack.last != transition.popSymbol) {
+          continue;
+        }
+        nextStack.removeLast();
+      }
+
+      if (!transition.isLambdaInput) {
+        if (config.index >= input.length ||
+            input[config.index] != transition.inputSymbol) {
+          continue;
+        }
+      }
+
+      if (!transition.isLambdaPush) {
+        for (var i = transition.pushSymbol.length - 1; i >= 0; i--) {
+          nextStack.add(transition.pushSymbol[i]);
+        }
+      }
+
+      queue.add(
+        _PdaConfiguration(
+          state: transition.toState.id,
+          index: transition.isLambdaInput ? config.index : config.index + 1,
+          stack: nextStack,
+        ),
+      );
+    }
+  }
+
+  return false;
+}
+
 void main() {
-  group('ExamplesAssetDataSource JSON validation', () {
+  group('ExamplesAssetDataSource typed catalog', () {
     late ExamplesAssetDataSource dataSource;
 
     setUp(() {
       dataSource = ExamplesAssetDataSource();
     });
 
-    ExampleMetadata metadataFor({
-      required ExampleCategory category,
-      required String fileName,
-    }) {
-      return ExampleMetadata(
-        fileName: fileName,
-        category: category,
-        subcategory: 'Test',
-        difficulty: DifficultyLevel.medium,
-        description: 'Test metadata',
-        tags: const ['test'],
-        estimatedComplexity: ComplexityLevel.medium,
+    test('loads DFA examples as typed FSA payloads with metadata', () async {
+      final example = await _expectLoaded<FSA>(
+        dataSource.loadTypedFsaExample('AFD - Termina com A'),
       );
-    }
 
-    Map<String, dynamic> loadExample(String fileName) {
-      final file = File('jflutter_js/examples/$fileName');
-      final jsonString = file.readAsStringSync();
-      final decoded = jsonDecode(jsonString);
+      expect(example.name, 'AFD - Termina com A');
+      expect(example.category, ExampleCategory.dfa);
+      expect(example.difficultyLevel, DifficultyLevel.easy);
+      expect(example.complexityLevel, ComplexityLevel.low);
+      expect(example.tags, containsAll(['dfa', 'basic']));
+
+      final fsa = example.payload;
+      expect(fsa.id, 'example_afd_ends_with_a');
+      expect(fsa.name, example.name);
+      expect(fsa.alphabet, {'a', 'b'});
+      expect(fsa.states, hasLength(2));
+      expect(fsa.fsaTransitions, hasLength(4));
+      expect(fsa.initialState?.id, 'q0');
+      expect(fsa.acceptingStates.map((state) => state.id), contains('q1'));
+      expect(fsa.isDeterministic, isTrue);
+      expect(fsa.validate(), isEmpty);
+    });
+
+    test('loads lambda NFA examples as typed FSA payloads', () async {
+      final example = await _expectLoaded<FSA>(
+        dataSource.loadTypedFsaExample('AFNλ - A ou AB'),
+      );
+
+      expect(example.category, ExampleCategory.nfa);
+      expect(example.difficultyLevel, DifficultyLevel.medium);
+      expect(example.payload.states, hasLength(5));
+      expect(example.payload.epsilonTransitions, isNotEmpty);
+      expect(example.payload.isDeterministic, isFalse);
+      expect(example.payload.validate(), isEmpty);
+    });
+
+    test('loads CFG examples as typed Grammar payloads', () async {
+      final example = await _expectLoaded<Grammar>(
+        dataSource.loadTypedCfgExample('GLC - Parênteses balanceados'),
+      );
+
+      expect(example.category, ExampleCategory.cfg);
+      expect(example.payload.terminals, {'(', ')'});
+      expect(example.payload.nonterminals, {'S'});
+      expect(example.payload.startSymbol, 'S');
+      expect(example.payload.productionCount, 3);
       expect(
-        decoded,
-        isA<Map<String, dynamic>>(),
-        reason: 'Fixture $fileName must decode to a JSON object',
-      );
-      return decoded as Map<String, dynamic>;
-    }
-
-    test('Returns failure when DFA example is missing states', () {
-      final json = loadExample('afd_ends_with_a.json');
-      final metadata = metadataFor(
-        category: ExampleCategory.dfa,
-        fileName: 'afd_ends_with_a.json',
-      );
-
-      json.remove('states');
-
-      final result = dataSource.convertJsonForTesting(
-        json,
-        metadata,
-        'AFD - Termina com A',
-      );
-
-      expect(result.isFailure, isTrue);
-      expect(result.error, contains('states'));
-    });
-
-    test('Converts DFA example through the canonical automaton DTO', () {
-      final json = loadExample('afd_ends_with_a.json');
-      final metadata = metadataFor(
-        category: ExampleCategory.dfa,
-        fileName: 'afd_ends_with_a.json',
-      );
-
-      final result = dataSource.convertJsonForTesting(
-        json,
-        metadata,
-        'AFD - Termina com A',
-      );
-
-      expect(result.isSuccess, isTrue);
-      final dto = result.data!;
-      expect(dto.id, json['id']);
-      expect(dto.name, json['name']);
-      expect(dto.type, json['type']);
-      expect(dto.toJson()['states'], json['states']);
-      expect(dto.toJson()['transitions'], json['transitions']);
-
-      final entity = dto.toEntity();
-      expect(entity.id, dto.id);
-      expect(entity.name, dto.name);
-      expect(entity.type.name, dto.type);
-      expect(entity.states.length, dto.states.length);
-      expect(entity.transitions, dto.transitions);
-    });
-
-    test('Validates CFG example without producing an automaton DTO', () {
-      final json = loadExample('glc_balanced_parentheses.json');
-      final metadata = metadataFor(
-        category: ExampleCategory.cfg,
-        fileName: 'glc_balanced_parentheses.json',
-      );
-
-      final result = dataSource.convertJsonForTesting(
-        json,
-        metadata,
-        'GLC - Parênteses balanceados',
-      );
-
-      expect(result.isSuccess, isTrue);
-      expect(result.data, isNull);
-    });
-
-    test('Validates all registered PDA example structures', () {
-      const fixtures = [
-        ('apda_balanced_parentheses.json', 'APD - Parênteses Balanceados'),
-        ('apda_anbn.json', 'APD - a^n b^n'),
-        ('apda_palindrome.json', 'APD - Palíndromo'),
-      ];
-
-      for (final (fileName, exampleName) in fixtures) {
-        final json = loadExample(fileName);
-        final metadata = metadataFor(
-          category: ExampleCategory.pda,
-          fileName: fileName,
-        );
-
-        final result = dataSource.convertJsonForTesting(
-          json,
-          metadata,
-          exampleName,
-        );
-
-        expect(
-          result.isSuccess,
-          isTrue,
-          reason: 'Expected $fileName to validate as a PDA example.',
-        );
-        expect(result.data, isNull);
-      }
-    });
-
-    bool runPda(Map<String, dynamic> json, String input) {
-      final transitionsRaw = json['transitions'];
-      expect(transitionsRaw, isA<Map<String, dynamic>>());
-
-      final transitions = <String, List<_PdaTransition>>{};
-      (transitionsRaw as Map<String, dynamic>).forEach((key, value) {
-        final parts = key.split('|');
-        expect(
-          parts.length,
-          3,
-          reason:
-              'Transition key "$key" must follow the pattern estado|símbolo|topoDaPilha.',
-        );
-
-        final fromState = parts[0];
-        final inputSymbol = parts[1];
-        final requiredStackTop = parts[2];
-
-        final targets = value is List ? value : [value];
-        final parsedTargets = targets.map((dynamic target) {
-          final targetString = target.toString();
-          final targetParts = targetString.split('|');
-          expect(
-            targetParts.length,
-            2,
-            reason:
-                'Transition target "$targetString" must follow the pattern estado|substituicaoPilha.',
-          );
-
-          final stackReplacement = targetParts.length > 1 ? targetParts[1] : '';
-
-          return _PdaTransition(
-            toState: targetParts[0],
-            inputSymbol: inputSymbol,
-            requiredStackTop: requiredStackTop,
-            stackReplacement: stackReplacement,
-          );
-        }).toList();
-
-        transitions.putIfAbsent(fromState, () => []).addAll(parsedTargets);
-      });
-
-      final initialState = json['initialId'] as String;
-      final finalStates = Set<String>.from(
-        (json['finalStates'] as List).map((e) => e.toString()),
-      );
-      final initialStack =
-          (json['initialStack'] as List).map((e) => e.toString()).toList();
-
-      final queue = ListQueue<_PdaConfiguration>();
-      queue.add(
-        _PdaConfiguration(
-          state: initialState,
-          index: 0,
-          stack: List<String>.from(initialStack),
+        example.payload.productions.any(
+          (production) =>
+              production.leftSide.single == 'S' &&
+              production.rightSide.join() == '(S)',
         ),
+        isTrue,
+      );
+      expect(
+        example.payload.productions.any((production) => production.isLambda),
+        isTrue,
+      );
+      expect(example.payload.validate(), isEmpty);
+    });
+
+    test('loads all registered PDA examples as typed PDA payloads', () async {
+      final examples = await _expectLoadedList<PDA>(
+        dataSource.loadAllTypedPdaExamples(),
       );
 
-      final visited = <String>{};
+      expect(examples, hasLength(3));
+      expect(
+        examples.map((example) => example.name),
+        containsAll([
+          'APD - Parênteses Balanceados',
+          'APD - a^n b^n',
+          'APD - Palíndromo',
+        ]),
+      );
 
-      bool isEpsilon(String symbol) => symbol.isEmpty || symbol == 'λ';
-
-      while (queue.isNotEmpty) {
-        final config = queue.removeFirst();
-        final signature =
-            '${config.state}|${config.index}|${config.stack.join(',')}';
-        if (!visited.add(signature)) {
-          continue;
-        }
-
-        if (config.index == input.length &&
-            finalStates.contains(config.state)) {
-          return true;
-        }
-
-        final available = transitions[config.state];
-        if (available == null) {
-          continue;
-        }
-
-        for (final transition in available) {
-          final nextStack = List<String>.from(config.stack);
-
-          if (transition.requiredStackTop.isNotEmpty) {
-            if (nextStack.isEmpty ||
-                nextStack.last != transition.requiredStackTop) {
-              continue;
-            }
-            nextStack.removeLast();
-          }
-
-          final consumesEpsilon = isEpsilon(transition.inputSymbol);
-
-          if (!consumesEpsilon) {
-            if (config.index >= input.length) {
-              continue;
-            }
-            final currentSymbol = input[config.index];
-            if (currentSymbol != transition.inputSymbol) {
-              continue;
-            }
-          }
-
-          final replacement = transition.stackReplacement;
-          if (replacement.isNotEmpty) {
-            for (var i = replacement.length - 1; i >= 0; i--) {
-              nextStack.add(replacement[i]);
-            }
-          }
-
-          final nextIndex = consumesEpsilon ? config.index : config.index + 1;
-
-          queue.add(
-            _PdaConfiguration(
-              state: transition.toState,
-              index: nextIndex,
-              stack: nextStack,
-            ),
-          );
-        }
+      for (final example in examples) {
+        final pda = example.payload;
+        expect(example.category, ExampleCategory.pda);
+        expect(pda.states, isNotEmpty);
+        expect(pda.pdaTransitions, isNotEmpty);
+        expect(pda.stackAlphabet, contains(pda.initialStackSymbol));
+        expect(pda.acceptingStates, isNotEmpty);
       }
-
-      return false;
-    }
+    });
 
     test(
-      'APD palindrome example accepts palindromes and rejects non-palindromes',
-      () {
-        final json = loadExample('apda_palindrome.json');
+      'APD palindrome typed example accepts palindromes and rejects others',
+      () async {
+        final example = await _expectLoaded<PDA>(
+          dataSource.loadTypedPdaExample('APD - Palíndromo'),
+        );
+        final pda = example.payload;
+
+        expect(pda.initialStackSymbol, 'Z');
+        expect(
+          pda.pdaTransitions.any((transition) => transition.pushSymbol == 'aZ'),
+          isTrue,
+        );
+        expect(
+          pda.pdaTransitions.any((transition) => transition.isLambdaInput),
+          isTrue,
+        );
 
         const accepted = [
           '',
@@ -314,21 +241,13 @@ void main() {
           'abba',
           'baab',
           'abbba',
+          'ababa',
         ];
         const rejected = ['ab', 'ba', 'abb', 'aab', 'abbabb'];
-        const acceptedOddLong = ['ababa'];
-
-        for (final word in acceptedOddLong) {
-          expect(
-            runPda(json, word),
-            isTrue,
-            reason: 'Expected palindrome "$word" to be accepted.',
-          );
-        }
 
         for (final word in accepted) {
           expect(
-            runPda(json, word),
+            _runPda(pda, word),
             isTrue,
             reason: 'Expected palindrome "$word" to be accepted.',
           );
@@ -336,7 +255,7 @@ void main() {
 
         for (final word in rejected) {
           expect(
-            runPda(json, word),
+            _runPda(pda, word),
             isFalse,
             reason: 'Expected non-palindrome "$word" to be rejected.',
           );
@@ -344,52 +263,47 @@ void main() {
       },
     );
 
-    test('Validates TM example structure', () {
-      final json = loadExample('tm_binary_to_unary.json');
-      final metadata = metadataFor(
-        category: ExampleCategory.tm,
-        fileName: 'tm_binary_to_unary.json',
+    test('loads all registered TM examples as typed TM payloads', () async {
+      final examples = await _expectLoadedList<TM>(
+        dataSource.loadAllTypedTmExamples(),
       );
 
-      final result = dataSource.convertJsonForTesting(
-        json,
-        metadata,
-        'MT - Binário para unário',
+      expect(examples, hasLength(5));
+      expect(
+        examples.map((example) => example.name),
+        containsAll([
+          'MT - a^n b^n',
+          'MT - Binário para unário',
+          'MT - Cópia de string',
+          'MT - Incremento binário',
+          'MT - Verificador de palíndromo',
+        ]),
       );
 
-      expect(result.isSuccess, isTrue);
-      expect(result.data, isNull);
-    });
+      final binaryToUnary = examples.firstWhere(
+        (example) => example.name == 'MT - Binário para unário',
+      );
+      final tm = binaryToUnary.payload;
+      expect(binaryToUnary.category, ExampleCategory.tm);
+      expect(tm.tapeAlphabet, containsAll(['0', '1', 'X', 'B']));
+      expect(tm.blankSymbol, 'B');
+      expect(tm.states, hasLength(3));
+      expect(tm.acceptingStates.map((state) => state.id), contains('q2'));
+      expect(tm.tmTransitions, hasLength(6));
+      expect(
+        tm.tmTransitions.any(
+          (transition) =>
+              transition.readSymbol == '1' &&
+              transition.writeSymbol == 'X' &&
+              transition.movesRight,
+        ),
+        isTrue,
+      );
 
-    test('Validates all registered TM example structures', () {
-      const fixtures = [
-        ('tm_anbn.json', 'MT - a^n b^n'),
-        ('tm_binary_to_unary.json', 'MT - Binário para unário'),
-        ('tm_copy_string.json', 'MT - Cópia de string'),
-        ('tm_increment.json', 'MT - Incremento binário'),
-        ('tm_palindrome.json', 'MT - Verificador de palíndromo'),
-      ];
-
-      for (final (fileName, exampleName) in fixtures) {
-        final json = loadExample(fileName);
-        final metadata = metadataFor(
-          category: ExampleCategory.tm,
-          fileName: fileName,
-        );
-
-        final result = dataSource.convertJsonForTesting(
-          json,
-          metadata,
-          exampleName,
-        );
-
-        expect(
-          result.isSuccess,
-          isTrue,
-          reason: 'Expected $fileName to validate as a TM example.',
-        );
-        expect(result.data, isNull);
-      }
+      expect(
+        examples.every((example) => example.payload.validate().isEmpty),
+        isTrue,
+      );
     });
   });
 }

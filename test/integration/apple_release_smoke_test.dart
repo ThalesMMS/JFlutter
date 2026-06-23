@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jflutter/app.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:jflutter/presentation/widgets/desktop_navigation.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
 
@@ -14,7 +15,7 @@ Future<void> _pumpReleaseApp(
 }) async {
   await resetDependencies();
   SharedPreferences.setMockInitialValues(const {});
-  await setupDependencyInjection();
+  final prefs = await initializeSharedPreferences();
 
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -24,8 +25,9 @@ Future<void> _pumpReleaseApp(
   });
 
   await tester.pumpWidget(
-    const ProviderScope(
-      child: JFlutterApp(),
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const JFlutterApp(),
     ),
   );
   await tester.pump();

@@ -21,7 +21,6 @@ import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';
 import '../../core/models/transition.dart';
 import '../../core/utils/epsilon_utils.dart';
-import '../../data/services/automaton_service.dart';
 
 /// State for automaton CRUD operations
 class AutomatonStateProviderState {
@@ -69,12 +68,10 @@ class AutomatonStateProviderState {
 /// State notifier for automaton CRUD operations
 class AutomatonStateNotifier
     extends StateNotifier<AutomatonStateProviderState> {
-  final AutomatonService _automatonService;
+  int _nextId = 1;
   int _graphViewMutationCounter = 0;
 
-  AutomatonStateNotifier({required AutomatonService automatonService})
-      : _automatonService = automatonService,
-        super(const AutomatonStateProviderState());
+  AutomatonStateNotifier() : super(const AutomatonStateProviderState());
 
   /// Current automaton snapshot for collaborators that should not read the
   /// protected StateNotifier state directly.
@@ -105,31 +102,38 @@ class AutomatonStateNotifier
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Create a simple automaton with one state
-      final result = _automatonService.createAutomaton(
-        CreateAutomatonRequest(
-          name: name,
-          description: description,
-          states: const [
-            StateData(
-              id: 'q0',
-              name: 'q0',
-              position: Point(100, 100),
-              isInitial: true,
-              isAccepting: false,
-            ),
-          ],
-          transitions: const [],
-          alphabet: alphabet,
-          bounds: const Rect(0, 0, 400, 300),
-        ),
+      if (name.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error:
+              'Error creating automaton: ${ArgumentError('Automaton name cannot be empty')}',
+        );
+        return;
+      }
+
+      final now = DateTime.now();
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2(100, 100),
+        isInitial: true,
+        isAccepting: false,
       );
 
-      if (result.isSuccess) {
-        state = state.copyWith(currentAutomaton: result.data, isLoading: false);
-      } else {
-        state = state.copyWith(isLoading: false, error: result.error);
-      }
+      final automaton = FSA(
+        id: (_nextId++).toString(),
+        name: name,
+        states: {q0},
+        transitions: const <Transition>{},
+        alphabet: alphabet.toSet(),
+        initialState: q0,
+        acceptingStates: const <State>{},
+        created: now,
+        modified: now,
+        bounds: const Rectangle<double>(0, 0, 400, 300),
+      );
+
+      state = state.copyWith(currentAutomaton: automaton, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -753,7 +757,5 @@ final automatonStateProvider =
     StateNotifierProvider<AutomatonStateNotifier, AutomatonStateProviderState>((
   ref,
 ) {
-  final automatonService = AutomatonService();
-
-  return AutomatonStateNotifier(automatonService: automatonService);
+  return AutomatonStateNotifier();
 });

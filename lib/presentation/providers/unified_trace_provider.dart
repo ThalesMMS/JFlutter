@@ -17,7 +17,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
 import '../../data/services/trace_persistence_service.dart' as data_trace;
-import '../../injection/dependency_injection.dart';
 import 'trace_step_navigation.dart';
 
 Map<String, dynamic> _deepUnmodifiableMap(Map<String, dynamic> source) {
@@ -369,7 +368,9 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
 
 /// Bridge for startup-initialized platform preferences.
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  return getIt<SharedPreferences>();
+  throw StateError(
+    'sharedPreferencesProvider must be overridden at app startup.',
+  );
 });
 
 /// Provider for trace persistence service (data layer version)

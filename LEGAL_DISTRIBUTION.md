@@ -11,9 +11,7 @@ JFlutter includes original Flutter implementation work and JFLAP-derived
 content. The following shipped components are treated as JFLAP-derived or
 JFLAP-compatible for license compliance purposes:
 
-- JFLAP XML automaton DTOs, including `JflapStructureDto`,
-  `JflapAutomatonDto`, `JflapStateDto`, and `JflapTransitionDto`
-  (`automaton_dto`).
+- JFLAP XML automaton compatibility handled by `JflapXmlCodec`.
 - JFLAP grammar DTOs, including `JflapGrammarDto`,
   `JflapGrammarStructureDto`, and `JflapProductionDto` (`grammar_dto`).
 - JFLAP Turing machine DTOs, including `JflapTuringMachineDto`,

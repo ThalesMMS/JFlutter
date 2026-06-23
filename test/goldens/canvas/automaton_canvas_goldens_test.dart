@@ -22,14 +22,13 @@ import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 
 class _TestAutomatonStateNotifier extends AutomatonStateNotifier {
-  _TestAutomatonStateNotifier() : super(automatonService: AutomatonService());
+  _TestAutomatonStateNotifier() : super();
 }
 
 void main() {

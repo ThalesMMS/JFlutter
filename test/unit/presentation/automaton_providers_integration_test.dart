@@ -20,7 +20,6 @@ import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart';
 import 'package:jflutter/presentation/providers/automaton_algorithm_provider.dart';
 import 'package:jflutter/presentation/providers/conversion_history_provider.dart';
@@ -43,7 +42,7 @@ void main() {
       container = ProviderContainer(
         overrides: [
           automatonStateProvider.overrideWith((ref) {
-            return AutomatonStateNotifier(automatonService: AutomatonService());
+            return AutomatonStateNotifier();
           }),
           automatonAlgorithmProvider.overrideWith((ref) {
             return AutomatonAlgorithmNotifier(ref);

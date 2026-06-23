@@ -23,18 +23,20 @@ import 'package:vector_math/vector_math_64.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/fsa/determinism_badge.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
 
 class _TestAutomatonStateNotifier extends AutomatonStateNotifier {
-  _TestAutomatonStateNotifier() : super(automatonService: AutomatonService());
+  _TestAutomatonStateNotifier() : super();
 }
+
+late SharedPreferences _prefs;
 
 // Widget that composes toolbar + canvas like FSA page does
 class _FSAPageTestWidget extends StatefulWidget {
@@ -81,6 +83,7 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
     ]);
 
     return ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(_prefs)],
       child: Scaffold(
         body: Stack(
           children: [
@@ -160,7 +163,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
+    _prefs = await initializeSharedPreferences();
   });
 
   tearDownAll(() async {

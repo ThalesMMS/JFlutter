@@ -12,7 +12,9 @@ import 'package:jflutter/presentation/pages/home_page.dart';
 import 'package:jflutter/presentation/pages/settings_page.dart';
 import 'package:jflutter/presentation/widgets/mobile_navigation.dart';
 import 'package:jflutter/presentation/widgets/desktop_navigation.dart';
-import 'package:jflutter/injection/dependency_injection.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
+
+late SharedPreferences _prefs;
 
 class _TestHomeNavigationNotifier extends HomeNavigationNotifier {
   final List<int> receivedIndices = [];
@@ -68,6 +70,7 @@ Future<void> _pumpHomePage(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(_prefs),
         homeNavigationProvider.overrideWith((ref) {
           return navigationNotifier;
         }),
@@ -113,11 +116,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
-  });
-
-  tearDownAll(() async {
-    await resetDependencies();
+    _prefs = await SharedPreferences.getInstance();
   });
 
   group('HomePage', () {

@@ -234,8 +234,39 @@ void _runFileOperationsPanelAutomatonOperationTests(
       await tapAndSettle(tester, find.byKey(_fsaSvgExportButtonKey));
 
       expect(service.exportCallCount, equals(1));
+      expect(service.lastFsaSvgExport, same(automaton));
       expect(find.textContaining('Download started'), findsOneWidget);
     }, skip: !kIsWeb);
+
+    testWidgets(
+      'desktop SVG export uses current FSA model',
+      (tester) async {
+        final automaton = _buildSampleAutomaton();
+        final service = _StubFileOperationsService(
+          exportResponses: Queue.of([
+            const Success<String>('/tmp/automaton.svg'),
+          ]),
+        );
+        final picker = fakeFilePicker();
+        picker.enqueueSaveResult('/tmp/automaton.svg');
+
+        await pumpFileOperationsPanel(
+          tester,
+          automaton: automaton,
+          fileService: service,
+        );
+
+        await tapAndSettle(tester, find.byKey(_fsaSvgExportButtonKey));
+
+        expect(service.exportCallCount, equals(1));
+        expect(service.lastFsaSvgExport, same(automaton));
+        expect(find.text('Automaton exported successfully'), findsOneWidget);
+      },
+      variant: const TargetPlatformVariant(<TargetPlatform>{
+        TargetPlatform.macOS,
+      }),
+      skip: kIsWeb,
+    );
 
     testWidgets(
       'desktop PNG export writes pre-rendered bytes without rerendering',

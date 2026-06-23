@@ -157,7 +157,6 @@ Business services for data operations:
 
 ```
 services/
-├── automaton_service.dart                # In-memory CRUD plus layout helpers for automata
 ├── conversion_service.dart               # Bridges UI requests to conversion algorithms
 ├── examples_service.dart                 # Catalog search, filtering, and caching for examples
 ├── file_operations_service.dart          # Conditional export choosing IO/Web implementations
@@ -165,7 +164,6 @@ services/
 ├── file_operations_service_web.dart      # Web download/export fallback without dart:io
 ├── import_export_validation_service.dart # Round-trip validators for XML/JSON interchange
 ├── serialization_service.dart            # JSON/JFLAP XML serialization utilities
-├── simulation_service.dart               # Simulator façade with result normalization
 └── trace_persistence_service.dart        # SharedPreferences-backed trace history manager
 ```
 
@@ -184,7 +182,6 @@ Repository pattern implementations:
 
 ```
 repositories/
-├── automaton_repository_impl.dart # Automaton repository backed by services/data sources
 ├── examples_repository_impl.dart  # Provides curated example listings and search
 └── settings_repository_impl.dart  # SharedPreferences-powered user settings storage
 ```
@@ -195,7 +192,7 @@ Data transfer objects:
 
 ```
 models/
-├── automaton_dto.dart             # Canonical automaton JSON DTO for storage/import/examples
+├── asset_example.dart             # Typed bundled example metadata and payload wrapper
 ├── grammar_dto.dart               # Grammar DTO with production metadata
 └── turing_machine_dto.dart        # Turing machine DTO mapping tape/configurations
 ```
@@ -306,13 +303,13 @@ theme/
 └── app_theme.dart                 # Material 3 theme configuration
 ```
 
-## Dependency Injection (`lib/injection/`)
+## Startup Initialization (`lib/injection/`)
 
-Service registration and dependency management:
+Startup dependency initialization:
 
 ```
 injection/
-└── dependency_injection.dart      # GetIt service registration
+└── dependency_injection.dart      # SharedPreferences startup initialization
 ```
 
 ## Test Structure (`test/`)

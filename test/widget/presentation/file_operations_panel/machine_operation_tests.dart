@@ -77,6 +77,64 @@ void _runFileOperationsPanelMachineOperationTests(
       expect(grammarLoaded, isTrue);
       expect(find.text('Grammar loaded successfully'), findsOneWidget);
     });
+
+    testWidgets('grammar svg export uses current grammar model on web', (
+      tester,
+    ) async {
+      final grammar = _buildSampleGrammar();
+      final service = _StubFileOperationsService(
+        exportResponses: Queue.of([const Success<String>('grammar.svg')]),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FileOperationsPanel(grammar: grammar, fileService: service),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(service.exportCallCount, equals(1));
+      expect(service.lastGrammarSvgExport, same(grammar));
+      expect(find.textContaining('Download started'), findsOneWidget);
+    }, skip: !kIsWeb);
+
+    testWidgets(
+      'desktop grammar svg export uses current grammar model',
+      (tester) async {
+        final grammar = _buildSampleGrammar();
+        final service = _StubFileOperationsService(
+          exportResponses: Queue.of([
+            const Success<String>('/tmp/grammar.svg'),
+          ]),
+        );
+        fakeFilePicker().enqueueSaveResult('/tmp/grammar.svg');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(grammar: grammar, fileService: service),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(service.exportCallCount, equals(1));
+        expect(service.lastGrammarSvgExport, same(grammar));
+        expect(find.text('Grammar exported successfully'), findsOneWidget);
+      },
+      variant: const TargetPlatformVariant(<TargetPlatform>{
+        TargetPlatform.macOS,
+      }),
+      skip: kIsWeb,
+    );
   });
 
   group('FileOperationsPanel PDA Operations Tests', () {
@@ -114,8 +172,40 @@ void _runFileOperationsPanelMachineOperationTests(
       await tester.pumpAndSettle();
 
       expect(service.exportCallCount, equals(1));
+      expect(service.lastPdaSvgExport, same(pda));
       expect(find.textContaining('Download started'), findsOneWidget);
     }, skip: !kIsWeb);
+
+    testWidgets(
+      'desktop pda svg export uses current PDA model',
+      (tester) async {
+        final pda = _buildSamplePda();
+        final service = _StubFileOperationsService(
+          exportResponses: Queue.of([const Success<String>('/tmp/pda.svg')]),
+        );
+        fakeFilePicker().enqueueSaveResult('/tmp/pda.svg');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: FileOperationsPanel(pda: pda, fileService: service),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text(kIsWeb ? 'Download SVG' : 'Export SVG'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(service.exportCallCount, equals(1));
+        expect(service.lastPdaSvgExport, same(pda));
+        expect(find.text('PDA exported successfully'), findsOneWidget);
+      },
+      variant: const TargetPlatformVariant(<TargetPlatform>{
+        TargetPlatform.macOS,
+      }),
+      skip: kIsWeb,
+    );
   });
 
   group('FileOperationsPanel TM Operations Tests', () {

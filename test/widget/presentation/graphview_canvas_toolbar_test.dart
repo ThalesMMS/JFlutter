@@ -18,7 +18,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
@@ -80,7 +79,7 @@ void main() {
   late _TestGraphViewCanvasController controller;
 
   setUp(() {
-    provider = AutomatonStateNotifier(automatonService: AutomatonService());
+    provider = AutomatonStateNotifier();
     controller = _TestGraphViewCanvasController(
       automatonStateNotifier: provider,
     )..synchronize(provider.state.currentAutomaton);

@@ -12,12 +12,12 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
 import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/fsa_transition.dart';
+import '../../core/models/pda.dart';
 import '../../core/parsers/grammar_xml_codec.dart';
 import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
@@ -34,11 +34,6 @@ class FileOperationsService with FileOperationsPayloadMixin {
       'The selected save location is no longer available. Choose a different destination and try again.';
   static const _missingReadLocationMessage =
       'The selected file is no longer available. Pick the file again and try again.';
-
-  /// Creates the legacy FSA SVG payload without writing it to disk.
-  String exportLegacyAutomatonToSvgString(FSA automaton) {
-    return _buildSVG(automaton);
-  }
 
   /// Renders the PNG payload without writing it to disk.
   Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
@@ -266,16 +261,16 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
-  /// Exports automaton to SVG format (enhanced version)
-  Future<StringResult> exportAutomatonToSVG(
-    AutomatonEntity automaton,
+  /// Exports the current FSA model to SVG format.
+  Future<StringResult> exportFsaToSVG(
+    FSA automaton,
     String filePath, {
     SvgExportOptions? options,
   }) async {
     try {
       final file = File(filePath);
       await file.writeAsString(
-        exportAutomatonToSvgString(automaton, options: options),
+        exportFsaToSvgString(automaton, options: options),
       );
       return Success(filePath);
     } on FileSystemException catch (e) {
@@ -308,6 +303,48 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  /// Exports the current grammar model to SVG format.
+  Future<StringResult> exportGrammarModelToSVG(
+    Grammar grammar,
+    String filePath, {
+    SvgExportOptions? options,
+  }) async {
+    try {
+      final file = File(filePath);
+      await file.writeAsString(
+        exportGrammarModelToSvgString(grammar, options: options),
+      );
+      return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export grammar to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
+    } catch (e) {
+      return Failure('Failed to export grammar to SVG: $e');
+    }
+  }
+
+  /// Exports the current PDA model to SVG format.
+  Future<StringResult> exportPdaToSVG(
+    PDA pda,
+    String filePath, {
+    SvgExportOptions? options,
+  }) async {
+    try {
+      final file = File(filePath);
+      await file.writeAsString(
+        exportPdaToSvgString(pda, options: options),
+      );
+      return Success(filePath);
+    } on FileSystemException catch (e) {
+      return Failure(
+        'Failed to export PDA to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
+      );
+    } catch (e) {
+      return Failure('Failed to export PDA to SVG: $e');
+    }
+  }
+
   /// Exports Turing machine to SVG format
   Future<StringResult> exportTuringMachineToSVG(
     TuringMachineEntity tm,
@@ -326,24 +363,6 @@ class FileOperationsService with FileOperationsPayloadMixin {
       );
     } catch (e) {
       return Failure('Failed to export Turing machine to SVG: $e');
-    }
-  }
-
-  /// Exports automaton to SVG format (legacy FSA support)
-  Future<StringResult> exportLegacyAutomatonToSVG(
-    FSA automaton,
-    String filePath,
-  ) async {
-    try {
-      final file = File(filePath);
-      await file.writeAsString(exportLegacyAutomatonToSvgString(automaton));
-      return Success(filePath);
-    } on FileSystemException catch (e) {
-      return Failure(
-        'Failed to export automaton to SVG: ${describeFileAccessFailure(e, isWrite: true)}',
-      );
-    } catch (e) {
-      return Failure('Failed to export automaton to SVG: $e');
     }
   }
 
@@ -410,47 +429,6 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
-  /// Builds SVG representation of automaton
-  String _buildSVG(FSA automaton) {
-    final drawingData = _prepareDrawingData(automaton);
-    final buffer = StringBuffer();
-    buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="$_kCanvasWidth" height="$_kCanvasHeight">',
-    );
-
-    // Draw transitions first (so they appear behind states)
-    for (final transition in drawingData.transitions) {
-      final from = transition.from;
-      final to = transition.to;
-      buffer.writeln(
-        '  <line x1="${from.dx}" y1="${from.dy}" x2="${to.dx}" y2="${to.dy}" stroke="${_colorToHex(_kStrokeColor)}" stroke-width="$_kDefaultStrokeWidth"/>',
-      );
-
-      // Draw transition label
-      final midX = (from.dx + to.dx) / 2;
-      final midY = (from.dy + to.dy) / 2;
-      buffer.writeln(
-        '  <text x="$midX" y="$midY" text-anchor="middle" font-family="Arial" font-size="12" fill="${_colorToHex(_kTextColor)}">${transition.label}</text>',
-      );
-    }
-
-    // Draw states
-    for (final state in drawingData.states) {
-      final x = state.center.dx;
-      final y = state.center.dy;
-      buffer.writeln(
-        '  <circle cx="$x" cy="$y" r="$_kStateRadius" fill="${_colorToHex(state.fillColor)}" stroke="${_colorToHex(state.strokeColor)}" stroke-width="${state.strokeWidth}"/>',
-      );
-      buffer.writeln(
-        '  <text x="$x" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14" fill="${_colorToHex(_kTextColor)}">${state.label}</text>',
-      );
-    }
-
-    buffer.writeln('</svg>');
-    return buffer.toString();
-  }
-
   _AutomatonDrawingData _prepareDrawingData(FSA automaton) {
     final states = automaton.states.toList()
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -508,13 +486,6 @@ const Color _kAcceptingFillColor = Color(0xFFADD8E6);
 const Color _kStrokeColor = Color(0xFF000000);
 const Color _kInitialStrokeColor = Color(0xFFFF0000);
 const Color _kTextColor = Color(0xFF000000);
-
-String _colorToHex(Color color) {
-  final value = ((color.r * 255).round() << 16) |
-      ((color.g * 255).round() << 8) |
-      (color.b * 255).round();
-  return '#${value.toRadixString(16).padLeft(6, '0')}';
-}
 
 class _AutomatonDrawingData {
   const _AutomatonDrawingData({

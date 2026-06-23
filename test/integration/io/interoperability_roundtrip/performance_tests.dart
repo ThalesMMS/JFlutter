@@ -4,7 +4,7 @@ void _runPerformanceTests() {
   group('Performance and Scalability Tests', () {
     test('Large automaton round-trip completes within reasonable time', () {
       final largeAutomaton = _createLargeAutomaton();
-      final automatonData = _convertEntityToData(largeAutomaton);
+      final automatonData = _copyAutomatonData(largeAutomaton);
 
       final stopwatch = Stopwatch()..start();
 
@@ -35,7 +35,7 @@ void _runPerformanceTests() {
 
       final stopwatch = Stopwatch()..start();
 
-      final svg = SvgExporter.exportAutomatonToSvg(largeAutomaton);
+      final svg = SvgExporter.exportFsaToSvg(_fsaFromData(largeAutomaton));
 
       stopwatch.stop();
 
@@ -49,7 +49,7 @@ void _runPerformanceTests() {
 
     test('Multiple format conversions complete within reasonable time', () {
       final testAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(testAutomaton);
+      final automatonData = _copyAutomatonData(testAutomaton);
 
       final stopwatch = Stopwatch()..start();
 
@@ -69,8 +69,8 @@ void _runPerformanceTests() {
       expect(jsonParseResult.isSuccess, true);
 
       final jsonData = jsonParseResult.data!;
-      final svg = SvgExporter.exportAutomatonToSvg(
-        _convertDataToEntity(jsonData),
+      final svg = SvgExporter.exportFsaToSvg(
+        _fsaFromData(jsonData),
       );
       expect(svg, isNotEmpty);
 

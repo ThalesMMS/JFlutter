@@ -13,7 +13,6 @@ import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/tm.dart';
 import 'package:jflutter/core/models/tm_transition.dart';
-import 'package:jflutter/data/services/automaton_service.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_pda_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_tm_canvas_controller.dart';
@@ -46,9 +45,7 @@ void main() {
     });
 
     test('large DFA/NFA/PDA/TM synchronization stays bounded', () {
-      final fsaNotifier = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
+      final fsaNotifier = AutomatonStateNotifier();
       final dfaController = GraphViewCanvasController(
         automatonStateNotifier: fsaNotifier,
       );
@@ -99,9 +96,7 @@ void main() {
     });
 
     test('identical highlight dispatch does not notify twice', () {
-      final notifier = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
+      final notifier = AutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: notifier,
       );
@@ -134,9 +129,7 @@ void main() {
     testWidgets('rapid highlight cycling stays within frame budget', (
       tester,
     ) async {
-      final notifier = AutomatonStateNotifier(
-        automatonService: AutomatonService(),
-      );
+      final notifier = AutomatonStateNotifier();
       final controller = GraphViewCanvasController(
         automatonStateNotifier: notifier,
       );

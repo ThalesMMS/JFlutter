@@ -123,12 +123,12 @@ class _StubFileOperationsService extends FileOperationsService {
     Queue<Result<FSA>>? loadAutomatonResponses,
     Queue<Result<Grammar>>? loadGrammarResponses,
     this.delayMs = 0,
-  }) : saveAutomatonResponses =
-           saveAutomatonResponses ?? Queue<Result<String>>(),
-       saveGrammarResponses = saveGrammarResponses ?? Queue<Result<String>>(),
-       exportResponses = exportResponses ?? Queue<Result<String>>(),
-       loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>(),
-       loadGrammarResponses = loadGrammarResponses ?? Queue<Result<Grammar>>();
+  })  : saveAutomatonResponses =
+            saveAutomatonResponses ?? Queue<Result<String>>(),
+        saveGrammarResponses = saveGrammarResponses ?? Queue<Result<String>>(),
+        exportResponses = exportResponses ?? Queue<Result<String>>(),
+        loadAutomatonResponses = loadAutomatonResponses ?? Queue<Result<FSA>>(),
+        loadGrammarResponses = loadGrammarResponses ?? Queue<Result<Grammar>>();
 
   final Queue<Result<String>> saveAutomatonResponses;
   final Queue<Result<String>> saveGrammarResponses;
@@ -145,6 +145,9 @@ class _StubFileOperationsService extends FileOperationsService {
   int exportAutomatonPngCallCount = 0;
   int loadAutomatonCallCount = 0;
   int loadGrammarCallCount = 0;
+  FSA? lastFsaSvgExport;
+  PDA? lastPdaSvgExport;
+  Grammar? lastGrammarSvgExport;
 
   @override
   Future<StringResult> saveAutomatonToJFLAP(
@@ -177,23 +180,8 @@ class _StubFileOperationsService extends FileOperationsService {
   }
 
   @override
-  Future<StringResult> exportLegacyAutomatonToSVG(
+  Future<StringResult> exportFsaToSVG(
     FSA automaton,
-    String filePath,
-  ) async {
-    if (delayMs > 0) {
-      await Future.delayed(Duration(milliseconds: delayMs));
-    }
-    exportCallCount++;
-    if (exportResponses.isEmpty) {
-      return const Failure<String>('No export response configured');
-    }
-    return exportResponses.removeFirst();
-  }
-
-  @override
-  Future<StringResult> exportAutomatonToSVG(
-    dynamic automaton,
     String filePath, {
     dynamic options,
   }) async {
@@ -201,6 +189,41 @@ class _StubFileOperationsService extends FileOperationsService {
       await Future.delayed(Duration(milliseconds: delayMs));
     }
     exportCallCount++;
+    lastFsaSvgExport = automaton;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<StringResult> exportPdaToSVG(
+    PDA pda,
+    String filePath, {
+    dynamic options,
+  }) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    exportCallCount++;
+    lastPdaSvgExport = pda;
+    if (exportResponses.isEmpty) {
+      return const Failure<String>('No export response configured');
+    }
+    return exportResponses.removeFirst();
+  }
+
+  @override
+  Future<StringResult> exportGrammarModelToSVG(
+    Grammar grammar,
+    String filePath, {
+    dynamic options,
+  }) async {
+    if (delayMs > 0) {
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+    exportCallCount++;
+    lastGrammarSvgExport = grammar;
     if (exportResponses.isEmpty) {
       return const Failure<String>('No export response configured');
     }
@@ -308,8 +331,8 @@ class _StubFileOperationsService extends FileOperationsService {
 
 class _FakeFilePicker extends FilePicker {
   _FakeFilePicker()
-    : _pickResults = Queue<FilePickerResult?>(),
-      _saveResults = Queue<String?>();
+      : _pickResults = Queue<FilePickerResult?>(),
+        _saveResults = Queue<String?>();
 
   final Queue<FilePickerResult?> _pickResults;
   final Queue<String?> _saveResults;

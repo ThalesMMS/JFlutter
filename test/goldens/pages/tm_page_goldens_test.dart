@@ -26,9 +26,12 @@ import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/features/canvas/graphview/graphview_tm_canvas_controller.dart';
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:jflutter/presentation/widgets/tm_canvas_graphview.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
+
+late SharedPreferences _prefs;
 
 // Widget that composes toolbar + canvas like TM page does
 class _TMPageTestWidget extends StatefulWidget {
@@ -75,7 +78,10 @@ class _TMPageTestWidgetState extends State<_TMPageTestWidget> {
     ]);
 
     return ProviderScope(
-      overrides: [tmEditorProvider.overrideWith((ref) => _editorNotifier)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(_prefs),
+        tmEditorProvider.overrideWith((ref) => _editorNotifier),
+      ],
       child: Scaffold(
         body: Stack(
           children: [
@@ -145,7 +151,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
+    _prefs = await initializeSharedPreferences();
   });
 
   tearDownAll(() async {

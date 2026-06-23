@@ -4,7 +4,7 @@ void _runJffFormatTests() {
   group('JFF (JFLAP) Format Tests', () {
     test('JFF round-trip preserves automaton structure', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Convert to JFF format
       final jffXml = _serializeAutomatonToJflap(
@@ -33,7 +33,7 @@ void _runJffFormatTests() {
 
     test('JFF serialization writes finite automata as fa type', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       final jffXml = _serializeAutomatonToJflap(
         automatonData,
@@ -46,7 +46,7 @@ void _runJffFormatTests() {
 
     test('JFF handles complex automatons correctly', () {
       final complexAutomaton = _createComplexDFA();
-      final automatonData = _convertEntityToData(complexAutomaton);
+      final automatonData = _copyAutomatonData(complexAutomaton);
 
       // Convert to JFF format
       final jffXml = _serializeAutomatonToJflap(
@@ -74,7 +74,7 @@ void _runJffFormatTests() {
 
     test('JFF handles NFA with epsilon transitions', () {
       final epsilonNFA = _createEpsilonNFA();
-      final automatonData = _convertEntityToData(epsilonNFA);
+      final automatonData = _copyAutomatonData(epsilonNFA);
 
       // Convert to JFF format
       final jffXml = _serializeAutomatonToJflap(
@@ -195,41 +195,25 @@ void _runJffFormatTests() {
     });
 
     test('JFF normalizes epsilon aliases consistently', () {
-      const aliasAutomaton = AutomatonEntity(
+      final aliasAutomaton = _automatonData(
         id: 'alias_nfa',
         name: 'Alias NFA',
-        alphabet: {'a'},
+        type: 'nfa',
+        alphabet: const ['a'],
         states: [
-          StateEntity(
-            id: 'q0',
-            name: 'q0',
-            x: 0.0,
-            y: 0.0,
-            isInitial: true,
-            isFinal: false,
-          ),
-          StateEntity(
-            id: 'q1',
-            name: 'q1',
-            x: 120.0,
-            y: 0.0,
-            isInitial: false,
-            isFinal: true,
-          ),
+          _stateData('q0', isInitial: true),
+          _stateData('q1', x: 120, isFinal: true),
         ],
-        transitions: {
+        transitions: const {
           'q0|λ': ['q1'],
           'q1|vazio': ['q0'],
           'q0|': ['q0'],
         },
         initialId: 'q0',
         nextId: 2,
-        type: AutomatonType.nfa,
       );
 
-      expect(aliasAutomaton.hasLambda, isTrue);
-
-      final aliasData = _convertEntityToData(aliasAutomaton);
+      final aliasData = _copyAutomatonData(aliasAutomaton);
       final jffXml = _serializeAutomatonToJflap(aliasData);
 
       // JFLAP XML spec: epsilon transitions should use empty <read/> tags
@@ -449,7 +433,7 @@ void _runJffFormatTests() {
 
     test('Empty automaton round-trip remains stable across formats', () {
       final emptyAutomaton = _createEmptyAutomaton();
-      final automatonData = _convertEntityToData(emptyAutomaton);
+      final automatonData = _copyAutomatonData(emptyAutomaton);
 
       final jffXml = _serializeAutomatonToJflap(
         automatonData,
@@ -480,7 +464,7 @@ void _runJffFormatTests() {
 
     test('NFA epsilon round-trip preserves nfa type', () {
       final originalAutomaton = _createEpsilonNFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       final jffXml = _serializeAutomatonToJflap(
         automatonData,

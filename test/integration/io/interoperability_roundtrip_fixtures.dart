@@ -1,221 +1,133 @@
 part of 'interoperability_roundtrip_test.dart';
 
-/// Helper functions to create test automatons
+/// Helper functions to create serializable test automata.
 
-AutomatonEntity _createTestDFA() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createTestDFA() {
+  return _automatonData(
     id: 'test_dfa',
     name: 'Test DFA',
-    alphabet: {'0', '1'},
+    type: 'dfa',
+    alphabet: const ['0', '1'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q1',
-        name: 'q1',
-        x: 100.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true),
+      _stateData('q1', x: 100, isFinal: true),
     ],
-    transitions: {
+    transitions: const {
       'q0|0': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
-    type: AutomatonType.dfa,
   );
 }
 
-AutomatonEntity _createTestNFA() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createTestNFA() {
+  return _automatonData(
     id: 'test_nfa',
     name: 'Test NFA',
-    alphabet: {'0', '1'},
+    type: 'nfa',
+    alphabet: const ['0', '1'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q1',
-        name: 'q1',
-        x: 100.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true),
+      _stateData('q1', x: 100, isFinal: true),
     ],
-    transitions: {
+    transitions: const {
       'q0|0': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
-    type: AutomatonType.nfa,
   );
 }
 
-AutomatonEntity _createEpsilonNFA() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createEpsilonNFA() {
+  return _automatonData(
     id: 'test_epsilon_nfa',
     name: 'Test Epsilon NFA',
-    alphabet: {'a', 'b'},
+    type: 'nfa',
+    alphabet: const ['a', 'b'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q1',
-        name: 'q1',
-        x: 100.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true),
+      _stateData('q1', x: 100, isFinal: true),
     ],
-    transitions: {
+    transitions: const {
       'q0|ε': ['q1'],
     },
     initialId: 'q0',
     nextId: 2,
-    type: AutomatonType.nfa,
   );
 }
 
-AutomatonEntity _createComplexDFA() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createComplexDFA() {
+  return _automatonData(
     id: 'complex_dfa',
     name: 'Complex DFA',
-    alphabet: {'0', '1'},
+    type: 'dfa',
+    alphabet: const ['0', '1'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q1',
-        name: 'q1',
-        x: 100.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q2',
-        name: 'q2',
-        x: 200.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true),
+      _stateData('q1', x: 100),
+      _stateData('q2', x: 200, isFinal: true),
     ],
-    transitions: {
+    transitions: const {
       'q0|0': ['q1'],
       'q1|1': ['q2'],
     },
     initialId: 'q0',
     nextId: 3,
-    type: AutomatonType.dfa,
   );
 }
 
-AutomatonEntity _createEmptyAutomaton() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createEmptyAutomaton() {
+  return _automatonData(
     id: 'empty_automaton',
     name: 'Empty Automaton',
-    alphabet: {},
-    states: [],
-    transitions: {},
-    initialId: null,
+    type: 'dfa',
+    alphabet: const [],
+    states: const [],
+    transitions: const {},
     nextId: 0,
-    type: AutomatonType.dfa,
   );
 }
 
-AutomatonEntity _createSingleStateAutomaton() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createSingleStateAutomaton() {
+  return _automatonData(
     id: 'single_state_automaton',
     name: 'Single State Automaton',
-    alphabet: {'a'},
+    type: 'dfa',
+    alphabet: const ['a'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true, isFinal: true),
     ],
-    transitions: {},
+    transitions: const {},
     initialId: 'q0',
     nextId: 1,
-    type: AutomatonType.dfa,
   );
 }
 
-AutomatonEntity _createNoTransitionsAutomaton() {
-  return const AutomatonEntity(
+Map<String, dynamic> _createNoTransitionsAutomaton() {
+  return _automatonData(
     id: 'no_transitions_automaton',
     name: 'No Transitions Automaton',
-    alphabet: {'a'},
+    type: 'dfa',
+    alphabet: const ['a'],
     states: [
-      StateEntity(
-        id: 'q0',
-        name: 'q0',
-        x: 0.0,
-        y: 0.0,
-        isInitial: true,
-        isFinal: false,
-      ),
-      StateEntity(
-        id: 'q1',
-        name: 'q1',
-        x: 100.0,
-        y: 0.0,
-        isInitial: false,
-        isFinal: true,
-      ),
+      _stateData('q0', isInitial: true),
+      _stateData('q1', x: 100, isFinal: true),
     ],
-    transitions: {},
+    transitions: const {},
     initialId: 'q0',
     nextId: 2,
-    type: AutomatonType.dfa,
   );
 }
 
-AutomatonEntity _createLargeAutomaton() {
-  final states = <StateEntity>[];
+Map<String, dynamic> _createLargeAutomaton() {
+  final states = <Map<String, dynamic>>[];
   final transitions = <String, List<String>>{};
 
-  // Create 50 states
-  for (int i = 0; i < 50; i++) {
+  for (var i = 0; i < 50; i++) {
     states.add(
-      StateEntity(
-        id: 'q$i',
-        name: 'q$i',
+      _stateData(
+        'q$i',
         x: (i * 20).toDouble(),
-        y: 0.0,
         isInitial: i == 0,
         isFinal: i == 49,
       ),
@@ -226,15 +138,15 @@ AutomatonEntity _createLargeAutomaton() {
     }
   }
 
-  return AutomatonEntity(
+  return _automatonData(
     id: 'large_automaton',
     name: 'Large Automaton',
-    alphabet: {'0', '1'},
+    type: 'dfa',
+    alphabet: const ['0', '1'],
     states: states,
     transitions: transitions,
     initialId: 'q0',
     nextId: 50,
-    type: AutomatonType.dfa,
   );
 }
 
@@ -274,62 +186,115 @@ TuringMachineEntity _createTestTuringMachine() {
   );
 }
 
-/// Helper functions for data conversion
-
-Map<String, dynamic> _convertEntityToData(AutomatonEntity entity) {
-  return {
-    'id': entity.id,
-    'name': entity.name,
-    'type': entity.type.name,
-    'alphabet': entity.alphabet.toList(),
-    'states': entity.states
-        .map(
-          (s) => {
-            'id': s.id,
-            'name': s.name,
-            'x': s.x,
-            'y': s.y,
-            'isInitial': s.isInitial,
-            'isFinal': s.isFinal,
-          },
-        )
-        .toList(),
-    'transitions': entity.transitions,
-    'initialId': entity.initialId,
-    'nextId': entity.nextId,
+Map<String, dynamic> _automatonData({
+  required String id,
+  required String name,
+  required String type,
+  required List<String> alphabet,
+  required List<Map<String, dynamic>> states,
+  required Map<String, List<String>> transitions,
+  String? initialId,
+  required int nextId,
+}) {
+  return <String, dynamic>{
+    'id': id,
+    'name': name,
+    'type': type,
+    'alphabet': alphabet,
+    'states': states,
+    'transitions': transitions,
+    'initialId': initialId,
+    'nextId': nextId,
   };
 }
 
-AutomatonEntity _convertDataToEntity(Map<String, dynamic> data) {
-  return AutomatonEntity(
-    id: data['id'] as String,
-    name: data['name'] as String,
-    alphabet: (data['alphabet'] as List).cast<String>().toSet(),
-    states: (data['states'] as List)
-        .map(
-          (s) => StateEntity(
-            id: s['id'] as String,
-            name: s['name'] as String,
-            x: s['x'] as double,
-            y: s['y'] as double,
-            isInitial: s['isInitial'] as bool,
-            isFinal: s['isFinal'] as bool,
+Map<String, dynamic> _stateData(
+  String id, {
+  double x = 0,
+  double y = 0,
+  bool isInitial = false,
+  bool isFinal = false,
+}) {
+  return <String, dynamic>{
+    'id': id,
+    'name': id,
+    'x': x,
+    'y': y,
+    'isInitial': isInitial,
+    'isFinal': isFinal,
+  };
+}
+
+Map<String, dynamic> _copyAutomatonData(Map<String, dynamic> data) {
+  return _normalizeAutomatonJson(data);
+}
+
+FSA _fsaFromData(Map<String, dynamic> data) {
+  final normalized = _normalizeAutomatonJson(data);
+  final states = (normalized['states'] as List)
+      .cast<Map<String, dynamic>>()
+      .map(
+        (state) => automata.State(
+          id: state['id'] as String,
+          label: state['name'] as String,
+          position: Vector2(
+            (state['x'] as num).toDouble(),
+            (state['y'] as num).toDouble(),
           ),
-        )
-        .toList(),
-    transitions: (data['transitions'] as Map).map(
-      (key, value) => MapEntry(
-        key as String,
-        (value as List)
-            .map((symbol) => symbol as String)
-            .toList(growable: false),
-      ),
-    ),
-    initialId: data['initialId'] as String?,
-    nextId: data['nextId'] as int,
-    type: AutomatonType.values.firstWhere(
-      (t) => t.name == data['type'],
-      orElse: () => AutomatonType.dfa,
-    ),
+          isInitial: state['isInitial'] as bool,
+          isAccepting: state['isFinal'] as bool,
+        ),
+      )
+      .toSet();
+  final statesById = {for (final state in states) state.id: state};
+  final transitions = <FSATransition>{};
+
+  final transitionData = normalized['transitions'] as Map<String, List<String>>;
+  for (final entry in transitionData.entries) {
+    final separatorIndex = entry.key.indexOf('|');
+    final fromStateId = separatorIndex == -1
+        ? entry.key
+        : entry.key.substring(0, separatorIndex);
+    final symbol =
+        separatorIndex == -1 ? '' : entry.key.substring(separatorIndex + 1);
+    final fromState = statesById[fromStateId];
+    if (fromState == null) {
+      continue;
+    }
+
+    for (final targetStateId in entry.value) {
+      final targetState = statesById[targetStateId];
+      if (targetState == null) {
+        continue;
+      }
+      final isEpsilon = _isEpsilonSymbol(symbol);
+      transitions.add(
+        FSATransition(
+          id: 't${transitions.length}',
+          fromState: fromState,
+          toState: targetState,
+          inputSymbols: isEpsilon ? const <String>{} : {symbol},
+          lambdaSymbol: isEpsilon ? 'ε' : null,
+        ),
+      );
+    }
+  }
+
+  final acceptingStates = states.where((state) => state.isAccepting).toSet();
+  return FSA(
+    id: normalized['id'] as String,
+    name: normalized['name'] as String,
+    states: states,
+    transitions: transitions,
+    alphabet: (normalized['alphabet'] as List).cast<String>().toSet(),
+    initialState: statesById[normalized['initialId'] as String?],
+    acceptingStates: acceptingStates,
+    created: DateTime(2025),
+    modified: DateTime(2025),
+    bounds: const math.Rectangle<double>(0, 0, 800, 600),
   );
+}
+
+bool _isEpsilonSymbol(String symbol) {
+  return symbol.isEmpty || symbol == 'ε' || symbol == 'λ' || symbol == 'vazio';
 }

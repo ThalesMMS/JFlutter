@@ -574,7 +574,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
                         title: example.name,
                         isLoading: _loadingExampleName == example.name,
                         onPressed: _loadingExampleName == null
-                            ? () => _loadExample(example.name)
+                            ? () => _loadSelectedExample(example.name)
                             : null,
                       ),
                     ),
@@ -621,7 +621,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     );
   }
 
-  Future<void> _loadExample(String exampleName) async {
+  Future<void> _loadSelectedExample(String exampleName) async {
     setState(() {
       _loadingExampleName = exampleName;
     });

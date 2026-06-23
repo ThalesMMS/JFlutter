@@ -10,18 +10,76 @@
 //
 
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:math' as math;
 
-import 'package:jflutter/core/entities/automaton_entity.dart';
 import 'package:jflutter/core/entities/grammar_entity.dart';
 import 'package:jflutter/core/entities/turing_machine_entity.dart';
-import 'package:jflutter/core/repositories/automaton_repository.dart';
+import 'package:jflutter/core/models/fsa.dart';
+import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/state.dart' as automata;
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
 import 'package:jflutter/presentation/widgets/export/svg_exporter.dart';
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 RegExp _viewBoxPattern(num width, num height) => RegExp(
       'viewBox="0 0 ${width.toInt()}(?:\\\\.0+)? ${height.toInt()}(?:\\\\.0+)?"',
     );
+
+FSA _buildTestFsa({
+  String id = 'test',
+  String name = 'Test',
+  bool includeStates = true,
+  bool includeEpsilonLoop = false,
+}) {
+  final q0 = automata.State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2.zero(),
+    isInitial: true,
+  );
+  final q1 = automata.State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(120, 60),
+    isAccepting: true,
+  );
+  final states = includeStates ? {q0, q1} : <automata.State>{};
+  final transitions = <FSATransition>{};
+  if (includeStates) {
+    transitions.add(
+      FSATransition(
+        id: 't0',
+        fromState: q0,
+        toState: q1,
+        inputSymbols: const {'a'},
+      ),
+    );
+    if (includeEpsilonLoop) {
+      transitions.add(
+        FSATransition(
+          id: 't1',
+          fromState: q1,
+          toState: q1,
+          lambdaSymbol: 'ε',
+        ),
+      );
+    }
+  }
+
+  return FSA(
+    id: id,
+    name: name,
+    states: states,
+    transitions: transitions,
+    alphabet: const {'a', 'b'},
+    initialState: includeStates ? q0 : null,
+    acceptingStates: includeStates ? {q1} : <automata.State>{},
+    created: DateTime(2025),
+    modified: DateTime(2025),
+    bounds: const math.Rectangle<double>(0, 0, 800, 600),
+  );
+}
 
 TuringMachineEntity _buildSimpleTuringMachine() {
   const initialStateId = 'q0';
@@ -130,23 +188,18 @@ void main() {
         expect(searchResults, contains('AFD - Termina com A'));
       });
 
-      test('Example metadata is properly structured', () {
-        // Test that metadata structure is correct without loading actual assets
-        const example = ExampleEntity(
-          name: 'Test Example',
-          description: 'Test description',
-          category: 'DFA',
-          subcategory: 'Basic',
-          difficultyLevel: DifficultyLevel.easy,
-          tags: ['test', 'dfa'],
-          estimatedComplexity: ComplexityLevel.low,
-          automaton: null, // Would be loaded from asset
+      test('Example metadata is properly structured', () async {
+        final result = await dataSource.loadTypedFsaExample(
+          'AFD - Termina com A',
         );
 
-        expect(example.name, equals('Test Example'));
-        expect(example.difficultyLevel, equals(DifficultyLevel.easy));
-        expect(example.tags, contains('test'));
-        expect(example.estimatedComplexity, equals(ComplexityLevel.low));
+        expect(result.isSuccess, isTrue, reason: result.error);
+        final example = result.data!;
+        expect(example.name, equals('AFD - Termina com A'));
+        expect(example.category, ExampleCategory.dfa);
+        expect(example.difficultyLevel, DifficultyLevel.easy);
+        expect(example.complexityLevel, ComplexityLevel.low);
+        expect(example.tags, contains('dfa'));
       });
     });
 
@@ -195,25 +248,19 @@ void main() {
     });
 
     group('Data Structure Tests', () {
-      test('ExampleEntity has all required fields', () {
-        const example = ExampleEntity(
-          name: 'Test Example',
-          description: 'Test description',
-          category: 'DFA',
-          subcategory: 'Basic',
-          difficultyLevel: DifficultyLevel.easy,
-          tags: ['test', 'dfa'],
-          estimatedComplexity: ComplexityLevel.low,
-          automaton: null,
-        );
+      test('AssetExample exposes required metadata and typed payload',
+          () async {
+        final result = await dataSource.loadTypedCfgExample('GLC - Palíndromo');
 
+        expect(result.isSuccess, isTrue, reason: result.error);
+        final example = result.data!;
         expect(example.name, isNotEmpty);
         expect(example.description, isNotEmpty);
-        expect(example.category, isNotEmpty);
-        expect(example.subcategory, isNotEmpty);
+        expect(example.category, ExampleCategory.cfg);
         expect(example.difficultyLevel, isNotNull);
         expect(example.tags, isNotEmpty);
-        expect(example.estimatedComplexity, isNotNull);
+        expect(example.complexityLevel, isNotNull);
+        expect(example.payload.productions, isNotEmpty);
       });
 
       test('DifficultyLevel has correct properties', () {
@@ -273,8 +320,7 @@ void main() {
 
       test('ExamplesAssetDataSource loads all TM examples from assets',
           () async {
-        final result =
-            await dataSource.loadExamplesByCategory(ExampleCategory.tm);
+        final result = await dataSource.loadAllTypedTmExamples();
 
         expect(result.isSuccess, isTrue);
         expect(result.data, isNotNull);
@@ -399,38 +445,7 @@ void main() {
 
     group('SVG Export Tests', () {
       test('Automaton SVG export produces valid SVG structure', () {
-        final svg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: [
-              StateEntity(
-                id: 'q0',
-                name: 'q0',
-                x: 0.0,
-                y: 0.0,
-                isInitial: true,
-                isFinal: false,
-              ),
-              StateEntity(
-                id: 'q1',
-                name: 'q1',
-                x: 0.0,
-                y: 0.0,
-                isInitial: false,
-                isFinal: true,
-              ),
-            ],
-            transitions: {
-              'q0': ['q1'],
-            },
-            initialId: 'q0',
-            nextId: 2,
-            type: AutomatonType.dfa,
-          ),
-        );
+        final svg = SvgExporter.exportFsaToSvg(_buildTestFsa());
 
         // Verify SVG structure
         expect(svg, contains('<?xml'));
@@ -543,18 +558,8 @@ void main() {
           scale: 1.5,
         );
 
-        final svg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test with Options',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final svg = SvgExporter.exportFsaToSvg(
+          _buildTestFsa(name: 'Test with Options', includeStates: false),
           options: options,
         );
 
@@ -568,34 +573,16 @@ void main() {
         const smallSize = Size(400, 300);
         const largeSize = Size(1200, 900);
 
-        final smallSvg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final emptyFsa = _buildTestFsa(includeStates: false);
+
+        final smallSvg = SvgExporter.exportFsaToSvg(
+          emptyFsa,
           width: smallSize.width,
           height: smallSize.height,
         );
 
-        final largeSvg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final largeSvg = SvgExporter.exportFsaToSvg(
+          emptyFsa,
           width: largeSize.width,
           height: largeSize.height,
         );
@@ -612,37 +599,11 @@ void main() {
       });
 
       test('SVG export handles complex automata correctly', () {
-        final svg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
+        final svg = SvgExporter.exportFsaToSvg(
+          _buildTestFsa(
             id: 'complex',
             name: 'Complex',
-            alphabet: {'a', 'b'},
-            states: [
-              StateEntity(
-                id: 'q0',
-                name: 'q0',
-                x: 0.0,
-                y: 0.0,
-                isInitial: true,
-                isFinal: false,
-              ),
-              StateEntity(
-                id: 'q1',
-                name: 'q1',
-                x: 120.0,
-                y: 60.0,
-                isInitial: false,
-                isFinal: true,
-              ),
-            ],
-            transitions: {
-              'q0|a': ['q1'],
-              'q1|ε': ['q1'],
-            },
-            initialId: 'q0',
-            nextId: 2,
-            type: AutomatonType.nfa,
+            includeEpsilonLoop: true,
           ),
         );
 
@@ -660,18 +621,10 @@ void main() {
 
       test('SVG export validates input parameters', () {
         // Test with zero size (should handle gracefully)
-        final zeroSizeSvg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final emptyFsa = _buildTestFsa(includeStates: false);
+
+        final zeroSizeSvg = SvgExporter.exportFsaToSvg(
+          emptyFsa,
           width: 0,
           height: 0,
         );
@@ -682,18 +635,8 @@ void main() {
         expect(zeroSizeSvg, contains('No states defined'));
 
         // Test with very large size
-        final largeSizeSvg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final largeSizeSvg = SvgExporter.exportFsaToSvg(
+          emptyFsa,
           width: 10000,
           height: 10000,
         );
@@ -703,18 +646,8 @@ void main() {
       });
 
       test('SVG export includes proper styling and markers', () {
-        final svg = SvgExporter.exportAutomatonToSvg(
-          // Mock automaton entity for testing
-          const AutomatonEntity(
-            id: 'test',
-            name: 'Test',
-            alphabet: {'a'},
-            states: <StateEntity>[],
-            transitions: <String, List<String>>{},
-            initialId: 'q0',
-            nextId: 0,
-            type: AutomatonType.dfa,
-          ),
+        final svg = SvgExporter.exportFsaToSvg(
+          _buildTestFsa(includeStates: false),
         );
 
         // Verify SVG styling elements

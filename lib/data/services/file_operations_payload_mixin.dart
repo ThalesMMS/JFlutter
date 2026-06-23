@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../../core/entities/automaton_entity.dart';
 import '../../core/entities/grammar_entity.dart';
 import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
 import '../../core/parsers/grammar_xml_codec.dart';
 import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
@@ -28,12 +28,12 @@ mixin FileOperationsPayloadMixin {
     return const GrammarXmlCodec().encodeGrammar(grammar);
   }
 
-  /// Creates the SVG payload without writing it to disk.
-  String exportAutomatonToSvgString(
-    AutomatonEntity automaton, {
+  /// Creates an FSA SVG payload from the current model.
+  String exportFsaToSvgString(
+    FSA automaton, {
     SvgExportOptions? options,
   }) {
-    return SvgExporter.exportAutomatonToSvg(automaton, options: options);
+    return SvgExporter.exportFsaToSvg(automaton, options: options);
   }
 
   /// Creates the grammar SVG payload without writing it to disk.
@@ -42,6 +42,25 @@ mixin FileOperationsPayloadMixin {
     SvgExportOptions? options,
   }) {
     return SvgExporter.exportGrammarToSvg(grammar, options: options);
+  }
+
+  /// Creates a grammar SVG payload from the current model.
+  String exportGrammarModelToSvgString(
+    Grammar grammar, {
+    SvgExportOptions? options,
+  }) {
+    return exportGrammarToSvgString(
+      _grammarToGrammarEntity(grammar),
+      options: options,
+    );
+  }
+
+  /// Creates a PDA SVG payload from the current model.
+  String exportPdaToSvgString(
+    PDA pda, {
+    SvgExportOptions? options,
+  }) {
+    return SvgExporter.exportPdaToSvg(pda, options: options);
   }
 
   /// Creates the Turing machine SVG payload without writing it to disk.
@@ -89,5 +108,24 @@ mixin FileOperationsPayloadMixin {
     } catch (e) {
       return Failure('Failed to load grammar from provided data: $e');
     }
+  }
+
+  GrammarEntity _grammarToGrammarEntity(Grammar grammar) {
+    return GrammarEntity(
+      id: grammar.id,
+      name: grammar.name,
+      terminals: grammar.terminals,
+      nonTerminals: grammar.nonterminals,
+      startSymbol: grammar.startSymbol,
+      productions: grammar.productions
+          .map(
+            (production) => ProductionEntity(
+              id: production.id,
+              leftSide: List<String>.from(production.leftSide),
+              rightSide: List<String>.from(production.rightSide),
+            ),
+          )
+          .toList(),
+    );
   }
 }

@@ -35,6 +35,22 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Trace persistence providers', () {
+    test('requires a startup SharedPreferences override', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      expect(
+        () => container.read(sharedPreferencesProvider),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('must be overridden'),
+          ),
+        ),
+      );
+    });
+
     test('build service from Riverpod SharedPreferences override', () async {
       SharedPreferences.setMockInitialValues(const {});
       final prefs = await SharedPreferences.getInstance();

@@ -63,9 +63,8 @@ class DeterminismInfo {
   static List<String> _findNonDeterministicStates(FSA fsa) {
     final result = <String>[];
     for (final state in fsa.states) {
-      final transitions = fsa.fsaTransitions
-          .where((t) => t.fromState.id == state.id)
-          .toList();
+      final transitions =
+          fsa.fsaTransitions.where((t) => t.fromState.id == state.id).toList();
 
       final symbolGroups = <String, int>{};
       for (final transition in transitions) {
@@ -84,9 +83,8 @@ class DeterminismInfo {
   static List<String> _findNonDeterministicSymbols(FSA fsa) {
     final symbols = <String>{};
     for (final state in fsa.states) {
-      final transitions = fsa.fsaTransitions
-          .where((t) => t.fromState.id == state.id)
-          .toList();
+      final transitions =
+          fsa.fsaTransitions.where((t) => t.fromState.id == state.id).toList();
 
       final symbolCounts = <String, int>{};
       for (final transition in transitions) {
@@ -103,13 +101,13 @@ class DeterminismInfo {
   }
 }
 
-/// Badge mostrando tipo de autômato (DFA/NFA/ε-NFA)
-class AutomatonTypeBadge extends StatelessWidget {
+/// Badge mostrando tipo de FSA (DFA/NFA/ε-NFA)
+class FsaTypeBadge extends StatelessWidget {
   final DeterminismInfo info;
   final VoidCallback? onTap;
   final bool compact;
 
-  const AutomatonTypeBadge({
+  const FsaTypeBadge({
     super.key,
     required this.info,
     this.onTap,
@@ -376,7 +374,7 @@ class _FSADeterminismOverlayState extends State<FSADeterminismOverlay> {
         Positioned(
           top: isMobile ? 60 : 16,
           right: 16,
-          child: AutomatonTypeBadge(
+          child: FsaTypeBadge(
             info: info,
             onTap: () {
               setState(() {

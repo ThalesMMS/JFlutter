@@ -9,7 +9,6 @@ import 'package:jflutter/core/models/pda.dart';
 import 'package:jflutter/core/models/pda_transition.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
 import 'package:jflutter/core/models/transition.dart';
-import 'package:jflutter/core/repositories/automaton_repository.dart';
 import 'package:jflutter/core/result.dart';
 import 'package:jflutter/data/data_sources/examples_asset_data_source.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';

@@ -22,6 +22,9 @@ import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/l10n/app_localizations.dart';
 import 'package:jflutter/presentation/pages/regex_page.dart';
 import 'package:jflutter/presentation/providers/automaton_algorithm_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
+
+late SharedPreferences _prefs;
 
 // Test notifier for overriding algorithm state
 class _TestAlgorithmNotifier extends AutomatonAlgorithmNotifier {
@@ -43,6 +46,7 @@ class _RegexPageTestWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(_prefs),
         if (algorithmState != null)
           automatonAlgorithmProvider.overrideWith(
             (ref) => _TestAlgorithmNotifier(ref, algorithmState!),
@@ -81,7 +85,7 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    await setupDependencyInjection();
+    _prefs = await initializeSharedPreferences();
   });
 
   tearDownAll(() async {

@@ -833,7 +833,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
                         title: example.name,
                         isLoading: _loadingExampleName == example.name,
                         onPressed: _loadingExampleName == null
-                            ? () => _loadExample(example.name)
+                            ? () => _loadSelectedExample(example.name)
                             : null,
                       ),
                     ),
@@ -880,7 +880,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     );
   }
 
-  Future<void> _loadExample(String exampleName) async {
+  Future<void> _loadSelectedExample(String exampleName) async {
     setState(() {
       _loadingExampleName = exampleName;
     });

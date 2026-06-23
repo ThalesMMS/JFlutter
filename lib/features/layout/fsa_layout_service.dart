@@ -2,8 +2,7 @@
 //  fsa_layout_service.dart
 //  JFlutter
 //
-//  Applies layout operations directly to current FSA models without converting
-//  through AutomatonEntity.
+//  Applies layout operations directly to current FSA models.
 //
 //  Thales Matheus Mendonça Santos - June 2026
 //

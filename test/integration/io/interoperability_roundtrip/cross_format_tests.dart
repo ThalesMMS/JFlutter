@@ -4,7 +4,7 @@ void _runCrossFormatTests() {
   group('Cross-Format Conversion Tests', () {
     test('JFF to JSON conversion preserves data', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Convert to JFF format
       final jffXml = _serializeAutomatonToJflap(
@@ -42,7 +42,7 @@ void _runCrossFormatTests() {
 
     test('JSON to JFF conversion preserves data', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Convert to JSON format
       final jsonString = _serializeAutomatonToJson(
@@ -80,7 +80,7 @@ void _runCrossFormatTests() {
 
     test('Round-trip through all formats preserves data', () {
       final originalAutomaton = _createTestDFA();
-      final automatonData = _convertEntityToData(originalAutomaton);
+      final automatonData = _copyAutomatonData(originalAutomaton);
 
       // Original -> JFF -> JSON -> JFF -> Final
       final jffXml1 = _serializeAutomatonToJflap(

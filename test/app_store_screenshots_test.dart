@@ -19,6 +19,7 @@ import 'package:jflutter/presentation/providers/grammar_provider.dart';
 import 'package:jflutter/presentation/providers/home_navigation_provider.dart';
 import 'package:jflutter/presentation/providers/pda_editor_provider.dart';
 import 'package:jflutter/presentation/providers/tm_editor_provider.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -210,9 +211,9 @@ Future<void> _captureForProfile(
   Future<void> Function(WidgetTester tester, ProviderContainer container)
       prepare,
 ) async {
+  await resetDependencies();
   SharedPreferences.setMockInitialValues(const {});
-  await getIt.reset();
-  await setupDependencyInjection();
+  final prefs = await initializeSharedPreferences();
 
   final logicalSize = Size(
     profile.physicalSize.width / profile.devicePixelRatio,
@@ -231,6 +232,7 @@ Future<void> _captureForProfile(
   final repaintKey = GlobalKey();
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: RepaintBoundary(
         key: repaintKey,
         child: SizedBox(

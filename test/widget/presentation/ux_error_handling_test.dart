@@ -918,10 +918,11 @@ class _StubFileOperationsService extends FileOperationsService {
   int loadAutomatonCallCount = 0;
 
   @override
-  Future<StringResult> exportLegacyAutomatonToSVG(
+  Future<StringResult> exportFsaToSVG(
     FSA automaton,
-    String filePath,
-  ) async {
+    String filePath, {
+    dynamic options,
+  }) async {
     exportCallCount++;
     if (exportResponses.isEmpty) {
       return const Failure<String>('No export response configured');

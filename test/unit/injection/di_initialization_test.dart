@@ -1,8 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'package:jflutter/injection/dependency_injection.dart';
+import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -12,31 +14,38 @@ void main() {
   });
 
   group('Dependency injection initialization', () {
-    test('completes successfully with mocked SharedPreferences', () async {
+    test('returns startup SharedPreferences for Riverpod override', () async {
       SharedPreferences.setMockInitialValues(const <String, Object>{
         'boot': 'ready',
       });
       final prefs = await SharedPreferences.getInstance();
 
-      await setupDependencyInjection(
-          sharedPreferencesProvider: () async => prefs);
+      final initializedPrefs = await initializeSharedPreferences(
+        sharedPreferencesProvider: () async => prefs,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(initializedPrefs),
+        ],
+      );
+      addTearDown(container.dispose);
 
-      expect(getIt<SharedPreferences>(), same(prefs));
+      expect(initializedPrefs, same(prefs));
+      expect(container.read(sharedPreferencesProvider), same(prefs));
     });
 
-    test('resolves registered singletons and factories without error',
-        () async {
+    test('returns platform SharedPreferences without error', () async {
       SharedPreferences.setMockInitialValues(const <String, Object>{});
-      await setupDependencyInjection();
+      final prefs = await initializeSharedPreferences();
 
-      expect(() => getIt<SharedPreferences>(), returnsNormally);
+      expect(prefs, isA<SharedPreferences>());
     });
 
     test('reports initialization stages in the expected order', () async {
       SharedPreferences.setMockInitialValues(const <String, Object>{});
       final observedStages = <DependencyInitializationStage>[];
 
-      await setupDependencyInjection(
+      await initializeSharedPreferences(
         onStage: observedStages.add,
       );
 
@@ -52,13 +61,13 @@ void main() {
         () async {
       final originalStore = SharedPreferencesStorePlatform.instance;
 
-      await setupDependencyInjection(
+      final prefs = await initializeSharedPreferences(
         sharedPreferencesProvider: () async {
           throw Exception('preferences unavailable');
         },
       );
 
-      expect(getIt<SharedPreferences>(), isA<SharedPreferences>());
+      expect(prefs, isA<SharedPreferences>());
 
       await resetDependencies();
 

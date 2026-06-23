@@ -26,6 +26,7 @@ import '../widgets/algorithm_step_navigator.dart';
 import '../widgets/algorithm_step_viewer.dart';
 import '../widgets/automaton_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
+import '../widgets/canvas_quick_actions.dart';
 import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/mobile_automaton_controls.dart';
@@ -47,7 +48,6 @@ import '../widgets/before_after_comparison.dart';
 import '../../core/models/step_explanation.dart';
 
 part 'fsa_page/fsa_page_behavior.dart';
-part 'fsa_page/fsa_page_quick_actions.dart';
 
 const double _kStepViewerNavigationControlsHeight = 88.0;
 const double _kStepViewerMinHeight = 160.0;

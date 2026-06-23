@@ -21,6 +21,7 @@ import '../../core/models/grammar_diagnostic_severity.dart';
 import '../../core/models/grammar_transformation_step.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import 'base_simulation_panel.dart';
 import 'common/algorithm_button.dart';
 import 'common/algorithm_button_config.dart';
 import 'grammar_transformation_history.dart';
@@ -88,7 +89,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       children: [
         _buildConversionSection(context, grammarState),
         const SizedBox(height: 24),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert to CNF',
             description: 'Convert grammar to Chomsky Normal Form',
@@ -99,7 +100,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert to GNF',
             description: 'Convert grammar to Greibach Normal Form',
@@ -110,7 +111,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Remove Left Recursion',
             description: 'Eliminate left recursion from grammar',
@@ -121,7 +122,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Left Factor',
             description: 'Apply left factoring to grammar',
@@ -132,7 +133,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Find First Sets',
             description: 'Calculate FIRST sets for all variables',
@@ -143,7 +144,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Find Follow Sets',
             description: 'Calculate FOLLOW sets for all variables',
@@ -154,7 +155,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Build Parse Table',
             description: 'Generate LL(1) or LR(1) parse table',
@@ -165,7 +166,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Check Ambiguity',
             description: 'Detect if grammar is ambiguous',
@@ -198,7 +199,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert Right-Linear Grammar to FSA',
             description: 'Build an FSA from a right-linear grammar',
@@ -211,7 +212,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert Grammar to PDA (General)',
             description: 'Build an equivalent PDA from the grammar',
@@ -224,7 +225,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert Grammar to PDA (Standard)',
             description: 'Build a standard-form PDA from the grammar',
@@ -237,7 +238,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildConfiguredAlgorithmButton(
+        AlgorithmButton.fromConfig(
           AlgorithmButtonConfig(
             title: 'Convert Grammar to PDA (Greibach)',
             description: 'Build a Greibach-form PDA from the grammar',
@@ -272,20 +273,6 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildConfiguredAlgorithmButton(AlgorithmButtonConfig config) {
-    return AlgorithmButton(
-      title: config.title,
-      description: config.description,
-      icon: config.icon,
-      onPressed: config.effectiveOnPressed,
-      isExecuting: config.isExecuting,
-      isDestructive: config.isDestructive,
-      isSelected: config.isSelected,
-      executionProgress: config.executionProgress,
-      executionStatus: config.executionStatus,
     );
   }
 
@@ -404,41 +391,10 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Widget _buildEmptyResults(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.analytics_outlined,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No analysis results yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Select an algorithm above to analyze your grammar',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return const SimulationEmptyResults(
+      icon: Icons.analytics_outlined,
+      title: 'No analysis results yet',
+      message: 'Select an algorithm above to analyze your grammar',
     );
   }
 

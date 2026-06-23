@@ -12,6 +12,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'algorithm_button_config.dart';
+
 /// Button for algorithm operations with consistent styling and state handling.
 ///
 /// This widget standardizes algorithm action buttons across different automata
@@ -56,6 +58,24 @@ class AlgorithmButton extends StatelessWidget {
               (executionProgress >= 0.0 && executionProgress <= 1.0),
           'executionProgress must be between 0.0 and 1.0',
         );
+
+  factory AlgorithmButton.fromConfig(
+    AlgorithmButtonConfig config, {
+    Key? key,
+  }) {
+    return AlgorithmButton(
+      key: key,
+      title: config.title,
+      description: config.description,
+      icon: config.icon,
+      onPressed: config.effectiveOnPressed,
+      isExecuting: config.isExecuting,
+      isDestructive: config.isDestructive,
+      isSelected: config.isSelected,
+      executionProgress: config.executionProgress,
+      executionStatus: config.executionStatus,
+    );
+  }
 
   /// Primary label displayed prominently at the top of the button.
   final String title;

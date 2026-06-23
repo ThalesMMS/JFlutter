@@ -441,7 +441,7 @@ extension _FSAPageStateBehavior on _FSAPageState {
             Positioned(
               top: 16,
               left: 16,
-              child: _CanvasQuickActions(
+              child: CanvasQuickActions(
                 onHelp: onHelp,
                 onSimulate: onSimulate,
                 onAlgorithms: onAlgorithms,

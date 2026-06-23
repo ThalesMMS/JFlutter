@@ -75,7 +75,6 @@ algorithms/
 ├── common/                        # Shared math, graph, and parser utilities
 ├── pda/                           # Pushdown automata specific operations
 ├── regex/                         # Regular expression parsing helpers
-├── algorithm_operations.dart      # High-level algorithm orchestration entrypoints
 ├── automaton_analyzer.dart        # Aggregate automaton statistics and metrics
 ├── automaton_simulator.dart       # DFA/NFA simulation core with step tracing
 ├── dfa_completer.dart             # Automates completion of partial DFAs
@@ -238,7 +237,6 @@ widgets/
 ├── pda_algorithm_panel.dart         # PDA algorithm shortcuts
 ├── tm_algorithm_panel.dart          # Turing machine tooling
 ├── automaton_canvas.dart            # Widget-agnostic canvas host
-├── automaton_canvas_web.dart        # Web-optimised canvas wrapper
 ├── automaton_graphview_canvas.dart  # GraphView-backed canvas implementation
 ├── diagnostics_panel.dart           # Runtime diagnostics and logs
 ├── file_operations_panel.dart       # Import/export actions

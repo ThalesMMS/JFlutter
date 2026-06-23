@@ -5,7 +5,7 @@
 //  Disponibiliza o painel de análises para Máquinas de Turing, reunindo botões
 //  para verificações de decidibilidade, alcançabilidade, linguagem, operações de
 //  fita e métricas temporais e espaciais com resultados estruturados.
-//  Conecta-se ao TMEditorProvider e aos AlgorithmOperations para executar
+//  Conecta-se ao TMEditorProvider e ao TMSimulator para executar
 //  diagnósticos, mantendo estado local de foco e evitando recomputações
 //  desnecessárias entre execuções.
 //
@@ -14,7 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/algorithms/algorithm_operations.dart';
+import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/state.dart' as automaton_models;
 import '../../core/models/tm.dart';
 import '../../core/models/tm_analysis.dart';
@@ -24,6 +24,7 @@ import '../../core/result.dart';
 import '../../data/data_sources/examples_asset_data_source.dart';
 import '../providers/tm_editor_provider.dart';
 import 'app_snackbar.dart';
+import 'base_simulation_panel.dart';
 import 'common/algorithm_button.dart';
 import 'common/algorithm_button_config.dart';
 import 'file_operations_panel.dart';
@@ -131,7 +132,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         const Divider(),
         const SizedBox(height: 16),
         for (var index = 0; index < algorithmConfigs.length; index++) ...[
-          _buildConfiguredAlgorithmButton(algorithmConfigs[index]),
+          AlgorithmButton.fromConfig(algorithmConfigs[index]),
           if (index < algorithmConfigs.length - 1) const SizedBox(height: 12),
         ],
       ],
@@ -196,20 +197,6 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     );
   }
 
-  Widget _buildConfiguredAlgorithmButton(AlgorithmButtonConfig config) {
-    return AlgorithmButton(
-      title: config.title,
-      description: config.description,
-      icon: config.icon,
-      onPressed: config.effectiveOnPressed,
-      isExecuting: config.isExecuting,
-      isDestructive: config.isDestructive,
-      isSelected: config.isSelected,
-      executionProgress: config.executionProgress,
-      executionStatus: config.executionStatus,
-    );
-  }
-
   Widget _buildResultsSection(BuildContext context) {
     final hasData = _analysis != null || _analysisError != null;
     return Column(
@@ -228,41 +215,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   Widget _buildEmptyResults(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.analytics_outlined,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No analysis results yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Select an algorithm above to analyze your TM.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return const SimulationEmptyResults(
+      icon: Icons.analytics_outlined,
+      title: 'No analysis results yet',
+      message: 'Select an algorithm above to analyze your TM.',
     );
   }
 
@@ -681,7 +637,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
     final Result<TMAnalysis> result;
     try {
-      result = AlgorithmOperations.analyzeTm(tm);
+      result = TMSimulator.analyzeTM(tm);
     } catch (error) {
       setState(() {
         _isAnalyzing = false;

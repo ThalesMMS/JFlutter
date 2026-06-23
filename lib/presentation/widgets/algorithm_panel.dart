@@ -7,7 +7,7 @@
 //  linguagem e transformações com expressões regulares em um painel único.
 //  Controla progresso, feedback textual e carregamento de autômatos externos via
 //  FilePicker, executando callbacks fornecidos pela camada de apresentação para
-//  orquestrar AlgorithmOperations.
+//  orquestrar algoritmos específicos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //

@@ -22,6 +22,7 @@ import '../widgets/automaton_workspace_scaffold.dart';
 import '../widgets/context_aware_help_panel.dart';
 import '../widgets/graphview_canvas_toolbar.dart';
 import '../widgets/automaton_canvas_tool.dart';
+import '../widgets/canvas_quick_actions.dart';
 import '../widgets/mobile_automaton_controls.dart';
 import '../widgets/pda_canvas_graphview.dart';
 import '../widgets/pda_algorithm_panel.dart';
@@ -340,7 +341,7 @@ class _PDAPageState extends ConsumerState<PDAPage>
             Positioned(
               top: 16,
               left: 16,
-              child: _PdaCanvasQuickActions(
+              child: CanvasQuickActions(
                 onHelp: onHelp,
                 onSimulate: onSimulate,
                 onAlgorithms: onAlgorithms,
@@ -485,59 +486,5 @@ class _PDAPageState extends ConsumerState<PDAPage>
     }
 
     return null;
-  }
-}
-
-class _PdaCanvasQuickActions extends StatelessWidget {
-  const _PdaCanvasQuickActions({
-    this.onHelp,
-    this.onSimulate,
-    this.onAlgorithms,
-  });
-
-  final VoidCallback? onHelp;
-  final VoidCallback? onSimulate;
-  final VoidCallback? onAlgorithms;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Material(
-      elevation: 6,
-      borderRadius: BorderRadius.circular(32),
-      color: colorScheme.surface.withValues(alpha: 0.92),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onHelp != null)
-              IconButton(
-                tooltip: 'Help',
-                icon: const Icon(Icons.help_outline),
-                onPressed: onHelp,
-              ),
-            if (onHelp != null && (onSimulate != null || onAlgorithms != null))
-              const SizedBox(width: 4),
-            if (onSimulate != null)
-              IconButton(
-                tooltip: 'Simulate',
-                icon: const Icon(Icons.play_arrow),
-                onPressed: onSimulate,
-              ),
-            if (onSimulate != null && onAlgorithms != null)
-              const SizedBox(width: 4),
-            if (onAlgorithms != null)
-              IconButton(
-                tooltip: 'Algorithms',
-                icon: const Icon(Icons.auto_awesome),
-                onPressed: onAlgorithms,
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }

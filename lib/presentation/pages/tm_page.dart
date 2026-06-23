@@ -17,6 +17,7 @@ import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../widgets/automaton_workspace_scaffold.dart';
 import '../providers/help_provider.dart';
+import '../widgets/canvas_quick_actions.dart';
 import '../providers/tm_editor_provider.dart';
 import '../widgets/context_aware_help_panel.dart';
 import '../widgets/tm_canvas_graphview.dart';
@@ -224,7 +225,7 @@ class _TMPageState extends ConsumerState<TMPage>
             Positioned(
               top: 16,
               left: 16,
-              child: _TmCanvasQuickActions(
+              child: CanvasQuickActions(
                 onHelp: _showContextualHelp,
                 onSimulate: onSimulate,
                 onAlgorithms: onAlgorithms,
@@ -539,73 +540,5 @@ class _TMPageState extends ConsumerState<TMPage>
         .where((list) => list.length > 1)
         .expand((list) => list.map((transition) => transition.id))
         .toSet();
-  }
-}
-
-class _TmCanvasQuickActions extends StatelessWidget {
-  const _TmCanvasQuickActions({
-    this.onHelp,
-    this.onSimulate,
-    this.onAlgorithms,
-    this.onMetrics,
-  });
-
-  final VoidCallback? onHelp;
-  final VoidCallback? onSimulate;
-  final VoidCallback? onAlgorithms;
-  final VoidCallback? onMetrics;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Material(
-      elevation: 6,
-      borderRadius: BorderRadius.circular(32),
-      color: colorScheme.surface.withValues(alpha: 0.92),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onHelp != null)
-              IconButton(
-                tooltip: 'Help',
-                icon: const Icon(Icons.help_outline),
-                onPressed: onHelp,
-              ),
-            if (onHelp != null &&
-                (onSimulate != null ||
-                    onAlgorithms != null ||
-                    onMetrics != null))
-              const SizedBox(width: 4),
-            if (onSimulate != null)
-              IconButton(
-                tooltip: 'Simulate',
-                icon: const Icon(Icons.play_arrow),
-                onPressed: onSimulate,
-              ),
-            if ((onSimulate != null && onAlgorithms != null) ||
-                (onSimulate != null && onMetrics != null))
-              const SizedBox(width: 4),
-            if (onAlgorithms != null)
-              IconButton(
-                tooltip: 'Algorithms',
-                icon: const Icon(Icons.auto_awesome),
-                onPressed: onAlgorithms,
-              ),
-            if (onAlgorithms != null && onMetrics != null)
-              const SizedBox(width: 4),
-            if (onMetrics != null)
-              IconButton(
-                tooltip: 'Metrics',
-                icon: const Icon(Icons.bar_chart),
-                onPressed: onMetrics,
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }

@@ -20,6 +20,7 @@ import '../../core/models/typed_algorithm_step.dart';
 import '../../core/result.dart';
 import '../providers/grammar_provider.dart';
 import 'algorithm_step_renderer_registry.dart';
+import 'base_simulation_panel.dart';
 import 'derivation_tree_view.dart';
 import 'grammar_sentential_form_card.dart';
 import 'step_explanation_card.dart';
@@ -247,41 +248,9 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildEmptyResults(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.psychology,
-            size: 48,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No parse results yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter a string and click Parse to see results',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return const SimulationEmptyResults(
+      title: 'No parse results yet',
+      message: 'Enter a string and click Parse to see results',
     );
   }
 

@@ -11,8 +11,8 @@
 //
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/regex_to_nfa_converter.dart';
-import 'package:jflutter/core/algorithms/algorithm_operations.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/regex_to_nfa_step.dart';
 
@@ -312,7 +312,7 @@ void main() {
   // =========================================================================
   group('RegexToNFAConverter.convertWithSteps - NFA correctness', () {
     Future<bool> accepts(FSA nfa, String input) async {
-      final sim = await AlgorithmOperations.simulateNfa(nfa, input);
+      final sim = await AutomatonSimulator.simulateNFA(nfa, input);
       if (!sim.isSuccess) return false;
       return sim.data!.accepted;
     }

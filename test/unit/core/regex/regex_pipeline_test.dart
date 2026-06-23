@@ -11,13 +11,13 @@
 //
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jflutter/core/algorithms/algorithm_operations.dart';
+import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:jflutter/core/algorithms/regex_to_nfa_converter.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/result.dart';
 
 Future<bool> _accepts(FSA nfa, String input) async {
-  final sim = await AlgorithmOperations.simulateNfa(nfa, input);
+  final sim = await AutomatonSimulator.simulateNFA(nfa, input);
   if (!sim.isSuccess) return false;
   return sim.data!.accepted;
 }
@@ -150,8 +150,8 @@ void main() {
       expect(await _accepts(nfa, 'ab'), false);
     });
 
-    test('Integrates via AlgorithmOperations', () async {
-      final Result<FSA> res = AlgorithmOperations.convertRegexToNfa('a(b|c)*');
+    test('Integrates via RegexToNFAConverter', () async {
+      final Result<FSA> res = RegexToNFAConverter.convert('a(b|c)*');
       expect(res.isSuccess, true);
       final nfa = res.data!;
       expect(await _accepts(nfa, 'a'), true);

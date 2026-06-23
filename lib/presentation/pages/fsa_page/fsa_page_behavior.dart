@@ -102,34 +102,26 @@ extension _FSAPageStateBehavior on _FSAPageState {
 
   Future<void> _handleNfaToDfa() async {
     if (_stepByStepMode) {
-      await _handleNfaToDfaWithSteps();
+      final automaton = _requireAutomaton();
+      if (automaton == null) return;
+      await ref
+          .read(automatonAlgorithmProvider.notifier)
+          .convertNfaToDfaWithSteps();
     } else {
       await ref.read(automatonAlgorithmProvider.notifier).convertNfaToDfa();
     }
   }
 
-  Future<void> _handleNfaToDfaWithSteps() async {
-    final automaton = _requireAutomaton();
-    if (automaton == null) return;
-
-    await ref
-        .read(automatonAlgorithmProvider.notifier)
-        .convertNfaToDfaWithSteps();
-  }
-
   Future<void> _handleMinimizeDfa() async {
     if (_stepByStepMode) {
-      await _handleMinimizeDfaWithSteps();
+      final automaton = _requireAutomaton(requireDfa: true);
+      if (automaton == null) return;
+      await ref
+          .read(automatonAlgorithmProvider.notifier)
+          .minimizeDfaWithSteps();
     } else {
       await ref.read(automatonAlgorithmProvider.notifier).minimizeDfa();
     }
-  }
-
-  Future<void> _handleMinimizeDfaWithSteps() async {
-    final automaton = _requireAutomaton(requireDfa: true);
-    if (automaton == null) return;
-
-    await ref.read(automatonAlgorithmProvider.notifier).minimizeDfaWithSteps();
   }
 
   Future<void> _handleRemoveLambda() async {
@@ -853,19 +845,12 @@ extension _FSAPageStateBehavior on _FSAPageState {
     final stateIds = <String>{};
     final transitionIds = <String>{};
     for (final target in diagnostic.highlights) {
-      switch (target.type) {
-        case HighlightTargetType.state:
-          if (target.id != null && target.id!.trim().isNotEmpty) {
-            stateIds.add(target.id!.trim());
-          }
-          break;
-        case HighlightTargetType.transition:
-          if (target.id != null && target.id!.trim().isNotEmpty) {
-            transitionIds.add(target.id!.trim());
-          }
-          break;
-        default:
-          break;
+      final id = target.id?.trim();
+      if (id == null || id.isEmpty) continue;
+      if (target.type == HighlightTargetType.state) {
+        stateIds.add(id);
+      } else if (target.type == HighlightTargetType.transition) {
+        transitionIds.add(id);
       }
     }
 

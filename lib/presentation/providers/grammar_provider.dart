@@ -11,15 +11,16 @@
 //
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/grammar_to_fsa_converter.dart';
+import '../../core/algorithms/grammar_to_pda_converter.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/production.dart';
 import '../../core/result.dart';
-import '../../data/services/conversion_service.dart';
 
 /// Types of conversions that can be triggered from the grammar workspace.
-enum GrammarConversionType {
+enum GrammarConversionKind {
   grammarToFsa,
   grammarToPda,
   grammarToPdaStandard,
@@ -35,7 +36,7 @@ class GrammarState {
   final bool isConverting;
   final String? error;
   final int nextProductionId;
-  final GrammarConversionType? activeConversion;
+  final GrammarConversionKind? activeConversion;
   final Result<PDA>? lastPdaResult;
 
   const GrammarState({
@@ -84,7 +85,7 @@ class GrammarState {
       nextProductionId: nextProductionId ?? this.nextProductionId,
       activeConversion: activeConversion == _noActiveConversionUpdate
           ? this.activeConversion
-          : activeConversion as GrammarConversionType?,
+          : activeConversion as GrammarConversionKind?,
       lastPdaResult: lastPdaResult == _noPdaResultUpdate
           ? this.lastPdaResult
           : lastPdaResult as Result<PDA>?,
@@ -98,13 +99,9 @@ const _noPdaResultUpdate = Object();
 
 /// Provider notifier responsible for updating grammar state and running conversions.
 class GrammarProvider extends StateNotifier<GrammarState> {
-  GrammarProvider({ConversionService? conversionService})
-      : _conversionService = conversionService ?? ConversionService(),
-        super(GrammarState.initial());
+  GrammarProvider() : super(GrammarState.initial());
 
   static final RegExp _productionIdPattern = RegExp(r'^p(\d+)$');
-
-  final ConversionService _conversionService;
 
   void updateName(String value) {
     state = state.copyWith(name: value, error: null);
@@ -303,13 +300,11 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     state = state.copyWith(
       isConverting: true,
       error: null,
-      activeConversion: GrammarConversionType.grammarToFsa,
+      activeConversion: GrammarConversionKind.grammarToFsa,
       lastPdaResult: null,
     );
 
-    final result = _conversionService.convertGrammarToFsa(
-      ConversionRequest.grammarToFsa(grammar: grammar),
-    );
+    final result = GrammarToFSAConverter.convert(grammar);
 
     if (result.isSuccess) {
       state = state.copyWith(
@@ -330,33 +325,28 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 
   Future<Result<PDA>> convertToPda() {
     return _performPdaConversion(
-      requestBuilder: ConversionRequest.grammarToPda,
-      converter: _conversionService.convertGrammarToPda,
-      conversionType: GrammarConversionType.grammarToPda,
+      converter: GrammarToPDAConverter.convertGrammarToPDA,
+      conversionType: GrammarConversionKind.grammarToPda,
     );
   }
 
   Future<Result<PDA>> convertToPdaStandard() {
     return _performPdaConversion(
-      requestBuilder: ConversionRequest.grammarToPdaStandard,
-      converter: _conversionService.convertGrammarToPdaStandard,
-      conversionType: GrammarConversionType.grammarToPdaStandard,
+      converter: GrammarToPDAConverter.convertGrammarToPDAStandard,
+      conversionType: GrammarConversionKind.grammarToPdaStandard,
     );
   }
 
   Future<Result<PDA>> convertToPdaGreibach() {
     return _performPdaConversion(
-      requestBuilder: ConversionRequest.grammarToPdaGreibach,
-      converter: _conversionService.convertGrammarToPdaGreibach,
-      conversionType: GrammarConversionType.grammarToPdaGreibach,
+      converter: GrammarToPDAConverter.convertGrammarToPDAGreibach,
+      conversionType: GrammarConversionKind.grammarToPdaGreibach,
     );
   }
 
   Future<Result<PDA>> _performPdaConversion({
-    required ConversionRequest Function({required Grammar grammar})
-        requestBuilder,
-    required Result<dynamic> Function(ConversionRequest request) converter,
-    required GrammarConversionType conversionType,
+    required Result<PDA> Function(Grammar grammar) converter,
+    required GrammarConversionKind conversionType,
   }) async {
     if (state.productions.isEmpty) {
       final result = ResultFactory.failure<PDA>(
@@ -378,9 +368,7 @@ class GrammarProvider extends StateNotifier<GrammarState> {
       activeConversion: conversionType,
     );
 
-    final serviceResult = converter(requestBuilder(grammar: grammar));
-
-    final result = _mapDynamicResultToPda(serviceResult);
+    final result = converter(grammar);
 
     state = state.copyWith(
       isConverting: false,
@@ -390,24 +378,6 @@ class GrammarProvider extends StateNotifier<GrammarState> {
     );
 
     return result;
-  }
-
-  Result<PDA> _mapDynamicResultToPda(Result<dynamic> result) {
-    if (result is Success<dynamic>) {
-      final data = result.data;
-      if (data is PDA) {
-        return ResultFactory.success<PDA>(data);
-      }
-      return ResultFactory.failure<PDA>(
-        'Unexpected result type returned from conversion.',
-      );
-    }
-
-    if (result is Failure<dynamic>) {
-      return ResultFactory.failure<PDA>(result.message);
-    }
-
-    return ResultFactory.failure<PDA>('Unknown conversion result.');
   }
 
   bool _isLambda(String symbol) =>
@@ -423,5 +393,5 @@ class GrammarProvider extends StateNotifier<GrammarState> {
 final grammarProvider = StateNotifierProvider<GrammarProvider, GrammarState>((
   ref,
 ) {
-  return GrammarProvider(conversionService: ConversionService());
+  return GrammarProvider();
 });

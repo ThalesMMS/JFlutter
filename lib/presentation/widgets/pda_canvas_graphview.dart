@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pda.dart';
+import '../../core/services/highlight_channel.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
@@ -39,7 +40,7 @@ class _PDACanvasGraphViewState extends ConsumerState<PDACanvasGraphView> {
   late GraphViewPdaCanvasController _controller;
   late bool _ownsController;
   SimulationHighlightService? _highlightService;
-  SimulationHighlightChannel? _previousHighlightChannel;
+  HighlightChannel? _previousHighlightChannel;
   ProviderSubscription<PDAEditorState>? _subscription;
   PDA? _lastDeliveredPda;
 

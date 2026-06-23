@@ -23,37 +23,22 @@ final canvasAlgorithmStepHighlightServiceProvider =
   return AlgorithmStepHighlightService();
 });
 
-/// Utility responsible for deriving and broadcasting algorithm step highlights.
-typedef AlgorithmStepHighlightDispatcher = HighlightDispatcher;
-
-/// Destination that consumes highlight payloads emitted by the
-/// [AlgorithmStepHighlightService].
-abstract class AlgorithmStepHighlightChannel implements HighlightChannel {}
-
-/// Adapter that forwards highlights to a legacy dispatcher callback.
-class FunctionAlgorithmStepHighlightChannel extends FunctionHighlightChannel
-    implements AlgorithmStepHighlightChannel {
-  FunctionAlgorithmStepHighlightChannel(super.dispatcher);
-}
-
 class AlgorithmStepHighlightService {
   AlgorithmStepHighlightService({
-    AlgorithmStepHighlightChannel? channel,
-    AlgorithmStepHighlightDispatcher? dispatcher,
-  }) : _highlightDispatch =
-            HighlightDispatchController<AlgorithmStepHighlightChannel>(
+    HighlightChannel? channel,
+    HighlightDispatcher? dispatcher,
+  }) : _highlightDispatch = HighlightDispatchController<HighlightChannel>(
           debugLabel: 'AlgorithmStepHighlightService',
           channel: channel,
           dispatcher: dispatcher,
-          channelFromDispatcher: FunctionAlgorithmStepHighlightChannel.new,
+          channelFromDispatcher: FunctionHighlightChannel.new,
         );
 
-  final HighlightDispatchController<AlgorithmStepHighlightChannel>
-      _highlightDispatch;
+  final HighlightDispatchController<HighlightChannel> _highlightDispatch;
 
-  AlgorithmStepHighlightChannel? get channel => _highlightDispatch.channel;
+  HighlightChannel? get channel => _highlightDispatch.channel;
 
-  set channel(AlgorithmStepHighlightChannel? value) {
+  set channel(HighlightChannel? value) {
     _highlightDispatch.channel = value;
   }
 

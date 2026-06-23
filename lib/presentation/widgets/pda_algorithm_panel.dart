@@ -10,13 +10,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/algorithms/pda_to_cfg_converter.dart';
 import '../../core/algorithms/pda_simulator.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/state.dart' as automaton_models;
 import '../../core/result.dart';
 import '../../data/data_sources/examples_asset_data_source.dart';
-import '../../data/services/conversion_service.dart';
 import '../providers/pda_editor_provider.dart';
 import 'app_snackbar.dart';
 import 'base_simulation_panel.dart';
@@ -44,7 +44,6 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   String? _loadingExampleName;
   String? _analysisResult;
   Grammar? _latestConvertedGrammar;
-  final ConversionService _conversionService = ConversionService();
   late final ExamplesAssetDataSource _examplesDataSource;
   late final Future<ListResult<AssetExample<PDA>>> _pdaExamplesFuture;
 
@@ -248,9 +247,7 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     });
 
     _performAnalysis('PDA to CFG Conversion', () async {
-      final conversionResult = _conversionService.convertPdaToCfg(
-        ConversionRequest.pdaToCfg(pda: pda),
-      );
+      final conversionResult = PDAtoCFGConverter.convert(pda);
       if (conversionResult.isSuccess) {
         _latestConvertedGrammar = conversionResult.data!.grammar;
         final grammar = _latestConvertedGrammar!;

@@ -402,8 +402,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
     required bool isMobile,
   }) {
     final simulationState = ref.watch(automatonSimulationProvider);
-    Widget buildAutomatonCanvas() {
-      return AutomatonCanvas(
+    Widget buildGraphViewCanvas() {
+      return AutomatonGraphViewCanvas(
         automaton: state.currentAutomaton,
         canvasKey: _canvasKey,
         controller: _canvasController,
@@ -512,7 +512,7 @@ extension _FSAPageStateBehavior on _FSAPageState {
     // Wrap canvas with step navigator at the bottom
     return Column(
       children: [
-        Expanded(child: buildCanvasWithToolbar(buildAutomatonCanvas())),
+        Expanded(child: buildCanvasWithToolbar(buildGraphViewCanvas())),
         const AlgorithmStepNavigator(),
       ],
     );

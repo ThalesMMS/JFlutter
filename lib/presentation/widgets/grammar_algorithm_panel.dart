@@ -205,7 +205,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             description: 'Build an FSA from a right-linear grammar',
             icon: Icons.sync_alt,
             isExecuting: isBusy &&
-                activeConversion == GrammarConversionType.grammarToFsa,
+                activeConversion == GrammarConversionKind.grammarToFsa,
             isEnabled: !isDisabled,
             executionStatus: 'Converting to FSA...',
             onPressed: _convertToAutomaton,
@@ -218,7 +218,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             description: 'Build an equivalent PDA from the grammar',
             icon: Icons.auto_fix_high,
             isExecuting: isBusy &&
-                activeConversion == GrammarConversionType.grammarToPda,
+                activeConversion == GrammarConversionKind.grammarToPda,
             isEnabled: !isDisabled,
             executionStatus: 'Converting to PDA...',
             onPressed: _convertToPdaGeneral,
@@ -231,7 +231,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             description: 'Build a standard-form PDA from the grammar',
             icon: Icons.layers,
             isExecuting: isBusy &&
-                activeConversion == GrammarConversionType.grammarToPdaStandard,
+                activeConversion == GrammarConversionKind.grammarToPdaStandard,
             isEnabled: !isDisabled,
             executionStatus: 'Converting (Standard)...',
             onPressed: _convertToPdaStandard,
@@ -244,7 +244,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
             description: 'Build a Greibach-form PDA from the grammar',
             icon: Icons.stacked_bar_chart,
             isExecuting: isBusy &&
-                activeConversion == GrammarConversionType.grammarToPdaGreibach,
+                activeConversion == GrammarConversionKind.grammarToPdaGreibach,
             isEnabled: !isDisabled,
             executionStatus: 'Converting (Greibach)...',
             onPressed: _convertToPdaGreibach,

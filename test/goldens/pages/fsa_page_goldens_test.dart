@@ -27,7 +27,7 @@ import 'package:jflutter/features/canvas/graphview/graphview_canvas_controller.d
 import 'package:jflutter/injection/dependency_injection.dart';
 import 'package:jflutter/presentation/providers/automaton_state_provider.dart';
 import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
-import 'package:jflutter/presentation/widgets/automaton_canvas.dart';
+import 'package:jflutter/presentation/widgets/automaton_graphview_canvas.dart';
 import 'package:jflutter/presentation/widgets/automaton_canvas_tool.dart';
 import 'package:jflutter/presentation/widgets/fsa/determinism_badge.dart';
 import 'package:jflutter/presentation/widgets/graphview_canvas_toolbar.dart';
@@ -89,7 +89,7 @@ class _FSAPageTestWidgetState extends State<_FSAPageTestWidget> {
           children: [
             // Canvas
             Positioned.fill(
-              child: AutomatonCanvas(
+              child: AutomatonGraphViewCanvas(
                 automaton: widget.automaton,
                 canvasKey: _canvasKey,
                 controller: _canvasController,

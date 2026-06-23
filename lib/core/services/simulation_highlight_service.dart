@@ -23,37 +23,22 @@ final canvasHighlightServiceProvider = Provider<SimulationHighlightService>((
   return SimulationHighlightService();
 });
 
-/// Utility responsible for deriving and broadcasting simulation highlights.
-typedef SimulationHighlightDispatcher = HighlightDispatcher;
-
-/// Destination that consumes highlight payloads emitted by the
-/// [SimulationHighlightService].
-abstract class SimulationHighlightChannel implements HighlightChannel {}
-
-/// Adapter that forwards highlights to a legacy dispatcher callback.
-class FunctionSimulationHighlightChannel extends FunctionHighlightChannel
-    implements SimulationHighlightChannel {
-  FunctionSimulationHighlightChannel(super.dispatcher);
-}
-
 class SimulationHighlightService {
   SimulationHighlightService({
-    SimulationHighlightChannel? channel,
-    SimulationHighlightDispatcher? dispatcher,
-  }) : _highlightDispatch =
-            HighlightDispatchController<SimulationHighlightChannel>(
+    HighlightChannel? channel,
+    HighlightDispatcher? dispatcher,
+  }) : _highlightDispatch = HighlightDispatchController<HighlightChannel>(
           debugLabel: 'SimulationHighlightService',
           channel: channel,
           dispatcher: dispatcher,
-          channelFromDispatcher: FunctionSimulationHighlightChannel.new,
+          channelFromDispatcher: FunctionHighlightChannel.new,
         );
 
-  final HighlightDispatchController<SimulationHighlightChannel>
-      _highlightDispatch;
+  final HighlightDispatchController<HighlightChannel> _highlightDispatch;
 
-  SimulationHighlightChannel? get channel => _highlightDispatch.channel;
+  HighlightChannel? get channel => _highlightDispatch.channel;
 
-  set channel(SimulationHighlightChannel? value) {
+  set channel(HighlightChannel? value) {
     _highlightDispatch.channel = value;
   }
 

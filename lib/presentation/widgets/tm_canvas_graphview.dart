@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
+import '../../core/services/highlight_channel.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../features/canvas/graphview/graphview_highlight_channel.dart';
 import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
@@ -44,7 +45,7 @@ class _TMCanvasGraphViewState extends ConsumerState<TMCanvasGraphView> {
   late GraphViewTmCanvasController _controller;
   late bool _ownsController;
   SimulationHighlightService? _highlightService;
-  SimulationHighlightChannel? _previousHighlightChannel;
+  HighlightChannel? _previousHighlightChannel;
   ProviderSubscription<TMEditorState>? _subscription;
   TM? _lastDeliveredTm;
 

@@ -10,7 +10,6 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/config/v1_feature_flags.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import '../widgets/desktop_navigation.dart';
@@ -64,12 +63,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           icon: Icons.pattern,
           description: 'Regular Expressions',
         ),
-        if (V1FeatureFlags.showPumpingLemma)
-          const NavigationItem(
-            label: 'Pumping',
-            icon: Icons.games,
-            description: 'Pumping Lemma',
-          ),
+        const NavigationItem(
+          label: 'Pumping',
+          icon: Icons.games,
+          description: 'Pumping Lemma',
+        ),
       ];
 
   List<Widget> get _pages => const [
@@ -78,7 +76,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         PDAPage(),
         TMPage(),
         RegexPage(),
-        if (V1FeatureFlags.showPumpingLemma) PumpingLemmaPage(),
+        PumpingLemmaPage(),
       ];
 
   int _sanitizeNavigationIndex(int index) {

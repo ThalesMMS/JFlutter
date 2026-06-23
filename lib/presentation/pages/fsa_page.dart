@@ -24,7 +24,7 @@ import '../providers/help_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/algorithm_step_navigator.dart';
 import '../widgets/algorithm_step_viewer.dart';
-import '../widgets/automaton_canvas.dart';
+import '../widgets/automaton_graphview_canvas.dart';
 import '../widgets/automaton_canvas_tool.dart';
 import '../widgets/canvas_quick_actions.dart';
 import '../widgets/context_aware_help_panel.dart';

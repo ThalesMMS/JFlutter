@@ -1,5 +1,5 @@
 //
-//  automaton_canvas.dart
+//  automaton_canvas_constants.dart
 //  JFlutter
 //
 //  Armazena constantes de layout utilizadas pelos widgets do canvas de

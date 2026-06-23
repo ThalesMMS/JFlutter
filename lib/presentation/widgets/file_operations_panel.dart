@@ -16,7 +16,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../core/config/v1_feature_flags.dart';
 import '../../core/entities/turing_machine_entity.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
@@ -54,34 +53,26 @@ class _FileOperationCapabilities {
 }
 
 const _fsaCapabilities = _FileOperationCapabilities(
-  supportsJflapImport: V1FeatureFlags.fsaSupportsJflapImport,
-  supportsJflapExport: V1FeatureFlags.fsaSupportsJflapExport,
-  supportsJsonImport: V1FeatureFlags.fsaSupportsJsonImport,
-  supportsJsonExport: V1FeatureFlags.fsaSupportsJsonExport,
-  supportsSvgExport: V1FeatureFlags.fsaSupportsSvgExport,
-  supportsPngExport: V1FeatureFlags.fsaSupportsPngExport,
+  supportsJflapImport: true,
+  supportsJflapExport: true,
+  supportsJsonImport: true,
+  supportsJsonExport: true,
+  supportsSvgExport: true,
+  supportsPngExport: true,
 );
 
 const _grammarCapabilities = _FileOperationCapabilities(
-  supportsJflapImport: V1FeatureFlags.grammarSupportsJflapImport,
-  supportsJflapExport: V1FeatureFlags.grammarSupportsJflapExport,
-  supportsSvgExport: V1FeatureFlags.grammarSupportsSvgExport,
+  supportsJflapImport: true,
+  supportsJflapExport: true,
+  supportsSvgExport: true,
 );
 
 const _pdaCapabilities = _FileOperationCapabilities(
-  supportsJflapImport: V1FeatureFlags.pdaSupportsJflapImport,
-  supportsJflapExport: V1FeatureFlags.pdaSupportsJflapExport,
-  supportsJsonImport: V1FeatureFlags.pdaSupportsJsonImport,
-  supportsJsonExport: V1FeatureFlags.pdaSupportsJsonExport,
-  supportsSvgExport: V1FeatureFlags.pdaSupportsSvgExport,
+  supportsSvgExport: true,
 );
 
 const _tmCapabilities = _FileOperationCapabilities(
-  supportsJflapImport: V1FeatureFlags.tmSupportsJflapImport,
-  supportsJflapExport: V1FeatureFlags.tmSupportsJflapExport,
-  supportsJsonImport: V1FeatureFlags.tmSupportsJsonImport,
-  supportsJsonExport: V1FeatureFlags.tmSupportsJsonExport,
-  supportsSvgExport: V1FeatureFlags.tmSupportsSvgExport,
+  supportsSvgExport: true,
 );
 
 const _kJsonUnreadableFileMessage =

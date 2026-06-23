@@ -10,13 +10,12 @@
 //  Thales Matheus Mendonça Santos - January 2026
 //
 import '../../../core/models/simulation_highlight.dart';
-import '../../../core/services/algorithm_step_highlight_service.dart';
+import '../../../core/services/highlight_channel.dart';
 import 'graphview_highlight_controller.dart';
 
-/// Highlight channel that bridges [AlgorithmStepHighlightService] payloads to a
+/// Highlight channel that bridges algorithm step highlight payloads to a
 /// GraphView canvas controller.
-class GraphViewAlgorithmStepHighlightChannel
-    implements AlgorithmStepHighlightChannel {
+class GraphViewAlgorithmStepHighlightChannel implements HighlightChannel {
   GraphViewAlgorithmStepHighlightChannel(this._controller);
 
   final GraphViewHighlightController _controller;

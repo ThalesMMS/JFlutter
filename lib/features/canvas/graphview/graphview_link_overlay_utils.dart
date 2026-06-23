@@ -11,7 +11,7 @@
 //
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/automaton_canvas.dart';
+import '../../../core/constants/automaton_canvas_constants.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'grouped_fsa_geometry.dart';
 import 'graphview_canvas_models.dart';

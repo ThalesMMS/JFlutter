@@ -23,9 +23,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart' as vmath;
 
-import '../../core/constants/automaton_canvas.dart';
+import '../../core/constants/automaton_canvas_constants.dart';
 import '../../core/models/simulation_highlight.dart';
 import '../../core/models/simulation_result.dart';
+import '../../core/services/highlight_channel.dart';
 import '../../core/services/simulation_highlight_service.dart';
 import '../../core/models/tm_transition.dart' show TapeDirection;
 import '../../features/canvas/graphview/base_graphview_canvas_controller.dart';
@@ -83,7 +84,7 @@ class _AutomatonGraphViewCanvasState
   late bool _ownsToolController;
   AutomatonCanvasTool _activeTool = AutomatonCanvasTool.selection;
   SimulationHighlightService? _highlightService;
-  SimulationHighlightChannel? _previousHighlightChannel;
+  HighlightChannel? _previousHighlightChannel;
   late _AutomatonGraphSugiyamaAlgorithm _algorithm;
   final Set<String> _selectedTransitions = <String>{};
   String? _transitionSourceId;

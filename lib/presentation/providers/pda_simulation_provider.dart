@@ -10,12 +10,12 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/algorithms/pda_simulator.dart' as pda_core;
 import '../../core/models/pda.dart';
 import '../../core/models/simulation_step.dart';
-import '../../core/algorithms/pda/pda_simulator_facade.dart' as pda_facade;
 
-typedef PDASimulationResult = pda_facade.PDASimulationResult;
-typedef PDAAcceptanceMode = pda_facade.PDAAcceptanceMode;
+typedef PDASimulationResult = pda_core.PDASimulationResult;
+typedef PDAAcceptanceMode = pda_core.PDAAcceptanceMode;
 
 class PDASimulationState {
   final PDA? pda;
@@ -127,7 +127,7 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
       currentStepIndex: 0,
     );
 
-    final result = pda_facade.PDASimulatorFacade.run(
+    final result = pda_core.PDASimulator.simulateNPDA(
       state.pda!,
       input,
       mode: state.mode,

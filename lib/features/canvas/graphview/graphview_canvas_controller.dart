@@ -24,7 +24,7 @@ import 'base_graphview_canvas_controller.dart';
 import 'graphview_automaton_mapper.dart';
 import 'graphview_canvas_models.dart';
 
-void _logAutomatonCanvas(String message) {
+void _logGraphViewCanvas(String message) {
   if (kDebugMode) {
     debugPrint('[GraphViewCanvasController] $message');
   }
@@ -78,7 +78,7 @@ class GraphViewCanvasController
   /// Synchronises the GraphView controller with the latest [automaton].
   @override
   void synchronize(FSA? automaton) {
-    _logAutomatonCanvas(
+    _logGraphViewCanvas(
       'Synchronizing canvas with automaton id=${automaton?.id} states=${automaton?.states.length ?? 0} transitions=${automaton?.transitions.length ?? 0}',
     );
     synchronizeGraph(automaton);
@@ -132,7 +132,7 @@ class GraphViewCanvasController
 
   @override
   void logCanvasStateMutation(String message) {
-    _logAutomatonCanvas(message);
+    _logGraphViewCanvas(message);
   }
 
   /// Adds or updates a transition between [fromStateId] and [toStateId].
@@ -145,7 +145,7 @@ class GraphViewCanvasController
     double? controlPointY,
   }) {
     final edgeId = transitionId ?? generateEdgeId();
-    _logAutomatonCanvas(
+    _logGraphViewCanvas(
       'addOrUpdateTransition -> id=$edgeId from=$fromStateId to=$toStateId label=$label cp=(${controlPointX?.toStringAsFixed(2)}, ${controlPointY?.toStringAsFixed(2)})',
     );
     performMutation(() {
@@ -162,7 +162,7 @@ class GraphViewCanvasController
 
   /// Removes the transition identified by [id] from the automaton.
   void removeTransition(String id) {
-    _logAutomatonCanvas('removeTransition -> id=$id');
+    _logGraphViewCanvas('removeTransition -> id=$id');
     performMutation(() {
       _provider.removeTransition(id: id);
     });
@@ -177,7 +177,7 @@ class GraphViewCanvasController
 
     final service = algorithmStepHighlightService;
     if (service == null) {
-      _logAutomatonCanvas(
+      _logGraphViewCanvas(
         'Cannot apply algorithm step highlight: service not configured',
       );
       return;
@@ -185,7 +185,7 @@ class GraphViewCanvasController
 
     final highlight = service.computeFromMetadata(metadata);
     applyHighlight(highlight);
-    _logAutomatonCanvas(
+    _logGraphViewCanvas(
       'Applied algorithm step highlight (states: ${highlight.stateIds.length}, transitions: ${highlight.transitionIds.length})',
     );
   }
@@ -193,7 +193,7 @@ class GraphViewCanvasController
   /// Clears any algorithm step highlight from the canvas.
   void clearAlgorithmStepHighlight() {
     clearHighlight();
-    _logAutomatonCanvas('Cleared algorithm step highlight');
+    _logGraphViewCanvas('Cleared algorithm step highlight');
   }
 
   @override
@@ -225,7 +225,7 @@ class GraphViewCanvasController
       modified: DateTime.now(),
     );
 
-    _logAutomatonCanvas(
+    _logGraphViewCanvas(
       'applySnapshotToDomain -> states=${merged.states.length} transitions=${merged.transitions.length}',
     );
     _provider.updateAutomaton(merged);

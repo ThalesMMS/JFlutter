@@ -9,17 +9,21 @@
 //
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jflutter/core/models/settings_model.dart';
 import 'package:jflutter/data/repositories/settings_repository_impl.dart';
 import 'package:jflutter/data/storage/settings_storage.dart';
 
 void main() {
   group('SharedPreferencesSettingsRepository legacy keys', () {
-    late InMemorySettingsStorage storage;
+    late SharedPreferencesSettingsStorage storage;
     late SharedPreferencesSettingsRepository repository;
 
     setUp(() {
-      storage = InMemorySettingsStorage({'settings_use_draw2d_canvas': true});
+      SharedPreferences.setMockInitialValues({
+        'settings_use_draw2d_canvas': true,
+      });
+      storage = const SharedPreferencesSettingsStorage();
       repository = SharedPreferencesSettingsRepository(storage: storage);
     });
 

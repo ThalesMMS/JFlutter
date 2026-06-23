@@ -53,7 +53,7 @@ class _MockGrammarNotifier extends GrammarProvider {
   Future<Result<FSA>> convertToAutomaton() async {
     state = state.copyWith(
       isConverting: true,
-      activeConversion: GrammarConversionType.grammarToFsa,
+      activeConversion: GrammarConversionKind.grammarToFsa,
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -91,7 +91,7 @@ class _MockGrammarNotifier extends GrammarProvider {
   Future<Result<PDA>> convertToPda() async {
     state = state.copyWith(
       isConverting: true,
-      activeConversion: GrammarConversionType.grammarToPda,
+      activeConversion: GrammarConversionKind.grammarToPda,
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -135,7 +135,7 @@ class _MockGrammarNotifier extends GrammarProvider {
   Future<Result<PDA>> convertToPdaStandard() async {
     state = state.copyWith(
       isConverting: true,
-      activeConversion: GrammarConversionType.grammarToPdaStandard,
+      activeConversion: GrammarConversionKind.grammarToPdaStandard,
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -179,7 +179,7 @@ class _MockGrammarNotifier extends GrammarProvider {
   Future<Result<PDA>> convertToPdaGreibach() async {
     state = state.copyWith(
       isConverting: true,
-      activeConversion: GrammarConversionType.grammarToPdaGreibach,
+      activeConversion: GrammarConversionKind.grammarToPdaGreibach,
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -440,7 +440,7 @@ void main() {
             ),
           ],
           isConverting: true,
-          activeConversion: GrammarConversionType.grammarToFsa,
+          activeConversion: GrammarConversionKind.grammarToFsa,
         ),
         hasAnimatingIndicator: true,
       );
@@ -465,7 +465,7 @@ void main() {
             ),
           ],
           isConverting: true,
-          activeConversion: GrammarConversionType.grammarToPda,
+          activeConversion: GrammarConversionKind.grammarToPda,
         ),
         hasAnimatingIndicator: true,
       );
@@ -490,7 +490,7 @@ void main() {
               ),
             ],
             isConverting: true,
-            activeConversion: GrammarConversionType.grammarToPdaStandard,
+            activeConversion: GrammarConversionKind.grammarToPdaStandard,
           ),
           hasAnimatingIndicator: true,
         );
@@ -516,7 +516,7 @@ void main() {
               ),
             ],
             isConverting: true,
-            activeConversion: GrammarConversionType.grammarToPdaGreibach,
+            activeConversion: GrammarConversionKind.grammarToPdaGreibach,
           ),
           hasAnimatingIndicator: true,
         );

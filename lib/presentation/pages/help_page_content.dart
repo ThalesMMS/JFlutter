@@ -125,12 +125,11 @@ class _GettingStartedContent extends StatelessWidget {
             Icons.pattern,
             'Regular Expressions - Pattern matching and conversion',
           ),
-          if (V1FeatureFlags.showPumpingLemma)
-            _buildFeatureCard(
-              'Pumping',
-              Icons.games,
-              'Pumping Lemma Game - Interactive learning tool',
-            ),
+          _buildFeatureCard(
+            'Pumping',
+            Icons.games,
+            'Pumping Lemma Game - Interactive learning tool',
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Basic Operations'),
           const SizedBox(height: 16),

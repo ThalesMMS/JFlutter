@@ -15,7 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import '../../core/constants/automaton_canvas.dart';
+import '../../core/constants/automaton_canvas_constants.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/fsa_transition.dart';
 import '../../core/models/state.dart';

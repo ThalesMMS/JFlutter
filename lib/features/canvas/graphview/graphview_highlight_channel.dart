@@ -10,13 +10,12 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../../../core/models/simulation_highlight.dart';
-import '../../../core/services/simulation_highlight_service.dart';
+import '../../../core/services/highlight_channel.dart';
 import 'graphview_highlight_controller.dart';
 
-/// Highlight channel that bridges [SimulationHighlightService] payloads to a
+/// Highlight channel that bridges simulation highlight payloads to a
 /// GraphView canvas controller.
-class GraphViewSimulationHighlightChannel
-    implements SimulationHighlightChannel {
+class GraphViewSimulationHighlightChannel implements HighlightChannel {
   GraphViewSimulationHighlightChannel(this._controller);
 
   final GraphViewHighlightController _controller;

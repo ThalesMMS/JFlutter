@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/config/v1_feature_flags.dart';
 import '../widgets/help_search_delegate.dart';
 
 part 'help_page_content.dart';
@@ -65,12 +64,11 @@ class _HelpPageState extends ConsumerState<HelpPage> {
           icon: Icons.pattern,
           content: _RegexHelpContent(),
         ),
-        if (V1FeatureFlags.showPumpingLemma)
-          HelpSection(
-            title: 'Pumping Lemma',
-            icon: Icons.games,
-            content: _PumpingLemmaHelpContent(),
-          ),
+        HelpSection(
+          title: 'Pumping Lemma',
+          icon: Icons.games,
+          content: _PumpingLemmaHelpContent(),
+        ),
         HelpSection(
           title: 'File Operations',
           icon: Icons.folder_open,

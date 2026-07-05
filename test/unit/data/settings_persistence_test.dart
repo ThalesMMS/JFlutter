@@ -47,6 +47,33 @@ class _RecordingSettingsStorage implements SettingsStorage {
   }
 }
 
+class _FailingSettingsStorage extends _RecordingSettingsStorage {
+  _FailingSettingsStorage(
+    Map<String, Object?> initialValues, {
+    required this.failKey,
+  }) : super(initialValues);
+
+  final String failKey;
+
+  @override
+  Future<bool> writeString(String key, String value) async {
+    await super.writeString(key, value);
+    return key != failKey;
+  }
+
+  @override
+  Future<bool> writeBool(String key, bool value) async {
+    await super.writeBool(key, value);
+    return key != failKey;
+  }
+
+  @override
+  Future<bool> writeDouble(String key, double value) async {
+    await super.writeDouble(key, value);
+    return key != failKey;
+  }
+}
+
 class _ThrowingSettingsRepository implements SettingsRepository {
   @override
   Future<SettingsModel> loadSettings() async {
@@ -129,6 +156,42 @@ void main() {
           .loadSettings();
 
       expect(loaded, equals(settings));
+    });
+
+    test('saveSettings rolls back written keys when one write fails',
+        () async {
+      final original = _settingsValues(const SettingsModel());
+      final storage = _FailingSettingsStorage(
+        original,
+        failKey: 'settings_theme_mode',
+      );
+      final repository = SharedPreferencesSettingsRepository(storage: storage);
+
+      await expectLater(
+        repository.saveSettings(_customSettings()),
+        throwsException,
+      );
+
+      expect(storage.values, equals(original));
+    });
+
+    test('saveSettings removes keys that were absent before a failed save',
+        () async {
+      final original = <String, Object?>{
+        'settings_theme_mode': 'light',
+      };
+      final storage = _FailingSettingsStorage(
+        original,
+        failKey: 'settings_grid_size',
+      );
+      final repository = SharedPreferencesSettingsRepository(storage: storage);
+
+      await expectLater(
+        repository.saveSettings(_customSettings()),
+        throwsException,
+      );
+
+      expect(storage.values, equals(original));
     });
 
     test('restores string, bool, and double settings by type', () async {

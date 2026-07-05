@@ -246,7 +246,7 @@ void main() {
             controlPointX: 50,
             controlPointY: 42,
             readSymbol: '0',
-            writeSymbol: '1',
+            writeSymbol: 'X',
             direction: TapeDirection.stay,
           ),
         ],
@@ -254,6 +254,9 @@ void main() {
           id: 'tm-1',
           name: 'Snapshot TM',
           alphabet: ['0', '1'],
+          tapeAlphabet: ['0', '1', 'X', 'B'],
+          blankSymbol: 'B',
+          tapeCount: 1,
         ),
       );
 
@@ -264,8 +267,13 @@ void main() {
       expect(rebuilt!.states.length, equals(2));
       final transition = rebuilt.tmTransitions.single;
       expect(transition.readSymbol, equals('0'));
-      expect(transition.writeSymbol, equals('1'));
+      expect(transition.writeSymbol, equals('X'));
       expect(transition.direction, equals(TapeDirection.stay));
+      expect(rebuilt.alphabet, containsAll({'0', '1'}));
+      expect(rebuilt.alphabet, isNot(contains('X')));
+      expect(rebuilt.tapeAlphabet, containsAll({'0', '1', 'X', 'B'}));
+      expect(rebuilt.blankSymbol, 'B');
+      expect(rebuilt.validate(), isEmpty);
       expect(controller.nodeById('q0'), isNotNull);
       expect(controller.edgeById('t0'), isNotNull);
     });

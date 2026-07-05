@@ -21,6 +21,128 @@ class AppLocalizationsPt extends AppLocalizations {
   String get algorithms => 'Algoritmos';
 
   @override
+  String get homeHelpTooltip => 'Ajuda';
+
+  @override
+  String get homeSettingsTooltip => 'Configurações';
+
+  @override
+  String get homeNavigationFsaLabel => 'AF';
+
+  @override
+  String get homeNavigationFsaDescription => 'Autômatos finitos';
+
+  @override
+  String get homeNavigationGrammarLabel => 'Gramática';
+
+  @override
+  String get homeNavigationGrammarDescription =>
+      'Gramáticas livres de contexto';
+
+  @override
+  String get homeNavigationPdaLabel => 'AP';
+
+  @override
+  String get homeNavigationPdaDescription => 'Autômatos com pilha';
+
+  @override
+  String get homeNavigationTmLabel => 'MT';
+
+  @override
+  String get homeNavigationTmDescription => 'Máquinas de Turing';
+
+  @override
+  String get homeNavigationRegexLabel => 'Regex';
+
+  @override
+  String get homeNavigationRegexDescription => 'Expressões regulares';
+
+  @override
+  String get homeNavigationPumpingLabel => 'Bombeamento';
+
+  @override
+  String get homeNavigationPumpingDescription => 'Lema do bombeamento';
+
+  @override
+  String get helpPageTitle => 'Ajuda e documentação';
+
+  @override
+  String get helpSearchTooltip => 'Pesquisar ajuda';
+
+  @override
+  String get helpQuickStartTitle => 'Guia rápido';
+
+  @override
+  String get helpQuickStartBody =>
+      'Bem-vindo ao JFlutter. Comece com este fluxo básico:\n\n'
+      '1. Escolha um espaço de trabalho, como AF, Gramática, AP, MT ou Regex.\n'
+      '2. Inicie em branco ou abra um exemplo ou arquivo compatível.\n'
+      '3. Use o editor para criar sua máquina ou gramática. Toque duas vezes em um estado para ações rápidas.\n'
+      '4. Execute simulações para testar seu trabalho.\n'
+      '5. Use os algoritmos para transformar estruturas.\n\n'
+      'Dicas:\n'
+      '• Use as abas de navegação ou chips de seção para trocar de espaço rapidamente.\n'
+      '• Toque duas vezes em um estado para abrir o menu de ações rápidas.\n'
+      '• Faça pinça para ampliar ou reduzir o canvas.\n'
+      '• Toque no ícone de guia rápido quando precisar relembrar o fluxo.';
+
+  @override
+  String get helpGotIt => 'Entendi!';
+
+  @override
+  String get helpSearchFieldLabel => 'Pesquisar ajuda...';
+
+  @override
+  String get helpSearchClear => 'Limpar pesquisa';
+
+  @override
+  String get helpSearchClose => 'Fechar pesquisa';
+
+  @override
+  String get helpSearchTitle => 'Pesquisar ajuda';
+
+  @override
+  String get helpSearchSubtitle =>
+      'Encontre tutoriais, atalhos e explicações de teoria';
+
+  @override
+  String get helpSearchNoResults => 'Nenhum resultado encontrado';
+
+  @override
+  String get helpSearchNoResultsDescription =>
+      'Tente outras palavras-chave ou confira a ortografia';
+
+  @override
+  String get helpSectionGettingStarted => 'Primeiros passos';
+
+  @override
+  String get helpSectionFsa => 'AF';
+
+  @override
+  String get helpSectionGrammar => 'Gramática';
+
+  @override
+  String get helpSectionPda => 'AP';
+
+  @override
+  String get helpSectionTm => 'Máquina de Turing';
+
+  @override
+  String get helpSectionRegex => 'Expressão regular';
+
+  @override
+  String get helpSectionPumping => 'Lema do bombeamento';
+
+  @override
+  String get helpSectionFileOperations => 'Operações de arquivo';
+
+  @override
+  String get helpSectionTroubleshooting => 'Solução de problemas';
+
+  @override
+  String get helpSectionLicenses => 'Licenças';
+
+  @override
   String get regularExpressionTitle => 'Expressão regular';
 
   @override

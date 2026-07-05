@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/help_content_model.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../providers/help_provider.dart';
 import 'context_aware_help_panel.dart';
 import 'help_icon_mapper.dart';
@@ -25,8 +26,9 @@ import 'help_icon_mapper.dart';
 class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
   HelpSearchDelegate({
     this.ref,
+    String? searchFieldLabel,
   }) : super(
-          searchFieldLabel: 'Search help...',
+          searchFieldLabel: searchFieldLabel,
           keyboardType: TextInputType.text,
         );
 
@@ -53,10 +55,11 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
 
   @override
   List<Widget> buildActions(BuildContext context) {
+    final l10n = jflapLocalizationsOf(context);
     return [
       if (query.isNotEmpty)
         Semantics(
-          label: 'Clear search',
+          label: l10n.helpSearchClear,
           button: true,
           child: IconButton(
             onPressed: () {
@@ -64,7 +67,7 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
               showSuggestions(context);
             },
             icon: const Icon(Icons.clear),
-            tooltip: 'Clear search',
+            tooltip: l10n.helpSearchClear,
           ),
         ),
     ];
@@ -72,15 +75,16 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
 
   @override
   Widget buildLeading(BuildContext context) {
+    final l10n = jflapLocalizationsOf(context);
     return Semantics(
-      label: 'Close search',
+      label: l10n.helpSearchClose,
       button: true,
       child: IconButton(
         onPressed: () {
           close(context, null);
         },
         icon: const Icon(Icons.arrow_back),
-        tooltip: 'Close search',
+        tooltip: l10n.helpSearchClose,
       ),
     );
   }
@@ -101,6 +105,7 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     return Center(
       child: Padding(
@@ -115,14 +120,14 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Search Help',
+              l10n.helpSearchTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Find tutorials, shortcuts, and theory explanations',
+              l10n.helpSearchSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -135,23 +140,23 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
               alignment: WrapAlignment.center,
               children: [
                 _SuggestionChip(
-                  label: 'Canvas Tools',
+                  label: l10n.helpSearchSuggestion('canvasTools'),
                   onTap: () => query = 'canvas',
                 ),
                 _SuggestionChip(
-                  label: 'Shortcuts',
+                  label: l10n.helpSearchSuggestion('shortcuts'),
                   onTap: () => query = 'keyboard',
                 ),
                 _SuggestionChip(
-                  label: 'DFA',
+                  label: l10n.helpSearchSuggestion('dfa'),
                   onTap: () => query = 'dfa',
                 ),
                 _SuggestionChip(
-                  label: 'NFA',
+                  label: l10n.helpSearchSuggestion('nfa'),
                   onTap: () => query = 'nfa',
                 ),
                 _SuggestionChip(
-                  label: 'Algorithms',
+                  label: l10n.helpSearchSuggestion('algorithms'),
                   onTap: () => query = 'algorithm',
                 ),
               ],
@@ -224,8 +229,12 @@ class _SearchResultsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = jflapLocalizationsOf(context);
     final helpState = ref.watch(helpProvider);
-    final results = _searchLocal(helpState.allContent.values, query);
+    final results = _searchLocal(
+      helpState.allContent.values.map(l10n.localizeHelpContent),
+      query,
+    );
 
     if (results.isEmpty) {
       return _buildNoResults(context);
@@ -259,6 +268,7 @@ class _SearchResultsList extends ConsumerWidget {
   Widget _buildNoResults(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     return Center(
       child: Padding(
@@ -273,14 +283,14 @@ class _SearchResultsList extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No results found',
+              l10n.helpSearchNoResults,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try different keywords or check your spelling',
+              l10n.helpSearchNoResultsDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -328,6 +338,7 @@ class _CategorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +364,7 @@ class _CategorySection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${results.length} ${results.length == 1 ? 'result' : 'results'}',
+                l10n.helpSearchResultCount(results.length),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -389,9 +400,10 @@ class _ResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     return Semantics(
-      label: 'Help topic: ${result.title}',
+      label: l10n.helpTopicSemanticLabel(result.title),
       button: true,
       child: InkWell(
         onTap: onTap,

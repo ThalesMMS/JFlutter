@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/help_content.dart';
 import '../../core/models/help_content_model.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../widgets/help_icon_mapper.dart';
 
 class HelpCategoryPage extends StatelessWidget {
@@ -32,7 +33,7 @@ class HelpCategoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Help: ${_formatCategory(category)}'),
+        title: Text('${jflapLocalizationsOf(context).helpPageTitle}: $category'),
       ),
       body: sortedResults.isEmpty
           ? _EmptyState(category: category)
@@ -64,18 +65,10 @@ class HelpCategoryPage extends StatelessWidget {
     );
   }
 
-  String _formatCategory(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return 'General';
-    }
-    final normalized = trimmed.replaceAll('_', ' ');
-    return '${normalized[0].toUpperCase()}${normalized.substring(1)}';
-  }
-
   void _showHelpDialog(BuildContext context, HelpContentModel helpContent) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     showDialog<void>(
       context: context,
@@ -100,7 +93,7 @@ class HelpCategoryPage extends StatelessWidget {
                 if (helpContent.relatedConcepts.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
-                    'Related Concepts:',
+                    '${l10n.relatedConcepts}:',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -110,7 +103,10 @@ class HelpCategoryPage extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 4,
                     children: helpContent.relatedConcepts.map((concept) {
-                      final label = kHelpContent[concept]?.title ?? concept;
+                      final label = l10n.relatedConceptLabel(
+                        concept,
+                        kHelpContent[concept],
+                      );
                       return Chip(
                         label: Text(label),
                         labelStyle: theme.textTheme.bodySmall,
@@ -125,7 +121,7 @@ class HelpCategoryPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(l10n.close),
             ),
           ],
         );
@@ -157,7 +153,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'No help items found for "$category".',
+              jflapLocalizationsOf(context).noHelpItemsFound(category),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

@@ -51,6 +51,9 @@ class GraphViewTmMapper {
       id: machine.id,
       name: machine.name,
       alphabet: machine.alphabet,
+      tapeAlphabet: machine.tapeAlphabet,
+      blankSymbol: machine.blankSymbol,
+      tapeCount: machine.tapeCount,
     );
 
     return GraphViewAutomatonSnapshot(
@@ -95,15 +98,14 @@ class GraphViewTmMapper {
       stateMap: stateMap,
     );
 
-    final alphabet = <String>{
-      ...template.alphabet,
-      for (final edge in snapshot.edges)
-        if (edge.readSymbol != null && edge.readSymbol!.isNotEmpty)
-          edge.readSymbol!,
-      for (final edge in snapshot.edges)
-        if (edge.writeSymbol != null && edge.writeSymbol!.isNotEmpty)
-          edge.writeSymbol!,
-    };
+    final blankSymbol = snapshot.metadata.blankSymbol ?? template.blankSymbol;
+    final tapeAlphabet = snapshot.metadata.tapeAlphabet.isNotEmpty
+        ? {
+            ...snapshot.metadata.tapeAlphabet,
+            if (blankSymbol.isNotEmpty) blankSymbol,
+          }
+        : template.tapeAlphabet;
+    final alphabet = snapshot.metadata.alphabet.toSet();
 
     final initialState = GraphViewMapperHelpers.resolveInitialState(
       nodes: snapshot.nodes,
@@ -117,6 +119,9 @@ class GraphViewTmMapper {
       acceptingStates: acceptingStates,
       initialState: initialState,
       alphabet: alphabet,
+      tapeAlphabet: tapeAlphabet,
+      blankSymbol: blankSymbol,
+      tapeCount: snapshot.metadata.tapeCount ?? template.tapeCount,
     );
   }
 }

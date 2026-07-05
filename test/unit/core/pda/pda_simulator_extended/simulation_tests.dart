@@ -82,6 +82,54 @@ void _runPdaSimulationTests() {
       expect(result.data!.accepted, false);
       expect(result.data!.errorMessage, contains('Rejected'));
     });
+
+    test('reports depth limit as inconclusive instead of rejected', () {
+      final q0 = State(
+        id: 'q0',
+        label: 'q0',
+        position: Vector2.zero(),
+        isInitial: true,
+        isAccepting: true,
+      );
+      final loop = PDATransition(
+        id: 'loop',
+        fromState: q0,
+        toState: q0,
+        inputSymbol: 'a',
+        popSymbol: 'Z',
+        pushSymbol: 'Z',
+        label: 'a,Z/Z',
+      );
+      final pda = PDA(
+        id: 'a_star',
+        name: 'a* PDA',
+        states: {q0},
+        transitions: <Transition>{loop},
+        alphabet: const {'a'},
+        initialState: q0,
+        acceptingStates: {q0},
+        stackAlphabet: const {'Z'},
+        initialStackSymbol: 'Z',
+        created: DateTime.now(),
+        modified: DateTime.now(),
+        bounds: const math.Rectangle(0, 0, 400, 300),
+      );
+
+      final longAcceptedInput =
+          List.filled(PDASimulator.defaultMaxBranchingDepth + 1, 'a').join();
+
+      final result = PDASimulator.simulateNPDA(pda, longAcceptedInput);
+
+      expect(result.isSuccess, true);
+      expect(result.data!.accepted, false);
+      expect(result.data!.errorMessage, contains('limit'));
+      expect(result.data!.errorMessage, isNot(contains('Rejected')));
+
+      final acceptsResult = PDASimulator.accepts(pda, longAcceptedInput);
+
+      expect(acceptsResult.isSuccess, false);
+      expect(acceptsResult.error, contains('limit'));
+    });
   });
 
   // =========================================================================

@@ -12,6 +12,8 @@
 //
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations_help.dart';
+
 /// Mobile-optimized bottom navigation widget
 class MobileNavigation extends StatelessWidget {
   final int currentIndex;
@@ -78,12 +80,13 @@ class MobileNavigation extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = jflapLocalizationsOf(context);
     final color = isSelected
         ? colorScheme.primary
         : colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Semantics(
-      label: 'Navigate to ${item.label}',
+      label: l10n.navigateTo(item.label),
       hint: item.description,
       button: true,
       enabled: true,

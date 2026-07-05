@@ -203,6 +203,17 @@ class GraphViewTmCanvasController
 
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
+    final metadataBlankSymbol = snapshot.metadata.blankSymbol ?? 'B';
+    final metadataTapeAlphabet = snapshot.metadata.tapeAlphabet.toSet();
+    final initialTapeAlphabet = metadataTapeAlphabet.isNotEmpty
+        ? {
+            ...metadataTapeAlphabet,
+            if (metadataBlankSymbol.isNotEmpty) metadataBlankSymbol,
+          }
+        : {
+            ...snapshot.metadata.alphabet,
+            if (metadataBlankSymbol.isNotEmpty) metadataBlankSymbol,
+          };
     final template = _notifier.currentTm ??
         TM(
           id: snapshot.metadata.id ??
@@ -216,11 +227,9 @@ class GraphViewTmCanvasController
           created: DateTime.now(),
           modified: DateTime.now(),
           bounds: const math.Rectangle<double>(0, 0, 800, 600),
-          tapeAlphabet: snapshot.metadata.alphabet.toSet().isEmpty
-              ? const {'B'}
-              : snapshot.metadata.alphabet.toSet(),
-          blankSymbol: 'B',
-          tapeCount: 1,
+          tapeAlphabet: initialTapeAlphabet,
+          blankSymbol: metadataBlankSymbol,
+          tapeCount: snapshot.metadata.tapeCount ?? 1,
           panOffset: Vector2.zero(),
           zoomLevel: 1.0,
         );
@@ -229,9 +238,6 @@ class GraphViewTmCanvasController
         GraphViewTmMapper.mergeIntoTemplate(snapshot, template).copyWith(
       id: snapshot.metadata.id ?? template.id,
       name: snapshot.metadata.name ?? template.name,
-      tapeAlphabet: snapshot.metadata.alphabet.isNotEmpty
-          ? snapshot.metadata.alphabet.toSet()
-          : template.tapeAlphabet,
       modified: DateTime.now(),
     );
 

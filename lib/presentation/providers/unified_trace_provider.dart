@@ -55,6 +55,8 @@ dynamic _deepFreezeValue(dynamic value) {
   return value;
 }
 
+const Object _unset = Object();
+
 /// Unified trace state that can handle traces from any automaton type
 class UnifiedTraceState with TraceStepNavigation<UnifiedTraceState> {
   final SimulationResult? currentTrace;
@@ -83,27 +85,35 @@ class UnifiedTraceState with TraceStepNavigation<UnifiedTraceState> {
   });
 
   UnifiedTraceState copyWith({
-    SimulationResult? currentTrace,
+    Object? currentTrace = _unset,
     int? currentStepIndex,
     bool? isRunning,
     bool? stepByStep,
     String? lastInput,
-    String? automatonType,
-    String? automatonId,
+    Object? automatonType = _unset,
+    Object? automatonId = _unset,
     List<Map<String, dynamic>>? traceHistory,
-    String? errorMessage,
+    Object? errorMessage = _unset,
     Map<String, dynamic>? traceStatistics,
   }) {
     return UnifiedTraceState(
-      currentTrace: currentTrace ?? this.currentTrace,
+      currentTrace: currentTrace == _unset
+          ? this.currentTrace
+          : currentTrace as SimulationResult?,
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       isRunning: isRunning ?? this.isRunning,
       stepByStep: stepByStep ?? this.stepByStep,
       lastInput: lastInput ?? this.lastInput,
-      automatonType: automatonType ?? this.automatonType,
-      automatonId: automatonId ?? this.automatonId,
+      automatonType: automatonType == _unset
+          ? this.automatonType
+          : automatonType as String?,
+      automatonId: automatonId == _unset
+          ? this.automatonId
+          : automatonId as String?,
       traceHistory: traceHistory ?? this.traceHistory,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage == _unset
+          ? this.errorMessage
+          : errorMessage as String?,
       traceStatistics: traceStatistics ?? this.traceStatistics,
     );
   }

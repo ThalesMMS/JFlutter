@@ -142,13 +142,22 @@ class GrammarToFSAConverter {
     final alphabet = grammar.terminals
         .where((symbol) => !_isLambdaSymbol(symbol))
         .toSet();
+    final canonicalTransitions = transitions
+        .map(
+          (transition) => transition.copyWith(
+            fromState:
+                stateMap[transition.fromState.id] ?? transition.fromState,
+            toState: stateMap[transition.toState.id] ?? transition.toState,
+          ),
+        )
+        .toSet();
 
     final now = DateTime.now();
     final automaton = FSA(
       id: 'fsa_from_${grammar.id}',
       name: '${grammar.name} (Automaton)',
       states: states,
-      transitions: transitions,
+      transitions: canonicalTransitions,
       alphabet: alphabet,
       initialState: stateMap[grammar.startSymbol],
       acceptingStates: acceptingStates,

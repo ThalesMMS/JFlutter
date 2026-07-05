@@ -17,6 +17,8 @@ import 'transition.dart';
 import 'fsa_transition.dart';
 import 'automaton.dart';
 
+const Object _unset = Object();
+
 /// Finite State Automaton (FSA) implementation
 class FSA extends Automaton {
   FSA({
@@ -43,7 +45,7 @@ class FSA extends Automaton {
     Set<State>? states,
     Set<Transition>? transitions,
     Set<String>? alphabet,
-    State? initialState,
+    Object? initialState = _unset,
     Set<State>? acceptingStates,
     AutomatonType? type,
     DateTime? created,
@@ -58,7 +60,8 @@ class FSA extends Automaton {
       states: states ?? this.states,
       transitions: transitions ?? this.transitions,
       alphabet: alphabet ?? this.alphabet,
-      initialState: initialState ?? this.initialState,
+      initialState:
+          initialState == _unset ? this.initialState : initialState as State?,
       acceptingStates: acceptingStates ?? this.acceptingStates,
       created: created ?? this.created,
       modified: modified ?? this.modified,
@@ -95,14 +98,22 @@ class FSA extends Automaton {
 
   /// Creates an FSA from a JSON representation
   factory FSA.fromJson(Map<String, dynamic> json) {
+    final states = (json['states'] as List)
+        .map((s) => State.fromJson(s as Map<String, dynamic>))
+        .toSet();
+    final statesById = {for (final state in states) state.id: state};
+
     return FSA(
       id: json['id'] as String,
       name: json['name'] as String,
-      states: (json['states'] as List)
-          .map((s) => State.fromJson(s as Map<String, dynamic>))
-          .toSet(),
+      states: states,
       transitions: (json['transitions'] as List)
-          .map((t) => FSATransition.fromJson(t as Map<String, dynamic>))
+          .map(
+            (t) => FSATransition.fromJson(
+              t as Map<String, dynamic>,
+              statesById: statesById,
+            ),
+          )
           .toSet(),
       alphabet: Set<String>.from(json['alphabet'] as List),
       initialState: json['initialState'] != null

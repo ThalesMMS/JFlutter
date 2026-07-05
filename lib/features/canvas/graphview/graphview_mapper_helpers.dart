@@ -31,11 +31,17 @@ class GraphViewMapperHelpers {
     required String id,
     required String name,
     required Iterable<String> alphabet,
+    Iterable<String> tapeAlphabet = const <String>[],
+    String? blankSymbol,
+    int? tapeCount,
   }) {
     return GraphViewAutomatonMetadata(
       id: id,
       name: name,
       alphabet: alphabet.toList(),
+      tapeAlphabet: tapeAlphabet.toList(),
+      blankSymbol: blankSymbol,
+      tapeCount: tapeCount,
     );
   }
 
@@ -77,7 +83,8 @@ class GraphViewMapperHelpers {
         return stateMap[node.id];
       }
     }
-    return fallbackInitialState;
+    final fallbackId = fallbackInitialState?.id;
+    return fallbackId == null ? null : stateMap[fallbackId];
   }
 
   static ({State fromState, State toState}) resolveEdgeEndpoints({

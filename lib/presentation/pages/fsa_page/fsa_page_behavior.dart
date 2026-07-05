@@ -459,12 +459,8 @@ extension _FSAPageStateBehavior on _FSAPageState {
                   onClear: () => ref
                       .read(automatonStateProvider.notifier)
                       .clearAutomaton(),
-                  onUndo: _canvasController.canUndo
-                      ? () => _canvasController.undo()
-                      : null,
-                  onRedo: _canvasController.canRedo
-                      ? () => _canvasController.redo()
-                      : null,
+                  onUndo: _canvasController.undo,
+                  onRedo: _canvasController.redo,
                   canUndo: _canvasController.canUndo,
                   canRedo: _canvasController.canRedo,
                   onSimulate: null,
@@ -797,32 +793,9 @@ extension _FSAPageStateBehavior on _FSAPageState {
     ConversionHistory? history,
     FSA? currentAutomaton,
   ) {
-    if (history?.initialSnapshot == null ||
-        history?.finalSnapshot == null ||
-        currentAutomaton == null) {
-      return const SizedBox.shrink();
-    }
-
-    late final FSA beforeAutomaton;
-    late final FSA afterAutomaton;
-    try {
-      beforeAutomaton = FSA.fromJson(history!.initialSnapshot!);
-      afterAutomaton = FSA.fromJson(history.finalSnapshot!);
-    } catch (_) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: SizedBox(
-        height: 320,
-        child: BeforeAfterComparison(
-          beforeAutomaton: beforeAutomaton,
-          afterAutomaton: afterAutomaton,
-          transformationDescription: 'Conversion result',
-          showStatistics: true,
-        ),
-      ),
+    return FSAConversionComparisonPanel(
+      history: history,
+      currentAutomaton: currentAutomaton,
     );
   }
 

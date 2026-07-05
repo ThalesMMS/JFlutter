@@ -240,12 +240,8 @@ class _TMPageState extends ConsumerState<TMPage>
                 onFitToContent: _canvasController.fitToContent,
                 onResetView: _canvasController.resetView,
                 onClear: _clearCanvasMachine,
-                onUndo: _canvasController.canUndo
-                    ? () => _canvasController.undo()
-                    : null,
-                onRedo: _canvasController.canRedo
-                    ? () => _canvasController.redo()
-                    : null,
+                onUndo: _canvasController.undo,
+                onRedo: _canvasController.redo,
                 canUndo: _canvasController.canUndo,
                 canRedo: _canvasController.canRedo,
                 onSimulate: null,

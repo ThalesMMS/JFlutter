@@ -12,7 +12,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/help_content.dart';
 import '../../core/models/help_content_model.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../pages/help_category_page.dart';
 import '../providers/help_provider.dart';
 import 'app_snackbar.dart';
@@ -55,10 +57,12 @@ class ContextAwareHelpPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
+    final localizedHelpContent = l10n.localizeHelpContent(helpContent);
 
     return Semantics(
       namesRoute: true,
-      label: 'Contextual help panel',
+      label: l10n.contextualHelpPanelLabel,
       child: AlertDialog(
         clipBehavior: Clip.antiAlias,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -66,7 +70,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
         contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
         actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
         title: _PanelTitle(
-          helpContent: helpContent,
+          helpContent: localizedHelpContent,
           colorScheme: colorScheme,
         ),
         content: ConstrainedBox(
@@ -77,18 +81,18 @@ class ContextAwareHelpPanel extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _CategoryChip(
-                  category: helpContent.category,
+                  category: localizedHelpContent.category,
                   colorScheme: colorScheme,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  helpContent.content,
+                  localizedHelpContent.content,
                   style: theme.textTheme.bodyMedium,
                 ),
-                if (helpContent.relatedConcepts.isNotEmpty) ...[
+                if (localizedHelpContent.relatedConcepts.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   _RelatedConceptsSection(
-                    relatedConcepts: helpContent.relatedConcepts,
+                    relatedConcepts: localizedHelpContent.relatedConcepts,
                     theme: theme,
                     colorScheme: colorScheme,
                     onNavigateToRelated: onNavigateToRelated,
@@ -108,19 +112,19 @@ class ContextAwareHelpPanel extends ConsumerWidget {
         ),
         actions: [
           Semantics(
-            label: 'Close help panel',
+            label: l10n.closeHelpPanel,
             button: true,
             child: TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 onClose?.call();
               },
-              child: const Text('Close'),
+              child: Text(l10n.close),
             ),
           ),
-          if (helpContent.keywords.isNotEmpty)
+          if (localizedHelpContent.keywords.isNotEmpty)
             Semantics(
-              label: 'View all related help',
+              label: l10n.viewAllRelatedHelp,
               button: true,
               child: TextButton.icon(
                 onPressed: () async {
@@ -129,10 +133,13 @@ class ContextAwareHelpPanel extends ConsumerWidget {
                   navigator.pop();
                   // Navigate to help page with this category
                   await _showCategoryHelp(
-                      rootContext, ref, helpContent.category);
+                    rootContext,
+                    ref,
+                    helpContent.category,
+                  );
                 },
                 icon: const Icon(Icons.help_outline),
-                label: const Text('More Help'),
+                label: Text(l10n.moreHelp),
               ),
             ),
         ],
@@ -147,15 +154,19 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     String category,
   ) async {
     final helpNotifier = ref.read(helpProvider.notifier);
+    final l10n = jflapLocalizationsOf(context);
 
     List<HelpContentModel> results = [];
     try {
-      results = helpNotifier.getHelpByCategory(category);
+      results = helpNotifier
+          .getHelpByCategory(category)
+          .map(l10n.localizeHelpContent)
+          .toList();
     } catch (error) {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: 'Unable to load help for "$category".',
+          message: jflapLocalizationsOf(context).unableToLoadHelp(category),
           tone: AppSnackBarTone.error,
         );
       }
@@ -167,7 +178,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     if (results.isEmpty) {
       showAppSnackBar(
         context,
-        message: 'No help items found for "$category".',
+        message: jflapLocalizationsOf(context).noHelpItemsFound(category),
         tone: AppSnackBarTone.info,
       );
       return;
@@ -176,7 +187,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => HelpCategoryPage(
-          category: category,
+          category: l10n.helpContentCategory(category),
           results: results,
         ),
       ),
@@ -311,7 +322,7 @@ class _RelatedConceptsSection extends ConsumerWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Related Concepts',
+              jflapLocalizationsOf(context).relatedConcepts,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.secondary,
@@ -374,6 +385,12 @@ class _RelatedConceptChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final helpContent = kHelpContent[conceptId];
+    final label = jflapLocalizationsOf(context).relatedConceptLabel(
+      conceptId,
+      helpContent,
+    );
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -390,7 +407,7 @@ class _RelatedConceptChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _formatConceptId(conceptId),
+              label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSecondaryContainer,
                     fontWeight: FontWeight.w500,
@@ -406,18 +423,6 @@ class _RelatedConceptChip extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// Formats concept ID into a readable label.
-  String _formatConceptId(String id) {
-    // Convert 'tool_add_state' to 'Add State'
-    // Convert 'concept_epsilon' to 'Epsilon'
-    return id
-        .replaceAll(RegExp(r'^(tool|concept)_'), '')
-        .split('_')
-        .where((word) => word.isNotEmpty)
-        .map((word) => word[0].toUpperCase() + word.substring(1))
-        .join(' ');
   }
 }
 

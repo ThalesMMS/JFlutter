@@ -140,10 +140,7 @@ class JflapXmlCodec {
         states: states.toSet(),
         transitions: transitions.toSet(),
         alphabet: alphabet,
-        initialState: states.firstWhere(
-          (s) => s.isInitial,
-          orElse: () => states.first,
-        ),
+        initialState: states.firstWhereOrNull((s) => s.isInitial),
         acceptingStates: states.where((s) => s.isAccepting).toSet(),
         bounds: const math.Rectangle(0, 0, 400, 300),
         created: now,
@@ -279,7 +276,6 @@ class JflapXmlCodec {
         'isFinal': isFinal,
       });
       idLookup[id] = id;
-      idLookup[name] = id;
 
       if (isInitial) {
         initialState = id;
@@ -432,10 +428,10 @@ class JflapXmlCodec {
 
   automaton_state.State? _findState(
     List<automaton_state.State> states,
-    String idOrLabel,
+    String id,
   ) {
     return states.firstWhereOrNull(
-      (s) => s.id == idOrLabel || s.label == idOrLabel,
+      (s) => s.id == id,
     );
   }
 

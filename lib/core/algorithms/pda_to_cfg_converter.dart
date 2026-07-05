@@ -47,6 +47,11 @@ class PDAtoCFGConverter {
       );
     }
 
+    final normalizationError = _validatePopNormalized(pda);
+    if (normalizationError != null) {
+      return Failure(normalizationError);
+    }
+
     final grammar = _buildGrammar(pda);
     if (grammar.productions.isEmpty) {
       return const Failure('No productions could be generated for this PDA.');
@@ -240,6 +245,25 @@ class PDAtoCFGConverter {
     buffer.writeln('Stack alphabet: ${pda.stackAlphabet.join(', ')}');
 
     return buffer.toString();
+  }
+
+  static String? _validatePopNormalized(PDA pda) {
+    for (final transition in pda.pdaTransitions) {
+      if (transition.isLambdaPop || _isLambdaSymbol(transition.popSymbol)) {
+        return 'PDA to CFG conversion requires every transition to pop '
+            'exactly one stack symbol. Transition ${transition.id} uses '
+            'a lambda pop; normalize the PDA before conversion.';
+      }
+    }
+    return null;
+  }
+
+  static bool _isLambdaSymbol(String symbol) {
+    final normalized = symbol.trim().toLowerCase();
+    return normalized.isEmpty ||
+        normalized == 'lambda' ||
+        normalized == '\u03bb' ||
+        normalized == '\u03b5';
   }
 
   static List<List<String>> _stateLabelSequences(

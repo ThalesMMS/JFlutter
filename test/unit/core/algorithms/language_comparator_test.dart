@@ -277,6 +277,20 @@ void main() {
         expect(result.isSuccess, true);
       });
 
+      test('NFA determinization failure should fail comparison', () {
+        final invalidNfa = _createNFAWithInvalidAcceptingState();
+        final dfa = _createDFAEndingInA();
+
+        final result = LanguageComparator.compareLanguages(invalidNfa, dfa);
+
+        expect(result.isFailure, true);
+        expect(result.error, contains('Failed to determinize automaton A'));
+        expect(
+          result.error,
+          contains('Accepting state must be in the states set'),
+        );
+      });
+
       test('Single state accepting automaton should work', () {
         final single1 = _createSingleStateAccepting();
         final single2 = _createSingleStateAccepting();
@@ -398,4 +412,45 @@ void main() {
       });
     });
   });
+}
+
+FSA _createNFAWithInvalidAcceptingState() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+  );
+  final missingAccept = State(
+    id: 'missing',
+    label: 'missing',
+    position: Vector2(200, 0),
+    isAccepting: true,
+  );
+
+  return FSA(
+    id: 'invalid_nfa',
+    name: 'Invalid NFA',
+    states: {q0, q1},
+    transitions: {
+      FSATransition.epsilon(
+        id: 'eps_q0_q1',
+        fromState: q0,
+        toState: q1,
+      ),
+    },
+    alphabet: {'a'},
+    initialState: q0,
+    acceptingStates: {missingAccept},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 200, 100),
+    zoomLevel: 1.0,
+    panOffset: Vector2.zero(),
+  );
 }

@@ -21,6 +21,127 @@ class AppLocalizationsEn extends AppLocalizations {
   String get algorithms => 'Algorithms';
 
   @override
+  String get homeHelpTooltip => 'Help';
+
+  @override
+  String get homeSettingsTooltip => 'Settings';
+
+  @override
+  String get homeNavigationFsaLabel => 'FSA';
+
+  @override
+  String get homeNavigationFsaDescription => 'Finite State Automata';
+
+  @override
+  String get homeNavigationGrammarLabel => 'Grammar';
+
+  @override
+  String get homeNavigationGrammarDescription => 'Context-Free Grammars';
+
+  @override
+  String get homeNavigationPdaLabel => 'PDA';
+
+  @override
+  String get homeNavigationPdaDescription => 'Pushdown Automata';
+
+  @override
+  String get homeNavigationTmLabel => 'TM';
+
+  @override
+  String get homeNavigationTmDescription => 'Turing Machines';
+
+  @override
+  String get homeNavigationRegexLabel => 'Regex';
+
+  @override
+  String get homeNavigationRegexDescription => 'Regular Expressions';
+
+  @override
+  String get homeNavigationPumpingLabel => 'Pumping';
+
+  @override
+  String get homeNavigationPumpingDescription => 'Pumping Lemma';
+
+  @override
+  String get helpPageTitle => 'Help & Documentation';
+
+  @override
+  String get helpSearchTooltip => 'Search Help';
+
+  @override
+  String get helpQuickStartTitle => 'Quick Start Guide';
+
+  @override
+  String get helpQuickStartBody =>
+      'Welcome to JFlutter. Here is a quick way to get started:\n\n'
+      '1. Choose a workspace such as FSA, Grammar, PDA, TM, or Regex.\n'
+      '2. Start with a blank workspace or open a supported example or file.\n'
+      '3. Use the editor to build your machine or grammar. Double-tap a state for quick actions.\n'
+      '4. Run simulations to test your work.\n'
+      '5. Use algorithms to transform structures.\n\n'
+      'Tips:\n'
+      '• Use navigation tabs or section chips to switch workspaces quickly.\n'
+      '• Double-tap a state to open its quick action menu.\n'
+      '• Pinch to zoom on the canvas.\n'
+      '• Tap the Quick Start icon whenever you need a refresher.';
+
+  @override
+  String get helpGotIt => 'Got it!';
+
+  @override
+  String get helpSearchFieldLabel => 'Search help...';
+
+  @override
+  String get helpSearchClear => 'Clear search';
+
+  @override
+  String get helpSearchClose => 'Close search';
+
+  @override
+  String get helpSearchTitle => 'Search Help';
+
+  @override
+  String get helpSearchSubtitle =>
+      'Find tutorials, shortcuts, and theory explanations';
+
+  @override
+  String get helpSearchNoResults => 'No results found';
+
+  @override
+  String get helpSearchNoResultsDescription =>
+      'Try different keywords or check your spelling';
+
+  @override
+  String get helpSectionGettingStarted => 'Getting Started';
+
+  @override
+  String get helpSectionFsa => 'FSA';
+
+  @override
+  String get helpSectionGrammar => 'Grammar';
+
+  @override
+  String get helpSectionPda => 'PDA';
+
+  @override
+  String get helpSectionTm => 'Turing Machine';
+
+  @override
+  String get helpSectionRegex => 'Regular Expression';
+
+  @override
+  String get helpSectionPumping => 'Pumping Lemma';
+
+  @override
+  String get helpSectionFileOperations => 'File Operations';
+
+  @override
+  String get helpSectionTroubleshooting => 'Troubleshooting';
+
+  @override
+  String get helpSectionLicenses => 'Licenses';
+
+  @override
   String get regularExpressionTitle => 'Regular Expression';
 
   @override

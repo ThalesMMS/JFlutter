@@ -21,6 +21,7 @@ import '../../core/models/grammar_diagnostic_severity.dart';
 import '../../core/models/grammar_transformation_step.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import 'algorithm_panel_scaffold.dart';
 import 'base_simulation_panel.dart';
 import 'common/algorithm_button.dart';
 import 'common/algorithm_button_config.dart';
@@ -49,36 +50,11 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            _buildAlgorithmButtons(context),
-            const SizedBox(height: 16),
-            _buildResultsSection(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
+    return AlgorithmPanelScaffold(
+      title: 'Grammar Analysis',
       children: [
-        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'Grammar Analysis',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
+        _buildAlgorithmButtons(context),
+        _buildResultsSection(context),
       ],
     );
   }
@@ -358,35 +334,32 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Analysis Results',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        if (_transformationSteps.isNotEmpty) ...[
-          GrammarTransformationHistory(
-            steps: _transformationSteps,
-            onApplyGrammar: (grammar) {
-              ref.read(grammarProvider.notifier).applyGrammar(grammar);
-              showAppSnackBar(
-                context,
-                message: 'Grammar applied to editor.',
-                tone: AppSnackBarTone.success,
-              );
-            },
-          ),
-          const SizedBox(height: 12),
+    return AlgorithmResultsSection(
+      hasResults: _transformationSteps.isNotEmpty || _analysisResult != null,
+      empty: _buildEmptyResults(context),
+      results: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_transformationSteps.isNotEmpty) ...[
+            GrammarTransformationHistory(
+              steps: _transformationSteps,
+              onApplyGrammar: (grammar) {
+                ref.read(grammarProvider.notifier).applyGrammar(grammar);
+                showAppSnackBar(
+                  context,
+                  message: 'Grammar applied to editor.',
+                  tone: AppSnackBarTone.success,
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_analysisResult == null)
+            _buildEmptyResults(context)
+          else
+            _buildResults(context),
         ],
-        if (_analysisResult == null)
-          _buildEmptyResults(context)
-        else
-          _buildResults(context),
-      ],
+      ),
     );
   }
 
@@ -399,18 +372,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   }
 
   Widget _buildResults(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
+    return AlgorithmResultsCard(
       child: SingleChildScrollView(
         child: Text(
           _analysisResult!,

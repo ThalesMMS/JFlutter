@@ -102,6 +102,12 @@ class MobileAutomatonControls extends StatelessWidget {
     ];
 
     final canvasActions = <_ControlAction>[
+      if (onUndo != null)
+        _ControlAction(
+          icon: Icons.undo,
+          tooltip: 'Undo',
+          onPressed: canUndo ? onUndo : null,
+        ),
       if (onRedo != null)
         _ControlAction(
           icon: Icons.redo,
@@ -148,12 +154,6 @@ class MobileAutomatonControls extends StatelessWidget {
           icon: Icons.delete_outline,
           tooltip: 'Clear canvas',
           onPressed: onClear,
-        ),
-      if (onUndo != null)
-        _ControlAction(
-          icon: Icons.undo,
-          tooltip: 'Undo',
-          onPressed: canUndo ? onUndo : null,
         ),
     ];
 

@@ -371,6 +371,12 @@ class TMSimulator {
 
     // Process until halting
     while (true) {
+      // Accept immediately when entering an accepting state, including the
+      // initial configuration, matching the NTM path and JFLAP semantics.
+      if (tm.acceptingStates.contains(currentState)) {
+        break;
+      }
+
       stepNumber++;
 
       // Check timeout
@@ -476,11 +482,6 @@ class TMSimulator {
             ),
           ),
         );
-      }
-
-      // Check if we're in an accepting state
-      if (tm.acceptingStates.contains(currentState)) {
-        break;
       }
     }
 

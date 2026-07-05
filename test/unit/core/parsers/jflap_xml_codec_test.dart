@@ -49,7 +49,7 @@ void main() {
       expect(xml, isNot(contains('<read>ε</read>')));
     });
 
-    test('decodes FSA transitions that reference state labels', () {
+    test('decodes FSA transitions that reference state ids', () {
       const xml = '''<?xml version="1.0" encoding="UTF-8"?>
 <structure type="fa">
   <automaton>
@@ -61,6 +61,80 @@ void main() {
     <state id="1" name="q1">
       <x>100</x>
       <y>0</y>
+      <final/>
+    </state>
+    <transition>
+      <from>0</from>
+      <to>1</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+      final result = codec.decodeFsaXml(xml);
+
+      expect(result.isSuccess, isTrue);
+      final transition =
+          result.data!.transitions.whereType<FSATransition>().single;
+      expect(transition.fromState.id, equals('0'));
+      expect(transition.toState.id, equals('1'));
+      expect(transition.label, equals('a'));
+    });
+
+    test('rejects FSA transitions that reference state labels instead of ids',
+        () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+    <state id="0" name="q0">
+      <initial/>
+    </state>
+    <state id="1" name="q1">
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+      final result = codec.decodeFsaXml(xml);
+
+      expect(result.isFailure, isTrue);
+      expect(result.error, contains('unknown state'));
+    });
+
+    test('does not fabricate an initial state when marker is absent', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+    <state id="q0" name="q0"/>
+    <state id="q1" name="q1">
+      <final/>
+    </state>
+  </automaton>
+</structure>''';
+
+      final result = codec.decodeFsaXml(xml);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.initialState, isNull);
+      expect(
+        result.data!.states.where((state) => state.isInitial),
+        isEmpty,
+      );
+    });
+
+    test('resolves ambiguous FSA transition endpoints by id only', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <automaton>
+    <state id="q0" name="q1">
+      <initial/>
+    </state>
+    <state id="q1" name="q0">
       <final/>
     </state>
     <transition>
@@ -76,9 +150,8 @@ void main() {
       expect(result.isSuccess, isTrue);
       final transition =
           result.data!.transitions.whereType<FSATransition>().single;
-      expect(transition.fromState.id, equals('0'));
-      expect(transition.toState.id, equals('1'));
-      expect(transition.label, equals('a'));
+      expect(transition.fromState.id, equals('q0'));
+      expect(transition.toState.id, equals('q1'));
     });
 
     test('rejects empty FSA imports with the existing file-service message',
@@ -133,6 +206,33 @@ void main() {
 
       expect(result.isFailure, isTrue);
       expect(result.error, contains('unknown state'));
+    });
+
+    test('decodes serializable transitions by id when names conflict', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="fa">
+  <type>fa</type>
+  <automaton>
+    <state id="q0" name="q1">
+      <initial/>
+    </state>
+    <state id="q1" name="q0">
+      <final/>
+    </state>
+    <transition>
+      <from>q0</from>
+      <to>q1</to>
+      <read>a</read>
+    </transition>
+  </automaton>
+</structure>''';
+
+      final result = codec.decodeSerializableAutomaton(xml);
+
+      expect(result.isSuccess, isTrue);
+      final transitions =
+          result.data!['transitions'] as Map<String, List<String>>;
+      expect(transitions['q0|a'], equals(['q1']));
     });
   });
 }

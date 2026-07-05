@@ -11,6 +11,8 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
@@ -49,9 +51,11 @@ class _SimulationPanelState extends State<SimulationPanel> {
   int _currentStepIndex = 0;
   List<SimulationStep> _simulationSteps = [];
   bool _isPlaying = false;
+  Timer? _playbackTimer;
 
   @override
   void dispose() {
+    _playbackTimer?.cancel();
     _inputController.dispose();
     widget.highlightService.clear();
     super.dispose();
@@ -61,6 +65,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
   void didUpdateWidget(covariant SimulationPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.simulationResult != oldWidget.simulationResult) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
       setState(() {
         _isSimulating = false;
       });
@@ -77,7 +83,10 @@ class _SimulationPanelState extends State<SimulationPanel> {
         _isSimulating = true;
         _currentStepIndex = 0;
         _simulationSteps.clear();
+        _isPlaying = false;
       });
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
 
       widget.highlightService.clear();
 
@@ -95,6 +104,9 @@ class _SimulationPanelState extends State<SimulationPanel> {
   }
 
   void _loadSimulationSteps() {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
+
     if (!_isStepByStep) {
       setState(() {
         _simulationSteps.clear();
@@ -308,6 +320,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
                 child: Switch(
                   value: _isStepByStep,
                   onChanged: (value) {
+                    _playbackTimer?.cancel();
+                    _playbackTimer = null;
                     setState(() {
                       _isStepByStep = value;
                       if (!value) {
@@ -597,8 +611,11 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   void _previousStep() {
     if (_currentStepIndex > 0) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
       setState(() {
         _currentStepIndex--;
+        _isPlaying = false;
       });
       _emitHighlightForCurrentStep();
     }
@@ -606,14 +623,18 @@ class _SimulationPanelState extends State<SimulationPanel> {
 
   void _nextStep() {
     if (_currentStepIndex < _simulationSteps.length - 1) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
       setState(() {
         _currentStepIndex++;
+        _isPlaying = false;
       });
       _emitHighlightForCurrentStep();
     }
   }
 
   void _playSteps() {
+    if (_isPlaying) return;
     setState(() {
       _isPlaying = true;
     });
@@ -622,22 +643,35 @@ class _SimulationPanelState extends State<SimulationPanel> {
   }
 
   void _pauseSteps() {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
     setState(() {
       _isPlaying = false;
     });
   }
 
   void _playStepAnimation() {
-    if (_isPlaying && _currentStepIndex < _simulationSteps.length - 1) {
+    if (!_isPlaying || !mounted) return;
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
+
+    if (_currentStepIndex < _simulationSteps.length - 1) {
       // Calculate delay based on animation speed: slower speed = longer delay
       final delayMs = (1000 / widget.animationSpeed).round();
-      Future.delayed(Duration(milliseconds: delayMs), () {
+      _playbackTimer = Timer(Duration(milliseconds: delayMs), () {
+        _playbackTimer = null;
         if (_isPlaying && mounted) {
-          setState(() {
-            _currentStepIndex++;
-          });
-          _emitHighlightForCurrentStep();
-          _playStepAnimation();
+          if (_currentStepIndex < _simulationSteps.length - 1) {
+            setState(() {
+              _currentStepIndex++;
+            });
+            _emitHighlightForCurrentStep();
+            _playStepAnimation();
+          } else {
+            setState(() {
+              _isPlaying = false;
+            });
+          }
         }
       });
     } else {
@@ -648,6 +682,8 @@ class _SimulationPanelState extends State<SimulationPanel> {
   }
 
   void _resetSteps() {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
     setState(() {
       _currentStepIndex = 0;
       _isPlaying = false;

@@ -81,6 +81,9 @@ class GrammarXmlCodec {
         );
       }
 
+      final grammarType = _parseGrammarType(
+        grammarElement.getAttribute('type'),
+      );
       final productions = <Production>{};
       for (final productionElement in grammarElement.findAllElements(
         'production',
@@ -108,19 +111,25 @@ class GrammarXmlCodec {
         );
       }
 
+      final nonterminals = <String>{
+        startSymbols.single,
+        ...productions.expand((p) => p.leftSide).where((s) => s.isNotEmpty),
+      };
+      final terminals = productions
+          .expand((p) => p.rightSide)
+          .where((s) => s.isNotEmpty && !nonterminals.contains(s))
+          .toSet();
+
       final now = DateTime.now();
       return Success(
         Grammar(
           id: 'imported_grammar_${now.millisecondsSinceEpoch}',
           name: 'Imported Grammar',
-          terminals: productions
-              .expand((p) => p.rightSide)
-              .where((s) => s.isNotEmpty)
-              .toSet(),
-          nonterminals: productions.expand((p) => p.leftSide).toSet(),
+          terminals: terminals,
+          nonterminals: nonterminals,
           startSymbol: startSymbols.single,
           productions: productions,
-          type: GrammarType.contextFree,
+          type: grammarType,
           created: now,
           modified: now,
         ),
@@ -136,5 +145,16 @@ class GrammarXmlCodec {
       return const <String>[];
     }
     return trimmed.split(RegExp(r'\s+'));
+  }
+
+  GrammarType _parseGrammarType(String? rawType) {
+    final normalized = rawType?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return GrammarType.contextFree;
+    }
+    return GrammarType.values.firstWhere(
+      (type) => type.name == normalized,
+      orElse: () => GrammarType.contextFree,
+    );
   }
 }

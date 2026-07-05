@@ -104,6 +104,67 @@ void main() {
     expect(find.byTooltip('Metrics'), findsNothing);
   });
 
+  testWidgets('shows undo and redo buttons with disabled history state', (
+    tester,
+  ) async {
+    var undoCount = 0;
+    var redoCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MobileAutomatonControls(
+            onAddState: () {},
+            onFitToContent: () {},
+            onResetView: () {},
+            onUndo: () => undoCount++,
+            onRedo: () => redoCount++,
+          ),
+        ),
+      ),
+    );
+
+    final undoButton = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byTooltip('Undo'),
+        matching: find.byType(IconButton),
+      ),
+    );
+    final redoButton = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byTooltip('Redo'),
+        matching: find.byType(IconButton),
+      ),
+    );
+
+    expect(undoButton.onPressed, isNull);
+    expect(redoButton.onPressed, isNull);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MobileAutomatonControls(
+            onAddState: () {},
+            onFitToContent: () {},
+            onResetView: () {},
+            onUndo: () => undoCount++,
+            canUndo: true,
+            onRedo: () => redoCount++,
+            canRedo: true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Undo'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Redo'));
+    await tester.pump();
+
+    expect(undoCount, equals(1));
+    expect(redoCount, equals(1));
+  });
+
   testWidgets('shows canvas tool toggles when enabled', (tester) async {
     var addStateInvoked = false;
     var transitionInvoked = false;

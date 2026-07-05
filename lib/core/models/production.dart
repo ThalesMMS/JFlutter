@@ -7,6 +7,10 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'package:collection/collection.dart';
+
+const _stringListEquality = ListEquality<String>();
+
 /// Production rule for grammars
 class Production {
   /// Unique identifier for the production within the grammar
@@ -76,15 +80,21 @@ class Production {
     if (identical(this, other)) return true;
     return other is Production &&
         other.id == id &&
-        other.leftSide == leftSide &&
-        other.rightSide == rightSide &&
+        _stringListEquality.equals(other.leftSide, leftSide) &&
+        _stringListEquality.equals(other.rightSide, rightSide) &&
         other.isLambda == isLambda &&
         other.order == order;
   }
 
   @override
   int get hashCode {
-    return Object.hash(id, leftSide, rightSide, isLambda, order);
+    return Object.hash(
+      id,
+      _stringListEquality.hash(leftSide),
+      _stringListEquality.hash(rightSide),
+      isLambda,
+      order,
+    );
   }
 
   @override

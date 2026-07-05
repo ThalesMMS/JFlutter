@@ -23,9 +23,9 @@ import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
 import '../../core/result.dart';
 import '../../data/data_sources/examples_asset_data_source.dart';
 import '../providers/tm_editor_provider.dart';
+import 'algorithm_panel_scaffold.dart';
 import 'app_snackbar.dart';
 import 'base_simulation_panel.dart';
-import 'common/algorithm_button.dart';
 import 'common/algorithm_button_config.dart';
 import 'file_operations_panel.dart';
 
@@ -84,40 +84,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   Widget build(BuildContext context) {
     final tm = ref.watch(tmEditorProvider).tm;
 
-    return Card(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 16),
-            _buildAlgorithmButtons(context),
-            const SizedBox(height: 16),
-            _buildResultsSection(context),
-            if (tm != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-              FileOperationsPanel(turingMachine: tm),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
+    return AlgorithmPanelScaffold(
+      title: 'TM Analysis',
       children: [
-        Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(
-          'TM Analysis',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        _buildAlgorithmButtons(context),
+        _buildResultsSection(context),
+        if (tm != null) ...[
+          const Divider(),
+          FileOperationsPanel(turingMachine: tm),
+        ],
       ],
     );
   }
@@ -131,10 +106,7 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
-        for (var index = 0; index < algorithmConfigs.length; index++) ...[
-          AlgorithmButton.fromConfig(algorithmConfigs[index]),
-          if (index < algorithmConfigs.length - 1) const SizedBox(height: 12),
-        ],
+        AlgorithmButtonList(configs: algorithmConfigs),
       ],
     );
   }
@@ -199,18 +171,10 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
 
   Widget _buildResultsSection(BuildContext context) {
     final hasData = _analysis != null || _analysisError != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Analysis Results',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        if (hasData) _buildResults(context) else _buildEmptyResults(context),
-      ],
+    return AlgorithmResultsSection(
+      hasResults: hasData,
+      empty: _buildEmptyResults(context),
+      results: _buildResults(context),
     );
   }
 
@@ -474,106 +438,12 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   }
 
   Widget _buildExamplesSection(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.lightbulb_outline, color: theme.colorScheme.secondary),
-            const SizedBox(width: 8),
-            Text(
-              'Load Examples',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        FutureBuilder<ListResult<AssetExample<TM>>>(
-          future: _tmExamplesFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: LinearProgressIndicator(),
-              );
-            }
-
-            final result = snapshot.data;
-            if (result == null || result.isFailure) {
-              return Text(
-                result?.error ?? 'Failed to load TM examples.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              );
-            }
-
-            final examples = result.data!;
-            if (examples.isEmpty) {
-              return Text(
-                'No TM examples available.',
-                style: theme.textTheme.bodySmall,
-              );
-            }
-
-            return Column(
-              children: examples
-                  .map(
-                    (example) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _buildExampleButton(
-                        context,
-                        title: example.name,
-                        isLoading: _loadingExampleName == example.name,
-                        onPressed: _loadingExampleName == null
-                            ? () => _loadSelectedExample(example.name)
-                            : null,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExampleButton(
-    BuildContext context, {
-    required String title,
-    required bool isLoading,
-    required VoidCallback? onPressed,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: isLoading
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.file_open, size: 18),
-        label: Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: colorScheme.secondary,
-          side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.5)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          alignment: Alignment.centerLeft,
-        ),
-      ),
+    return AlgorithmExamplesSection<TM>(
+      examplesFuture: _tmExamplesFuture,
+      loadingExampleName: _loadingExampleName,
+      onExampleSelected: (name) => _loadSelectedExample(name),
+      failureMessage: 'Failed to load TM examples.',
+      emptyMessage: 'No TM examples available.',
     );
   }
 

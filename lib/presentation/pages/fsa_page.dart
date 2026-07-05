@@ -44,7 +44,7 @@ import '../widgets/tablet_layout_container.dart';
 import '../../core/validators/input_validators.dart';
 import '../../core/validators/validation_issue_to_diagnostic.dart';
 import '../widgets/validation_diagnostic_card.dart';
-import '../widgets/before_after_comparison.dart';
+import '../widgets/fsa_conversion_comparison_panel.dart';
 import '../../core/models/step_explanation.dart';
 
 part 'fsa_page/fsa_page_behavior.dart';

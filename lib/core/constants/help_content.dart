@@ -457,6 +457,12 @@ const Map<String, HelpContentModel> kHelpContent = {
     id: 'shortcut_canvas_general',
     title: 'Canvas Keyboard Shortcuts',
     content: 'General canvas shortcuts:\n'
+        'A: Add a state at the canvas center\n'
+        'T: Activate transition mode\n'
+        'V: Activate selection mode\n'
+        'Delete or Backspace: Delete selected transition\n'
+        'Ctrl/Cmd + Z: Undo last canvas change\n'
+        'Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z: Redo canvas change\n'
         '• Tab: Move focus between canvas toolbar actions\n'
         '• Shift + Tab: Move focus to the previous toolbar action\n'
         '• Enter or Space: Activate the focused toolbar action\n'
@@ -474,6 +480,12 @@ const Map<String, HelpContentModel> kHelpContent = {
       'escape',
       'toolbar',
       'focus',
+      'state',
+      'transition',
+      'delete',
+      'backspace',
+      'undo',
+      'redo',
     ],
     relatedConcepts: ['tool_undo', 'tool_redo', 'tool_select'],
     icon: 'keyboard',

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/pages/home_page.dart';
+import 'presentation/providers/active_session_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/theme/app_theme.dart';
 
@@ -22,6 +23,8 @@ class JFlutterApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
+    ref.watch(activeSessionPersistenceProvider);
+
     return MaterialApp(
       title: 'JFlutter',
       theme: AppTheme.lightTheme,

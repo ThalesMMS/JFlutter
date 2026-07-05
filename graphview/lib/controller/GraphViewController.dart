@@ -4,6 +4,7 @@ class GraphViewController {
   _GraphViewState? _state;
   final TransformationController? transformationController;
   final bool _ownsTransformationController;
+  bool _hasAttachedView = false;
 
   final Map<Node, bool> collapsedNodes = {};
   final Map<Node, bool> expandingNodes = {};
@@ -14,10 +15,17 @@ class GraphViewController {
 
   GraphViewController({
     TransformationController? transformationController,
+    bool ownsTransformationController = false,
   })  : transformationController = transformationController,
-        _ownsTransformationController = transformationController == null;
+        _ownsTransformationController =
+            ownsTransformationController || transformationController == null;
 
-  void _attach(_GraphViewState? state) => _state = state;
+  bool get hasAttachedView => _hasAttachedView;
+
+  void _attach(_GraphViewState? state) {
+    _state = state;
+    _hasAttachedView = true;
+  }
 
   void _detach() => _state = null;
 

@@ -150,6 +150,7 @@ PDASimulationResult _simulateSearch(
 
   // Track longest explored branch for trace preservation on failure
   var longestBranch = <SimulationStep>[];
+  var depthLimitReached = false;
 
   while (queue.isNotEmpty) {
     if (DateTime.now().difference(startTime) > timeout) {
@@ -205,7 +206,9 @@ PDASimulationResult _simulateSearch(
     }
 
     if (depth >= maxDepth) {
-      // Depth bound reached; continue exploring siblings
+      // Depth bound reached; continue exploring siblings. If no accepting
+      // branch is found, this makes the result inconclusive instead of reject.
+      depthLimitReached = true;
       continue;
     }
 
@@ -284,6 +287,14 @@ PDASimulationResult _simulateSearch(
         enqueue(t.toState, newRemaining, newStack, step);
       }
     }
+  }
+
+  if (depthLimitReached) {
+    return PDASimulationResult.limitReached(
+      inputString: inputString,
+      steps: longestBranch,
+      executionTime: DateTime.now().difference(startTime),
+    );
   }
 
   return PDASimulationResult.failure(

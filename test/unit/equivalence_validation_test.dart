@@ -91,6 +91,22 @@ void main() {
           reason: 'Same NFA should be equivalent to itself',
         );
       });
+
+      test('NFA determinization failure is exposed as inconclusive', () {
+        final invalidNfa = _createNFAWithInvalidAcceptingState();
+
+        final result = EquivalenceChecker.areEquivalentResult(
+          invalidNfa,
+          dfa1,
+        );
+
+        expect(result.isFailure, true);
+        expect(result.error, contains('Failed to determinize automaton A'));
+        expect(
+          result.error,
+          contains('Accepting state must be in the states set'),
+        );
+      });
     });
 
     group('Cross-Type Equivalence Tests', () {
@@ -565,6 +581,47 @@ FSA _createNoInitialDFA() {
     created: DateTime.now(),
     modified: DateTime.now(),
     bounds: const math.Rectangle(0, 0, 100, 100),
+    zoomLevel: 1.0,
+    panOffset: Vector2.zero(),
+  );
+}
+
+FSA _createNFAWithInvalidAcceptingState() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+  );
+  final missingAccept = State(
+    id: 'missing',
+    label: 'missing',
+    position: Vector2(200, 0),
+    isAccepting: true,
+  );
+
+  return FSA(
+    id: 'invalid_nfa',
+    name: 'Invalid NFA',
+    states: {q0, q1},
+    transitions: {
+      FSATransition.epsilon(
+        id: 'eps_q0_q1',
+        fromState: q0,
+        toState: q1,
+      ),
+    },
+    alphabet: {'a'},
+    initialState: q0,
+    acceptingStates: {missingAccept},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 200, 100),
     zoomLevel: 1.0,
     panOffset: Vector2.zero(),
   );

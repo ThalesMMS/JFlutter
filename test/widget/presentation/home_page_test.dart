@@ -62,6 +62,7 @@ Future<void> _pumpHomePage(
   required _TestHomeNavigationNotifier navigationNotifier,
   required _TestSimulationHighlightService highlightService,
   Size size = const Size(430, 932),
+  Locale locale = const Locale('en'),
   List<NavigatorObserver> navigatorObservers = const [],
 }) async {
   tester.view.physicalSize = size;
@@ -78,7 +79,7 @@ Future<void> _pumpHomePage(
       ],
       child: MaterialApp(
         home: const HomePage(),
-        locale: const Locale('en'),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         navigatorObservers: navigatorObservers,
@@ -208,6 +209,57 @@ void main() {
         navigationNotifier.receivedIndices,
         isNot(contains(HomeNavigationNotifier.regexIndex)),
       );
+    });
+
+    testWidgets('exposes primary navigation and app actions to semantics', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+
+      final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(0);
+      final highlightService = _TestSimulationHighlightService();
+
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await _pumpHomePage(
+        tester,
+        navigationNotifier: navigationNotifier,
+        highlightService: highlightService,
+      );
+
+      expect(find.bySemanticsLabel('Navigate to FSA'), findsOneWidget);
+      expect(find.bySemanticsLabel('Navigate to Regex'), findsOneWidget);
+      expect(find.bySemanticsLabel('Help'), findsOneWidget);
+      expect(find.bySemanticsLabel('Settings'), findsOneWidget);
+    });
+
+    testWidgets('renders navigation and app actions in Portuguese', (
+      tester,
+    ) async {
+      final navigationNotifier = _TestHomeNavigationNotifier()..setIndex(1);
+      final highlightService = _TestSimulationHighlightService();
+
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await _pumpHomePage(
+        tester,
+        navigationNotifier: navigationNotifier,
+        highlightService: highlightService,
+        locale: const Locale('pt'),
+      );
+
+      expect(find.text('Gramática'), findsWidgets);
+      expect(find.text('Gramáticas livres de contexto'), findsOneWidget);
+      expect(find.byTooltip('Ajuda'), findsOneWidget);
+      expect(find.byTooltip('Configurações'), findsOneWidget);
+      expect(find.bySemanticsLabel('Navegar para Regex'), findsOneWidget);
     });
 
     testWidgets('updates page view and provider when tapping navigation', (

@@ -39,6 +39,8 @@ class StateRenamer {
     final radius = math.max(120.0, n * 40.0);
     const centerX = 400.0;
     const centerY = 300.0;
+    final initialStateId = fsa.initialState?.id;
+    final acceptingStateIds = fsa.acceptingStates.map((s) => s.id).toSet();
 
     for (int i = 0; i < n; i++) {
       final oldState = orderedStates[i];
@@ -50,6 +52,8 @@ class StateRenamer {
       stateMap[oldState.id] = oldState.copyWith(
         label: 'q$i',
         position: position,
+        isInitial: oldState.id == initialStateId,
+        isAccepting: acceptingStateIds.contains(oldState.id),
       );
     }
 

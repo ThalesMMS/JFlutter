@@ -17,6 +17,8 @@ import 'transition.dart';
 import 'tm_transition.dart';
 import 'automaton.dart';
 
+const Object _unset = Object();
+
 /// Turing Machine (TM) implementation
 class TM extends Automaton {
   /// Tape alphabet symbols (unmodifiable)
@@ -55,7 +57,7 @@ class TM extends Automaton {
     Set<State>? states,
     Set<Transition>? transitions,
     Set<String>? alphabet,
-    State? initialState,
+    Object? initialState = _unset,
     Set<State>? acceptingStates,
     AutomatonType? type,
     DateTime? created,
@@ -73,7 +75,8 @@ class TM extends Automaton {
       states: states ?? this.states,
       transitions: transitions ?? this.transitions,
       alphabet: alphabet ?? this.alphabet,
-      initialState: initialState ?? this.initialState,
+      initialState:
+          initialState == _unset ? this.initialState : initialState as State?,
       acceptingStates: acceptingStates ?? this.acceptingStates,
       created: created ?? this.created,
       modified: modified ?? this.modified,

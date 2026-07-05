@@ -101,12 +101,27 @@ class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
 class _InspectableGraphViewCanvasController extends GraphViewCanvasController {
   _InspectableGraphViewCanvasController({
     required super.automatonStateNotifier,
+    super.viewController,
+    super.transformationController,
     super.historyLimit,
     super.cacheEvictionThreshold,
   });
 
   Map<String, Node> get debugGraphNodes => graphNodes;
   Map<String, Edge> get debugGraphEdges => graphEdges;
+}
+
+class _RecordingGraphViewController extends GraphViewController {
+  _RecordingGraphViewController(TransformationController transformation)
+      : super(transformationController: transformation);
+
+  Matrix4? lastTarget;
+
+  @override
+  void animateToMatrix(Matrix4 target) {
+    lastTarget = Matrix4.copy(target);
+    transformationController!.value = target;
+  }
 }
 
 void main() {
@@ -123,6 +138,8 @@ void main() {
       int cacheEvictionThreshold =
           BaseGraphViewCanvasController.kDefaultCacheEvictionThreshold,
       bool inspectable = false,
+      TransformationController? transformationController,
+      GraphViewController? viewController,
     }) {
       if (controllerInitialized && !controllerDisposed) {
         controller.dispose();
@@ -131,11 +148,15 @@ void main() {
       controller = inspectable
           ? _InspectableGraphViewCanvasController(
               automatonStateNotifier: provider,
+              viewController: viewController,
+              transformationController: transformationController,
               historyLimit: historyLimit,
               cacheEvictionThreshold: cacheEvictionThreshold,
             )
           : GraphViewCanvasController(
               automatonStateNotifier: provider,
+              viewController: viewController,
+              transformationController: transformationController,
               historyLimit: historyLimit,
               cacheEvictionThreshold: cacheEvictionThreshold,
             );
@@ -168,6 +189,35 @@ void main() {
         controller.dispose();
         controllerDisposed = true;
       }
+    });
+
+    test('dispose releases owned transformation before GraphView mounts', () {
+      final transformation =
+          controller.graphController.transformationController!;
+
+      controller.dispose();
+      controllerDisposed = true;
+
+      expect(
+        () => transformation.value = Matrix4.identity()
+          ..translateByDouble(1.0, 0.0, 0.0, 1.0),
+        throwsFlutterError,
+      );
+    });
+
+    test('dispose leaves caller-owned transformation untouched', () {
+      final transformation = TransformationController();
+      recreateController(transformationController: transformation);
+
+      controller.dispose();
+      controllerDisposed = true;
+
+      expect(
+        () => transformation.value = Matrix4.identity()
+          ..translateByDouble(1.0, 0.0, 0.0, 1.0),
+        returnsNormally,
+      );
+      transformation.dispose();
     });
 
     test('addStateAt generates id and forwards to provider', () {
@@ -209,6 +259,36 @@ void main() {
         expect(secondCall['y'], closeTo((300 - (-50)) / 1.5, 0.0001));
       },
     );
+
+    test('zoomIn keeps the viewport centre anchored', () {
+      final transformation = TransformationController();
+      addTearDown(transformation.dispose);
+      final viewController = _RecordingGraphViewController(transformation);
+      recreateController(viewController: viewController);
+      controller.updateViewportSize(const Size(800, 600));
+
+      transformation.value = Matrix4.identity()
+        ..translateByDouble(-80.0, -60.0, 0.0, 1.0)
+        ..scaleByDouble(0.8, 0.8, 0.8, 1.0);
+      final before = Matrix4.copy(transformation.value);
+      final inverse = Matrix4.copy(before);
+      expect(inverse.invert(), isNot(0));
+      final worldAtViewportCenter = inverse.transform3(Vector3(400, 300, 0));
+
+      controller.zoomIn();
+
+      expect(viewController.lastTarget, isNotNull);
+      final afterCenter = transformation.value.transform3(
+        Vector3(
+          worldAtViewportCenter.x,
+          worldAtViewportCenter.y,
+          worldAtViewportCenter.z,
+        ),
+      );
+      expect(afterCenter.x, closeTo(400, 0.0001));
+      expect(afterCenter.y, closeTo(300, 0.0001));
+      expect(transformation.value.getMaxScaleOnAxis(), closeTo(0.96, 0.0001));
+    });
 
     test('moveState forwards coordinates to provider', () {
       controller.addStateAt(const Offset(0, 0));

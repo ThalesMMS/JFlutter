@@ -192,4 +192,30 @@ void main() {
       expect(migrated.containsKey('automatonId'), isFalse);
     });
   });
+
+  group('UnifiedTraceState copyWith', () {
+    test('can clear nullable trace fields', () {
+      final state = UnifiedTraceState(
+        currentTrace: _trace(input: 'old'),
+        currentStepIndex: 2,
+        automatonType: 'pda',
+        automatonId: 'pda-1',
+        errorMessage: 'failed',
+      );
+
+      final cleared = state.copyWith(
+        currentTrace: null,
+        currentStepIndex: 0,
+        automatonType: null,
+        automatonId: null,
+        errorMessage: null,
+      );
+
+      expect(cleared.currentTrace, isNull);
+      expect(cleared.currentStepIndex, equals(0));
+      expect(cleared.automatonType, isNull);
+      expect(cleared.automatonId, isNull);
+      expect(cleared.errorMessage, isNull);
+    });
+  });
 }

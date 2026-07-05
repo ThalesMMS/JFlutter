@@ -760,10 +760,22 @@ class AutomatonAlgorithmNotifier
     );
 
     try {
-      final areEquivalent = EquivalenceChecker.areEquivalent(
+      final equivalenceResult = EquivalenceChecker.areEquivalentResult(
         currentAutomaton,
         other,
       );
+      if (equivalenceResult.isFailure) {
+        final message = equivalenceResult.error!;
+        state = state.copyWith(
+          isLoading: false,
+          equivalenceResult: null,
+          equivalenceDetails: message,
+          error: message,
+        );
+        return null;
+      }
+
+      final areEquivalent = equivalenceResult.data!;
       state = state.copyWith(
         isLoading: false,
         equivalenceResult: areEquivalent,

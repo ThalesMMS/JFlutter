@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jflutter/l10n/app_localizations.dart';
 import 'package:jflutter/presentation/pages/help_page.dart';
 
 class _HelpPageTestHelpers {
@@ -68,13 +69,21 @@ class _HelpPageTestHelpers {
   static Future<void> pumpHelpPage(
     WidgetTester tester, {
     Size size = const Size(1200, 800),
+    Locale locale = const Locale('en'),
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: HelpPage())),
+      ProviderScope(
+        child: MaterialApp(
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const HelpPage(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -788,6 +797,27 @@ void main() {
       await _HelpPageTestHelpers.openLicensesAndSettle(tester);
 
       expect(find.text('Help & Documentation'), findsOneWidget);
+    });
+
+    testWidgets('Portuguese locale renders localized help shell copy', (
+      tester,
+    ) async {
+      await _HelpPageTestHelpers.pumpHelpPage(
+        tester,
+        locale: const Locale('pt'),
+      );
+
+      expect(find.text('Ajuda e documentação'), findsOneWidget);
+      expect(find.text('Primeiros passos'), findsWidgets);
+      expect(find.text('Operações de arquivo'), findsWidgets);
+      expect(find.byTooltip('Guia rápido'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Guia rápido'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Guia rápido'), findsOneWidget);
+      expect(find.textContaining('Bem-vindo ao JFlutter'), findsOneWidget);
+      expect(find.text('Entendi!'), findsOneWidget);
     });
   });
 

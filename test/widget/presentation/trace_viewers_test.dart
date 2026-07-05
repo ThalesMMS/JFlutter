@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/core/algorithms/pda_simulator.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';
+import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
+import 'package:jflutter/core/services/simulation_highlight_service.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/pda_trace_viewer.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/tm_trace_viewer.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/base_trace_viewer.dart';
@@ -32,8 +34,127 @@ Future<void> _pumpTMTraceViewer(
   await tester.pumpAndSettle();
 }
 
+Future<void> _pumpBaseTraceViewer(
+  WidgetTester tester, {
+  required SimulationResult result,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: BaseTraceViewer(
+          result: result,
+          title: 'Trace (${result.steps.length} steps)',
+          highlightService: SimulationHighlightService(),
+          animationSpeed: 10,
+          buildStepLine: (step, index) =>
+              Text('${index + 1}. ${step.currentState}'),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('BaseTraceViewer playback', () {
+    testWidgets('cancels stale playback timer after pause and replay', (
+      tester,
+    ) async {
+      final result = SimulationResult.success(
+        inputString: 'aaa',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'aaa',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'aa',
+            stepNumber: 1,
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'a',
+            stepNumber: 2,
+          ),
+          const SimulationStep(
+            currentState: 'q3',
+            remainingInput: '',
+            stepNumber: 3,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 1),
+      );
+
+      await _pumpBaseTraceViewer(tester, result: result);
+
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 40));
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+
+      await tester.pump(const Duration(milliseconds: 65));
+
+      expect(find.text('1 / 4'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 40));
+
+      expect(find.text('2 / 4'), findsOneWidget);
+    });
+
+    testWidgets('manual navigation pauses playback and cancels pending timer', (
+      tester,
+    ) async {
+      final result = SimulationResult.success(
+        inputString: 'aaa',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'aaa',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'aa',
+            stepNumber: 1,
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'a',
+            stepNumber: 2,
+          ),
+          const SimulationStep(
+            currentState: 'q3',
+            remainingInput: '',
+            stepNumber: 3,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 1),
+      );
+
+      await _pumpBaseTraceViewer(tester, result: result);
+
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pump();
+
+      expect(find.text('3 / 4'), findsOneWidget);
+      expect(find.byTooltip('Play'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 110));
+
+      expect(find.text('3 / 4'), findsOneWidget);
+    });
+  });
 
   group('PDATraceViewer', () {
     testWidgets('renders with accepted result and displays correct title', (

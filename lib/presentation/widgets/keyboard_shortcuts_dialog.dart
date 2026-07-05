@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/help_content.dart';
 import '../../core/models/help_content_model.dart';
+import '../../l10n/app_localizations_help.dart';
 
 /// Dialog displaying all keyboard shortcuts organized by context category.
 ///
@@ -24,6 +25,7 @@ class KeyboardShortcutsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = jflapLocalizationsOf(context);
 
     return Shortcuts(
       shortcuts: const <ShortcutActivator, Intent>{
@@ -50,7 +52,7 @@ class KeyboardShortcutsDialog extends ConsumerWidget {
           policy: OrderedTraversalPolicy(),
           child: Semantics(
             namesRoute: true,
-            label: 'Keyboard shortcuts dialog',
+            label: l10n.keyboardShortcutsDialogLabel,
             child: AlertDialog(
               clipBehavior: Clip.antiAlias,
               insetPadding:
@@ -67,24 +69,30 @@ class KeyboardShortcutsDialog extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _ShortcutSection(
-                        title: 'Canvas Operations',
+                        title: l10n.keyboardShortcutsCanvasOperations,
                         icon: Icons.edit,
                         color: theme.colorScheme.primary,
-                        helpContent: kHelpContent['shortcut_canvas_general']!,
+                        helpContent: l10n.localizeHelpContent(
+                          kHelpContent['shortcut_canvas_general']!,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       _ShortcutSection(
-                        title: 'Simulation Controls',
+                        title: l10n.keyboardShortcutsSimulationControls,
                         icon: Icons.play_arrow,
                         color: theme.colorScheme.secondary,
-                        helpContent: kHelpContent['shortcut_simulation']!,
+                        helpContent: l10n.localizeHelpContent(
+                          kHelpContent['shortcut_simulation']!,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       _ShortcutSection(
-                        title: 'Dialog Shortcuts',
+                        title: l10n.keyboardShortcutsDialogShortcuts,
                         icon: Icons.chat_bubble_outline,
                         color: theme.colorScheme.tertiary,
-                        helpContent: kHelpContent['shortcut_dialogs']!,
+                        helpContent: l10n.localizeHelpContent(
+                          kHelpContent['shortcut_dialogs']!,
+                        ),
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -95,14 +103,14 @@ class KeyboardShortcutsDialog extends ConsumerWidget {
                 FocusTraversalOrder(
                   order: const NumericFocusOrder(0.0),
                   child: Semantics(
-                    label: 'Close shortcuts dialog',
+                    label: l10n.closeShortcutsDialog,
                     button: true,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
                         minimumSize: const Size(44, 44),
                       ),
-                      child: const Text('Close'),
+                      child: Text(l10n.close),
                     ),
                   ),
                 ),
@@ -133,7 +141,7 @@ class _DialogTitle extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            'Keyboard Shortcuts',
+            jflapLocalizationsOf(context).keyboardShortcutsTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w600,
@@ -254,10 +262,11 @@ class _ShortcutRow extends StatelessWidget {
   final _ShortcutItem shortcut;
   final Color color;
 
-  List<String> _splitKeys(String keys) {
-    // Split on " or " for alternative shortcuts
-    if (keys.contains(' or ')) {
-      return keys.split(' or ').map((k) => k.trim()).toList();
+  List<String> _splitKeys(BuildContext context, String keys) {
+    final separator =
+        ' ${jflapLocalizationsOf(context).shortcutAlternativeSeparator} ';
+    if (keys.contains(separator)) {
+      return keys.split(separator).map((k) => k.trim()).toList();
     }
     return [keys];
   }
@@ -265,7 +274,8 @@ class _ShortcutRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final keyGroups = _splitKeys(shortcut.keys);
+    final l10n = jflapLocalizationsOf(context);
+    final keyGroups = _splitKeys(context, shortcut.keys);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -285,7 +295,7 @@ class _ShortcutRow extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
-                        'or',
+                        l10n.shortcutAlternativeSeparator,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.6),

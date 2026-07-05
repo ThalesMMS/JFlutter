@@ -14,6 +14,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_models.dart';
 
 void main() {
+  group('GraphViewAutomatonMetadata', () {
+    test('round-trips TM tape metadata', () {
+      const metadata = GraphViewAutomatonMetadata(
+        id: 'tm-1',
+        name: 'TM',
+        alphabet: ['a', 'b'],
+        tapeAlphabet: ['a', 'b', 'X', 'B'],
+        blankSymbol: 'B',
+        tapeCount: 1,
+      );
+
+      final restored = GraphViewAutomatonMetadata.fromJson(metadata.toJson());
+
+      expect(restored.alphabet, equals(['a', 'b']));
+      expect(restored.tapeAlphabet, equals(['a', 'b', 'X', 'B']));
+      expect(restored.blankSymbol, 'B');
+      expect(restored.tapeCount, 1);
+    });
+  });
+
   group('GraphViewCanvasEdge', () {
     test('copyWith updates PDA metadata fields', () {
       const baseEdge = GraphViewCanvasEdge(
@@ -41,6 +61,21 @@ void main() {
       expect(updated.isLambdaInput, isTrue);
       expect(updated.isLambdaPop, isTrue);
       expect(updated.isLambdaPush, isTrue);
+    });
+
+    test('round-trips epsilon edge without phantom empty symbol', () {
+      const edge = GraphViewCanvasEdge(
+        id: 'epsilon',
+        fromStateId: 'q0',
+        toStateId: 'q1',
+        symbols: <String>[],
+        lambdaSymbol: 'ε',
+      );
+
+      final restored = GraphViewCanvasEdge.fromJson(edge.toJson());
+
+      expect(restored.symbols, isEmpty);
+      expect(restored.lambdaSymbol, 'ε');
     });
   });
 }

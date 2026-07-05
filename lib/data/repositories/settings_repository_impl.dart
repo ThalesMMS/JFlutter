@@ -73,23 +73,116 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> saveSettings(SettingsModel settings) async {
-    final results = await Future.wait<bool>([
-      _storage.writeString(_emptyStringSymbolKey, settings.emptyStringSymbol),
-      _storage.writeString(_epsilonSymbolKey, settings.epsilonSymbol),
-      _storage.writeString(_themeModeKey, settings.themeMode),
-      _storage.writeBool(_showGridKey, settings.showGrid),
-      _storage.writeBool(_showCoordinatesKey, settings.showCoordinates),
-      _storage.writeBool(_autoSaveKey, settings.autoSave),
-      _storage.writeBool(_showTooltipsKey, settings.showTooltips),
-      _storage.writeDouble(_gridSizeKey, settings.gridSize),
-      _storage.writeDouble(_nodeSizeKey, settings.nodeSize),
-      _storage.writeDouble(_fontSizeKey, settings.fontSize),
-      _storage.writeDouble(_animationSpeedKey, settings.animationSpeed),
-    ]);
+    final previousValues = await _snapshotPersistedSettings();
+    var saved = false;
 
-    if (results.any((success) => !success)) {
+    try {
+      saved = await _writeSettings(settings);
+    } catch (_) {
+      saved = false;
+    }
+
+    if (!saved) {
+      try {
+        await _restorePersistedSettings(previousValues);
+      } catch (_) {
+        // Preserve the original save failure even if rollback also fails.
+      }
       throw Exception('Failed to save settings');
     }
+  }
+
+  Future<bool> _writeSettings(SettingsModel settings) async {
+    final writes = <Future<bool> Function()>[
+      () => _storage.writeString(
+            _emptyStringSymbolKey,
+            settings.emptyStringSymbol,
+          ),
+      () => _storage.writeString(_epsilonSymbolKey, settings.epsilonSymbol),
+      () => _storage.writeString(_themeModeKey, settings.themeMode),
+      () => _storage.writeBool(_showGridKey, settings.showGrid),
+      () => _storage.writeBool(_showCoordinatesKey, settings.showCoordinates),
+      () => _storage.writeBool(_autoSaveKey, settings.autoSave),
+      () => _storage.writeBool(_showTooltipsKey, settings.showTooltips),
+      () => _storage.writeDouble(_gridSizeKey, settings.gridSize),
+      () => _storage.writeDouble(_nodeSizeKey, settings.nodeSize),
+      () => _storage.writeDouble(_fontSizeKey, settings.fontSize),
+      () => _storage.writeDouble(
+            _animationSpeedKey,
+            settings.animationSpeed,
+          ),
+    ];
+
+    for (final write in writes) {
+      if (!await write()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<Map<String, Object?>> _snapshotPersistedSettings() async {
+    return <String, Object?>{
+      _emptyStringSymbolKey: await _storage.readString(_emptyStringSymbolKey),
+      _epsilonSymbolKey: await _storage.readString(_epsilonSymbolKey),
+      _themeModeKey: await _storage.readString(_themeModeKey),
+      _showGridKey: await _storage.readBool(_showGridKey),
+      _showCoordinatesKey: await _storage.readBool(_showCoordinatesKey),
+      _autoSaveKey: await _storage.readBool(_autoSaveKey),
+      _showTooltipsKey: await _storage.readBool(_showTooltipsKey),
+      _gridSizeKey: await _storage.readDouble(_gridSizeKey),
+      _nodeSizeKey: await _storage.readDouble(_nodeSizeKey),
+      _fontSizeKey: await _storage.readDouble(_fontSizeKey),
+      _animationSpeedKey: await _storage.readDouble(_animationSpeedKey),
+    };
+  }
+
+  Future<void> _restorePersistedSettings(
+    Map<String, Object?> previousValues,
+  ) async {
+    await Future.wait<bool>([
+      _restoreString(_emptyStringSymbolKey, previousValues),
+      _restoreString(_epsilonSymbolKey, previousValues),
+      _restoreString(_themeModeKey, previousValues),
+      _restoreBool(_showGridKey, previousValues),
+      _restoreBool(_showCoordinatesKey, previousValues),
+      _restoreBool(_autoSaveKey, previousValues),
+      _restoreBool(_showTooltipsKey, previousValues),
+      _restoreDouble(_gridSizeKey, previousValues),
+      _restoreDouble(_nodeSizeKey, previousValues),
+      _restoreDouble(_fontSizeKey, previousValues),
+      _restoreDouble(_animationSpeedKey, previousValues),
+    ]);
+  }
+
+  Future<bool> _restoreString(
+    String key,
+    Map<String, Object?> previousValues,
+  ) {
+    final value = previousValues[key] as String?;
+    return value == null
+        ? _storage.remove(key)
+        : _storage.writeString(key, value);
+  }
+
+  Future<bool> _restoreBool(
+    String key,
+    Map<String, Object?> previousValues,
+  ) {
+    final value = previousValues[key] as bool?;
+    return value == null
+        ? _storage.remove(key)
+        : _storage.writeBool(key, value);
+  }
+
+  Future<bool> _restoreDouble(
+    String key,
+    Map<String, Object?> previousValues,
+  ) {
+    final value = previousValues[key] as double?;
+    return value == null
+        ? _storage.remove(key)
+        : _storage.writeDouble(key, value);
   }
 
   Future<String> _readStringSetting(

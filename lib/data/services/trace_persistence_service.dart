@@ -23,6 +23,8 @@ class TracePersistenceService {
   static const int _maxHistorySize = 50; // Limit trace history size
 
   final SharedPreferences _prefs;
+  Future<void> _historyWriteQueue = Future<void>.value();
+  int _lastTraceIdMicros = 0;
 
   TracePersistenceService(this._prefs);
 
@@ -32,9 +34,23 @@ class TracePersistenceService {
     String? automatonType,
     String? automatonId,
   }) async {
+    await _enqueueHistoryWrite(() async {
+      await _saveTraceToHistory(
+        trace,
+        automatonType: automatonType,
+        automatonId: automatonId,
+      );
+    });
+  }
+
+  Future<void> _saveTraceToHistory(
+    SimulationResult trace, {
+    String? automatonType,
+    String? automatonId,
+  }) async {
     try {
       final traceData = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'id': _nextTraceId(),
         'timestamp': DateTime.now().toIso8601String(),
         'automatonType': automatonType ?? 'unknown',
         'automatonId': automatonId,
@@ -213,6 +229,12 @@ class TracePersistenceService {
 
   /// Delete a trace from history
   Future<void> deleteTrace(String traceId) async {
+    await _enqueueHistoryWrite(() async {
+      await _deleteTrace(traceId);
+    });
+  }
+
+  Future<void> _deleteTrace(String traceId) async {
     try {
       final history = await getTraceHistory();
       history.removeWhere((trace) => trace['id'] == traceId);
@@ -222,6 +244,21 @@ class TracePersistenceService {
         debugPrint('Failed to delete trace: $e');
       }
     }
+  }
+
+  Future<void> _enqueueHistoryWrite(Future<void> Function() operation) {
+    final queued = _historyWriteQueue.then((_) => operation());
+    _historyWriteQueue = queued.catchError((_) {});
+    return queued;
+  }
+
+  String _nextTraceId() {
+    final nowMicros = DateTime.now().microsecondsSinceEpoch;
+    final nextMicros = nowMicros > _lastTraceIdMicros
+        ? nowMicros
+        : _lastTraceIdMicros + 1;
+    _lastTraceIdMicros = nextMicros;
+    return nextMicros.toString();
   }
 
   /// Clear all trace history

@@ -12,8 +12,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/help_content.dart';
 import '../../core/models/help_content_model.dart';
 import '../../core/models/settings_model.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../providers/settings_provider.dart';
 import 'help_icon_mapper.dart';
 
@@ -49,6 +51,8 @@ class ContextualHelpTooltip extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
+    final localizedHelpContent = l10n.localizeHelpContent(helpContent);
 
     // If tooltips are disabled, return the child without wrapping
     if (!settings.showTooltips) {
@@ -59,14 +63,14 @@ class ContextualHelpTooltip extends ConsumerWidget {
       richMessage: TextSpan(
         children: [
           TextSpan(
-            text: '${helpContent.title}\n',
+            text: '${localizedHelpContent.title}\n',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
             ),
           ),
           TextSpan(
-            text: helpContent.content,
+            text: localizedHelpContent.content,
             style: TextStyle(
               color: colorScheme.onSurface.withValues(alpha: 0.8),
             ),
@@ -92,7 +96,7 @@ class ContextualHelpTooltip extends ConsumerWidget {
             right: -4,
             top: -4,
             child: Semantics(
-              label: 'Show help for ${helpContent.title}',
+              label: l10n.showHelpFor(localizedHelpContent.title),
               button: true,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -130,6 +134,8 @@ class ContextualHelpTooltip extends ConsumerWidget {
   void _showHelpDialog(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = jflapLocalizationsOf(context);
+    final localizedHelpContent = l10n.localizeHelpContent(helpContent);
 
     showDialog<void>(
       context: context,
@@ -138,12 +144,12 @@ class ContextualHelpTooltip extends ConsumerWidget {
           title: Row(
             children: [
               Icon(
-                helpIconData(helpContent.icon),
+                helpIconData(localizedHelpContent.icon),
                 color: colorScheme.primary,
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(helpContent.title),
+                child: Text(localizedHelpContent.title),
               ),
             ],
           ),
@@ -152,11 +158,11 @@ class ContextualHelpTooltip extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(helpContent.content),
-                if (helpContent.relatedConcepts.isNotEmpty) ...[
+                Text(localizedHelpContent.content),
+                if (localizedHelpContent.relatedConcepts.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
-                    'Related Concepts:',
+                    '${l10n.relatedConcepts}:',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -165,9 +171,14 @@ class ContextualHelpTooltip extends ConsumerWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: helpContent.relatedConcepts.map((concept) {
+                    children: localizedHelpContent.relatedConcepts.map((concept) {
                       return Chip(
-                        label: Text(_formatConceptId(concept)),
+                        label: Text(
+                          l10n.relatedConceptLabel(
+                            concept,
+                            kHelpContent[concept],
+                          ),
+                        ),
                         labelStyle: theme.textTheme.bodySmall,
                         visualDensity: VisualDensity.compact,
                       );
@@ -180,7 +191,7 @@ class ContextualHelpTooltip extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(l10n.close),
             ),
           ],
         );
@@ -188,12 +199,4 @@ class ContextualHelpTooltip extends ConsumerWidget {
     );
   }
 
-  String _formatConceptId(String id) {
-    return id
-        .replaceAll(RegExp(r'^(tool|concept)_'), '')
-        .split('_')
-        .where((word) => word.isNotEmpty)
-        .map((word) => word[0].toUpperCase() + word.substring(1))
-        .join(' ');
-  }
 }

@@ -70,7 +70,10 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final currentChallenge = _challenges[_currentLevel];
+    final challengeIndex = _currentLevel < _challenges.length
+        ? _currentLevel
+        : _challenges.length - 1;
+    final currentChallenge = _challenges[challengeIndex];
     final difficultyColor = switch (currentChallenge.difficulty) {
       ChallengeDifficulty.easy => Colors.green,
       ChallengeDifficulty.medium => Colors.orange,
@@ -483,7 +486,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
                   ),
                 ),
               ),
-              if (_currentLevel < _challenges.length - 1) ...[
+              if (!isCorrect && _currentLevel < _challenges.length - 1) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
@@ -744,7 +747,7 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     setState(() {
       _isPlaying = true;
       _currentLevel = 0;
-      _score = 0;
+      _resetScoringState();
       _selectedAnswer = null;
       _gameResult = null;
     });
@@ -841,6 +844,8 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     setState(() {
       _selectedAnswer = null;
       _gameResult = null;
+      _isLastAnswerCorrect = null;
+      _lastPointsEarned = 0;
     });
   }
 
@@ -850,9 +855,16 @@ class _PumpingLemmaGameState extends ConsumerState<PumpingLemmaGame> {
     setState(() {
       _isPlaying = false;
       _currentLevel = 0;
-      _score = 0;
+      _resetScoringState();
       _selectedAnswer = null;
       _gameResult = null;
     });
+  }
+
+  void _resetScoringState() {
+    _score = 0;
+    _streakCount = 0;
+    _isLastAnswerCorrect = null;
+    _lastPointsEarned = 0;
   }
 }

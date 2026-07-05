@@ -333,7 +333,8 @@ class PDASimulator {
     final result = simulationResult.data!;
     final errorMessage = result.errorMessage;
     if (errorMessage == PDA_SIMULATION_TIMEOUT_ERROR ||
-        errorMessage == PDA_SIMULATION_INFINITE_LOOP_ERROR) {
+        errorMessage == PDA_SIMULATION_INFINITE_LOOP_ERROR ||
+        errorMessage == PDA_SIMULATION_LIMIT_REACHED_ERROR) {
       return Failure(errorMessage!);
     }
 

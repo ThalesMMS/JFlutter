@@ -12,29 +12,40 @@
 //
 import '../models/fsa.dart';
 import '../models/state.dart';
+import '../result.dart';
 import 'dfa_completer.dart';
 import 'nfa_to_dfa_converter.dart';
 
 class EquivalenceChecker {
   static bool areEquivalent(FSA a, FSA b) {
+    return areEquivalentResult(a, b).data ?? false;
+  }
+
+  static Result<bool> areEquivalentResult(FSA a, FSA b) {
     // If either has no initial state, not equivalent per tests
-    if (a.initialState == null || b.initialState == null) return false;
+    if (a.initialState == null || b.initialState == null) {
+      return ResultFactory.success(false);
+    }
 
     // Enforce alphabet equality per tests (explicit requirement in suite)
     if (a.alphabet.isEmpty && b.alphabet.isEmpty) {
       // fall through; empty but equal
     } else if (a.alphabet.length != b.alphabet.length ||
         !a.alphabet.containsAll(b.alphabet)) {
-      return false;
+      return ResultFactory.success(false);
     }
 
     // Convert NFAs to DFAs if necessary
-    final dfaA = a.isDeterministic
-        ? a
-        : (NFAToDFAConverter.convert(a).data ?? a);
-    final dfaB = b.isDeterministic
-        ? b
-        : (NFAToDFAConverter.convert(b).data ?? b);
+    final dfaAResult = _determinizeIfNeeded(a, 'A');
+    if (dfaAResult.isFailure) {
+      return ResultFactory.failure(dfaAResult.error!);
+    }
+    final dfaBResult = _determinizeIfNeeded(b, 'B');
+    if (dfaBResult.isFailure) {
+      return ResultFactory.failure(dfaBResult.error!);
+    }
+    final dfaA = dfaAResult.data!;
+    final dfaB = dfaBResult.data!;
 
     // Use shared alphabet (after conversion) and complete both DFAs
     final sharedAlphabet = dfaA.alphabet.union(dfaB.alphabet);
@@ -61,7 +72,7 @@ class EquivalenceChecker {
 
       final accA = completedA.acceptingStates.contains(sA);
       final accB = completedB.acceptingStates.contains(sB);
-      if (accA != accB) return false;
+      if (accA != accB) return ResultFactory.success(false);
 
       for (final symbol in sharedAlphabet) {
         final nextASet = completedA.getTransitionsFromStateOnSymbol(sA, symbol);
@@ -72,7 +83,7 @@ class EquivalenceChecker {
         final nextB = nextBSet.isNotEmpty ? nextBSet.first.toState : null;
 
         if (nextA == null || nextB == null) {
-          return false; // completion invariant broken
+          return ResultFactory.success(false); // completion invariant broken
         }
         final key = '${nextA.id},${nextB.id}';
         if (visited.add(key)) {
@@ -81,6 +92,22 @@ class EquivalenceChecker {
       }
     }
 
-    return true;
+    return ResultFactory.success(true);
+  }
+
+  static Result<FSA> _determinizeIfNeeded(FSA automaton, String label) {
+    if (automaton.isDeterministic) {
+      return ResultFactory.success(automaton);
+    }
+
+    final conversion = NFAToDFAConverter.convert(automaton);
+    if (conversion.isFailure || conversion.data == null) {
+      return ResultFactory.failure(
+        'Failed to determinize automaton $label: '
+        '${conversion.error ?? 'unknown conversion failure'}',
+      );
+    }
+
+    return ResultFactory.success(conversion.data!);
   }
 }

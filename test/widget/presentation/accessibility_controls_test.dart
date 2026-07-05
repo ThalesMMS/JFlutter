@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jflutter/l10n/app_localizations.dart';
 import 'package:jflutter/presentation/widgets/error_banner.dart';
 import 'package:jflutter/presentation/widgets/keyboard_shortcuts_dialog.dart';
 
@@ -41,6 +42,9 @@ void main() {
     testWidgets('closes when Escape is pressed', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
               return Scaffold(

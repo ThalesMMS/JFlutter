@@ -15,6 +15,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -73,11 +74,18 @@ class _RecordingAutomatonStateNotifier extends AutomatonStateNotifier {
 class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
   _RecordingGraphViewCanvasController({required super.automatonStateNotifier});
 
+  final List<FSA?> synchronizedAutomata = [];
   int addStateAtCallCount = 0;
   Offset? lastAddStateWorldOffset;
   int moveStateCallCount = 0;
   String? lastMoveStateId;
   Offset? lastMoveStatePosition;
+
+  @override
+  void synchronize(FSA? automaton) {
+    synchronizedAutomata.add(automaton);
+    super.synchronize(automaton);
+  }
 
   @override
   void addStateAt(Offset worldPosition) {
@@ -160,23 +168,113 @@ void main() {
       },
     );
 
-    testWidgets('excludes the graph canvas from semantics traversal', (
+    testWidgets(
+      'resynchronizes when automaton structure changes with same identity fields',
+      (tester) async {
+        final canvasKey = GlobalKey();
+        final state = automaton_state.State(
+          id: 'q0',
+          label: 'q0',
+          position: Vector2(40, 40),
+          isInitial: true,
+        );
+        final automaton = FSA(
+          id: 'same-id',
+          name: 'Same Name',
+          states: {state},
+          transitions: const <FSATransition>{},
+          alphabet: const <String>{},
+          initialState: state,
+          acceptingStates: <automaton_state.State>{},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        provider.updateAutomaton(automaton);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AutomatonGraphViewCanvas(
+                automaton: automaton,
+                canvasKey: canvasKey,
+                controller: controller,
+                toolController: toolController,
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final initialSyncCount = controller.synchronizedAutomata.length;
+        expect(initialSyncCount, greaterThan(0));
+
+        final movedState = state.copyWith(position: Vector2(180, 120));
+        final updatedAutomaton = automaton.copyWith(
+          states: {movedState},
+          initialState: movedState,
+        );
+
+        provider.updateAutomaton(updatedAutomaton);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AutomatonGraphViewCanvas(
+                automaton: updatedAutomaton,
+                canvasKey: canvasKey,
+                controller: controller,
+                toolController: toolController,
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          controller.synchronizedAutomata.length,
+          greaterThan(initialSyncCount),
+        );
+        expect(controller.synchronizedAutomata.last, same(updatedAutomaton));
+      },
+    );
+
+    testWidgets('exposes canvas states and transitions to semantics', (
       tester,
     ) async {
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+
       final state = automaton_state.State(
         id: 'A',
         label: 'A',
         position: Vector2(40, 40),
         isInitial: true,
       );
+      final acceptingState = automaton_state.State(
+        id: 'B',
+        label: 'B',
+        position: Vector2(160, 40),
+        isAccepting: true,
+      );
       final automaton = FSA(
         id: 'semantic-canvas',
         name: 'Semantic Canvas',
-        states: {state},
-        transitions: const <FSATransition>{},
+        states: {state, acceptingState},
+        transitions: {
+          FSATransition(
+            id: 't0',
+            fromState: state,
+            toState: acceptingState,
+            inputSymbols: const {'a'},
+          ),
+        },
         alphabet: const <String>{'a'},
         initialState: state,
-        acceptingStates: <automaton_state.State>{},
+        acceptingStates: <automaton_state.State>{acceptingState},
         created: DateTime.utc(2024, 1, 1),
         modified: DateTime.utc(2024, 1, 1),
         bounds: const math.Rectangle<double>(0, 0, 400, 300),
@@ -203,13 +301,126 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.descendant(
-          of: find.byType(AutomatonGraphViewCanvas),
-          matching: find.byType(ExcludeSemantics),
+        find.bySemanticsLabel(
+          'Automaton canvas viewport. 2 states, 1 transition.',
         ),
         findsOneWidget,
       );
+      expect(
+        find.bySemanticsLabel(
+          'State A. Initial state. 1 outgoing transition. '
+          '0 incoming transitions.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(
+          'State B. Accepting state. 0 outgoing transitions. '
+          '1 incoming transition.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Transition t0 from A to B labeled a.'),
+        findsOneWidget,
+      );
     });
+
+    testWidgets('supports keyboard shortcuts for core canvas tools', (
+      tester,
+    ) async {
+      final automaton = FSA(
+        id: 'keyboard-canvas',
+        name: 'Keyboard Canvas',
+        states: <automaton_state.State>{},
+        transitions: const <FSATransition>{},
+        alphabet: const <String>{},
+        initialState: null,
+        acceptingStates: <automaton_state.State>{},
+        created: DateTime.utc(2024, 1, 1),
+        modified: DateTime.utc(2024, 1, 1),
+        bounds: const math.Rectangle<double>(0, 0, 400, 300),
+        zoomLevel: 1,
+        panOffset: Vector2.zero(),
+      );
+
+      provider.updateAutomaton(automaton);
+      controller.synchronize(automaton);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AutomatonGraphViewCanvas(
+              automaton: automaton,
+              canvasKey: GlobalKey(),
+              controller: controller,
+              toolController: toolController,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.pump();
+      expect(controller.addStateAtCallCount, equals(1));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyT);
+      await tester.pump();
+      expect(toolController.activeTool, AutomatonCanvasTool.transition);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+      await tester.pump();
+      expect(toolController.activeTool, AutomatonCanvasTool.selection);
+    });
+
+    testWidgets(
+      'mounted GraphView disposes controller-owned transformation on teardown',
+      (tester) async {
+        final transformation =
+            controller.graphController.transformationController!;
+        final automaton = FSA(
+          id: 'teardown',
+          name: 'Teardown Automaton',
+          states: <automaton_state.State>{},
+          transitions: const <FSATransition>{},
+          alphabet: const <String>{},
+          initialState: null,
+          acceptingStates: <automaton_state.State>{},
+          created: DateTime.utc(2024, 1, 1),
+          modified: DateTime.utc(2024, 1, 1),
+          bounds: const math.Rectangle<double>(0, 0, 400, 300),
+          zoomLevel: 1,
+          panOffset: Vector2.zero(),
+        );
+
+        provider.updateAutomaton(automaton);
+        controller.synchronize(automaton);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AutomatonGraphViewCanvas(
+                automaton: automaton,
+                canvasKey: GlobalKey(),
+                controller: controller,
+                toolController: toolController,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox.shrink());
+
+        expect(
+          () => transformation.value = Matrix4.identity()
+            ..translateByDouble(1.0, 0.0, 0.0, 1.0),
+          throwsFlutterError,
+        );
+      },
+    );
 
     for (final tool in [
       AutomatonCanvasTool.addState,

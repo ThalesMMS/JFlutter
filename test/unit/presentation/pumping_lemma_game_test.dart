@@ -9,11 +9,42 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/presentation/providers/pumping_lemma_progress_provider.dart';
 import 'package:jflutter/presentation/widgets/pumping_lemma_game/pumping_lemma_game.dart';
+
+Future<void> _pumpGame(WidgetTester tester) async {
+  await tester.pumpWidget(
+    const ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: PumpingLemmaGame(),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+Future<void> _tapVisibleText(WidgetTester tester, String text) async {
+  final finder = find.text(text).last;
+  await tester.ensureVisible(finder);
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _answerCorrectly(
+  WidgetTester tester,
+  PumpingLemmaChallenge challenge,
+) async {
+  final answerLabel =
+      challenge.isRegular ? 'Yes, it is regular' : 'No, it is not regular';
+  await _tapVisibleText(tester, answerLabel);
+  await _tapVisibleText(tester, 'Submit Answer');
+}
 
 void main() {
   group('Pumping lemma game mode', () {
@@ -183,37 +214,44 @@ void main() {
       });
     });
 
-    group('Scoring system', () {
-      test('Calculates scores based on difficulty', () {
-        // Easy: 10 points, Medium: 20 points, Hard: 30 points
-        expect(true, isTrue); // This would be tested in integration tests
+    group('PumpingLemmaGame scoring UI', () {
+      testWidgets('does not offer retry after a correct answer', (tester) async {
+        await _pumpGame(tester);
+        await _tapVisibleText(tester, 'Start Game');
+        await _answerCorrectly(tester, pumpingLemmaChallenges.first);
+
+        expect(find.text('Correct!'), findsOneWidget);
+        expect(find.text('Retry'), findsNothing);
       });
 
-      test('Applies streak bonuses correctly', () {
-        // Streak bonus after 2+ correct answers
-        expect(true, isTrue); // This would be tested in integration tests
-      });
+      testWidgets('practice again clears score and streak state',
+          (tester) async {
+        await _pumpGame(tester);
+        await _tapVisibleText(tester, 'Start Game');
 
-      test('Resets streak on incorrect answer', () {
-        expect(true, isTrue); // This would be tested in integration tests
-      });
-    });
+        for (var i = 0; i < pumpingLemmaChallenges.length; i++) {
+          await _answerCorrectly(tester, pumpingLemmaChallenges[i]);
+          await _tapVisibleText(
+            tester,
+            i == pumpingLemmaChallenges.length - 1
+                ? 'Finish Game'
+                : 'Next Challenge',
+          );
+        }
 
-    group('Game flow', () {
-      test('Provides immediate feedback after answers', () {
-        expect(true, isTrue); // This would be tested in integration tests
-      });
+        expect(find.text('Challenge Complete!'), findsOneWidget);
+        expect(find.textContaining('Streak:'), findsOneWidget);
 
-      test('Shows detailed explanations for each challenge', () {
-        expect(true, isTrue); // This would be tested in integration tests
-      });
+        await _tapVisibleText(tester, 'Practice Again');
 
-      test('Displays hints after incorrect answers', () {
-        expect(true, isTrue); // This would be tested in integration tests
-      });
+        expect(find.text('Score: 0'), findsOneWidget);
+        expect(find.textContaining('Streak:'), findsNothing);
 
-      test('Shows performance statistics on completion', () {
-        expect(true, isTrue); // This would be tested in integration tests
+        await _tapVisibleText(tester, 'Start Game');
+        await _answerCorrectly(tester, pumpingLemmaChallenges.first);
+
+        expect(find.text('Score: 12'), findsOneWidget);
+        expect(find.text('Retry'), findsNothing);
       });
     });
   });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations_help.dart';
 import 'mobile_navigation.dart';
 
 /// Desktop-optimized navigation rail mirroring the mobile navigation items.
@@ -20,6 +21,7 @@ class DesktopNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = jflapLocalizationsOf(context);
 
     return NavigationRail(
       selectedIndex: currentIndex,
@@ -56,7 +58,7 @@ class DesktopNavigation extends StatelessWidget {
               child: ExcludeSemantics(child: Icon(item.value.icon)),
             ),
             label: Semantics(
-              label: 'Navigate to ${item.value.label}',
+              label: l10n.navigateTo(item.value.label),
               hint: item.value.description,
               button: true,
               enabled: true,

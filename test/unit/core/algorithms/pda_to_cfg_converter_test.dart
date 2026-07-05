@@ -109,6 +109,34 @@ void main() {
       },
     );
 
+    test('rejects lambda-pop transitions before generating a grammar', () {
+      final initial = buildState('p', isInitial: true);
+      final accept = buildState('q', isAccepting: true);
+      final transition = PDATransition(
+        id: 't-lambda-pop',
+        fromState: initial,
+        toState: accept,
+        label: 'a,lambda->lambda',
+        inputSymbol: 'a',
+        popSymbol: '',
+        pushSymbol: '',
+        isLambdaPop: true,
+        isLambdaPush: true,
+      );
+      final pda = buildPda(
+        states: {initial, accept},
+        transitions: {transition},
+        initial: initial,
+        accepting: {accept},
+      );
+
+      final result = PDAtoCFGConverter.convert(pda);
+
+      expect(result, isA<Failure<PdaToCfgConversion>>());
+      expect(result.error, contains('pop exactly one stack symbol'));
+      expect(result.error, contains('t-lambda-pop'));
+    });
+
     test('expands pushed strings across intermediate states', () {
       final p = buildState('p', isInitial: true);
       final r = buildState('r', isAccepting: true);

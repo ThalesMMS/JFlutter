@@ -106,6 +106,48 @@ TM _dtmAcceptEmpty() {
   );
 }
 
+TM _dtmAcceptingInitialWithOutgoingTransition() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(0, 0),
+    isInitial: true,
+    isAccepting: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+  );
+
+  final transition = TMTransition(
+    id: 't0',
+    fromState: q0,
+    toState: q1,
+    label: 'a/a,R',
+    readSymbol: 'a',
+    writeSymbol: 'a',
+    direction: TapeDirection.right,
+    tapeNumber: 0,
+  );
+
+  return TM(
+    id: 'tm_initial_accepts_before_transition',
+    name: 'Initial Accepts Before Transition',
+    states: {q0, q1},
+    transitions: {transition},
+    alphabet: const {'a'},
+    initialState: q0,
+    acceptingStates: {q0},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 400, 300),
+    tapeAlphabet: const {'a', 'B'},
+    blankSymbol: 'B',
+    tapeCount: 1,
+  );
+}
+
 /// Creates a TM with a nondeterministic conflict: two transitions
 /// from q0 on '1' (one goes to qA, the other to qR).
 TM _dtmNondeterministicConflict() {
@@ -260,6 +302,28 @@ void main() {
       final res = TMSimulator.simulateDTM(tm, '');
       expect(res.isSuccess, true);
       expect(res.data!.accepted, true);
+    });
+
+    test('DTM accepts an accepting initial state before applying transitions',
+        () {
+      final tm = _dtmAcceptingInitialWithOutgoingTransition();
+
+      final dtmResult = TMSimulator.simulateDTM(tm, 'a');
+      final routedResult = TMSimulator.simulate(tm, 'a');
+      final ntmResult = TMSimulator.simulateNTM(tm, 'a');
+
+      expect(dtmResult.isSuccess, true);
+      expect(routedResult.isSuccess, true);
+      expect(ntmResult.isSuccess, true);
+      expect(dtmResult.data!.accepted, true);
+      expect(routedResult.data!.accepted, true);
+      expect(ntmResult.data!.accepted, true);
+      expect(dtmResult.data!.steps.last.currentState, 'q0');
+      expect(
+        dtmResult.data!.steps.any((step) => step.currentState == 'q1'),
+        isFalse,
+        reason: 'DTM should accept before taking the outgoing transition.',
+      );
     });
 
     test(

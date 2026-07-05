@@ -2,6 +2,7 @@ part of 'regex_page.dart';
 
 extension _RegexPageSampleSections on _RegexPageState {
   Widget _buildSampleStringsSection() {
+    final regexState = ref.watch(regexEditorProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -27,19 +28,17 @@ extension _RegexPageSampleSections on _RegexPageState {
                   ),
                 ),
                 const Spacer(),
-                if (_sampleStrings != null)
+                if (regexState.sampleStrings != null)
                   IconButton(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _showSampleStringsDetails = !_showSampleStringsDetails;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .toggleSampleStringsDetails(),
                     icon: Icon(
-                      _showSampleStringsDetails
+                      regexState.showSampleStringsDetails
                           ? Icons.expand_less
                           : Icons.expand_more,
                     ),
-                    tooltip: _showSampleStringsDetails
+                    tooltip: regexState.showSampleStringsDetails
                         ? 'Hide samples'
                         : 'Show samples',
                   ),
@@ -48,7 +47,7 @@ extension _RegexPageSampleSections on _RegexPageState {
             const SizedBox(height: 12),
 
             // Generate button
-            if (_sampleStrings == null)
+            if (regexState.sampleStrings == null)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -63,7 +62,7 @@ extension _RegexPageSampleSections on _RegexPageState {
               const SizedBox(height: 12),
 
               // Expandable samples list
-              if (_showSampleStringsDetails) ...[
+              if (regexState.showSampleStringsDetails) ...[
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildSampleStringsList(),
@@ -75,12 +74,9 @@ extension _RegexPageSampleSections on _RegexPageState {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _sampleStrings = null;
-                        _showSampleStringsDetails = false;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .clearSampleStrings(),
                     icon: const Icon(Icons.refresh, size: 18),
                     label: const Text('Clear'),
                   ),
@@ -101,7 +97,7 @@ extension _RegexPageSampleSections on _RegexPageState {
 
   /// Builds the sample strings summary showing key info
   Widget _buildSampleStringsSummary() {
-    final samples = _sampleStrings;
+    final samples = ref.watch(regexEditorProvider).sampleStrings;
     if (samples == null) return const SizedBox.shrink();
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -186,7 +182,7 @@ extension _RegexPageSampleSections on _RegexPageState {
 
   /// Builds the list of sample strings
   Widget _buildSampleStringsList() {
-    final samples = _sampleStrings;
+    final samples = ref.watch(regexEditorProvider).sampleStrings;
     if (samples == null || samples.samples.isEmpty) {
       return Center(
         child: Text(

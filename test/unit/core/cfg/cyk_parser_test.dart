@@ -18,6 +18,7 @@ void main() {
     late Grammar simpleCNFGrammar;
     late Grammar complexCNFGrammar;
     late Grammar lambdaGrammar;
+    late Grammar nullablePrefixGrammar;
     late Grammar unitGrammar;
 
     setUp(() {
@@ -30,7 +31,10 @@ void main() {
       // Test Case 3: Grammar with lambda productions
       lambdaGrammar = _createLambdaGrammar();
 
-      // Test Case 4: Grammar with unit productions
+      // Test Case 4: Grammar with nullable non-start productions
+      nullablePrefixGrammar = _createNullablePrefixGrammar();
+
+      // Test Case 5: Grammar with unit productions
       unitGrammar = _createUnitGrammar();
     });
 
@@ -313,6 +317,42 @@ void main() {
             cykResult.accepted,
             true,
             reason: 'Complex grammar should work',
+          );
+        }
+      });
+
+      test('Should expand nullable non-start symbols before CYK parsing', () {
+        final acceptedInputs = ['ab', 'b'];
+
+        for (final input in acceptedInputs) {
+          final result = CYKParser.parse(nullablePrefixGrammar, input);
+
+          expect(
+            result.isSuccess,
+            true,
+            reason: 'CYK parsing should succeed for "$input"',
+          );
+
+          if (result.isSuccess) {
+            expect(
+              result.data!.accepted,
+              true,
+              reason: 'Nullable prefix grammar should accept "$input"',
+            );
+          }
+        }
+
+        final rejected = CYKParser.parse(nullablePrefixGrammar, 'a');
+        expect(
+          rejected.isSuccess,
+          true,
+          reason: 'CYK parsing should succeed for rejected input',
+        );
+        if (rejected.isSuccess) {
+          expect(
+            rejected.data!.accepted,
+            false,
+            reason: 'Nullable prefix grammar should reject "a"',
           );
         }
       });
@@ -862,6 +902,51 @@ Grammar _createLambdaGrammar() {
     id: 'lambda',
     name: 'Lambda Grammar',
     terminals: {'a'},
+    nonterminals: {'S', 'A', 'B'},
+    startSymbol: 'S',
+    productions: productions,
+    type: GrammarType.contextFree,
+    created: DateTime.now(),
+    modified: DateTime.now(),
+  );
+}
+
+Grammar _createNullablePrefixGrammar() {
+  final productions = {
+    const Production(
+      id: 'p1',
+      leftSide: ['S'],
+      rightSide: ['A', 'B'],
+      isLambda: false,
+      order: 1,
+    ),
+    const Production(
+      id: 'p2',
+      leftSide: ['A'],
+      rightSide: ['a'],
+      isLambda: false,
+      order: 2,
+    ),
+    const Production(
+      id: 'p3',
+      leftSide: ['A'],
+      rightSide: [],
+      isLambda: true,
+      order: 3,
+    ),
+    const Production(
+      id: 'p4',
+      leftSide: ['B'],
+      rightSide: ['b'],
+      isLambda: false,
+      order: 4,
+    ),
+  };
+
+  return Grammar(
+    id: 'nullable_prefix',
+    name: 'Nullable Prefix Grammar',
+    terminals: {'a', 'b'},
     nonterminals: {'S', 'A', 'B'},
     startSymbol: 'S',
     productions: productions,

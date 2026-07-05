@@ -47,6 +47,16 @@ void _runPdaModelTests() {
       expect(result.errorMessage, contains('loop'));
     });
 
+    test('limitReached factory sets accepted=false with limit message', () {
+      final result = PDASimulationResult.limitReached(
+        inputString: 'abc',
+        steps: const [],
+        executionTime: const Duration(milliseconds: 1),
+      );
+      expect(result.accepted, false);
+      expect(result.errorMessage, contains('limit'));
+    });
+
     test('copyWith updates specified fields', () {
       final original = PDASimulationResult.success(
         inputString: 'a',

@@ -417,10 +417,73 @@ _CNFGrammar _toCNF(Grammar g) {
     });
   }
 
-  // 1) Start from original productions; expand into CNF-friendly ones
-  final List<Production> work = [];
+  final nullable = g.nullableNonterminals;
+  final nullableExpanded = <Production>[];
+  final seenNullableExpansions = <String>{};
+
+  void addNullableExpansion(
+    Production source,
+    List<String> rightSide, {
+    required bool isLambda,
+  }) {
+    final key =
+        '${source.leftSide.join('\u0000')}->${rightSide.join('\u0000')}|$isLambda';
+    if (!seenNullableExpansions.add(key)) return;
+
+    nullableExpanded.add(
+      Production(
+        id: 'cnf_nullable_${nullableExpanded.length}',
+        leftSide: source.leftSide,
+        rightSide: rightSide,
+        isLambda: isLambda,
+        order: nullableExpanded.length,
+      ),
+    );
+  }
+
   for (final p in g.productions) {
-    // Keep epsilon only if left is start symbol; others handled via CYK empty case
+    if (p.isLambda || p.rightSide.isEmpty) {
+      if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
+        addNullableExpansion(p, const [], isLambda: true);
+      }
+      continue;
+    }
+
+    final nullablePositions = <int>[];
+    for (var i = 0; i < p.rightSide.length; i++) {
+      if (nullable.contains(p.rightSide[i])) {
+        nullablePositions.add(i);
+      }
+    }
+
+    final subsetCount = 1 << nullablePositions.length;
+    for (var mask = 0; mask < subsetCount; mask++) {
+      final rhs = <String>[];
+      for (var i = 0; i < p.rightSide.length; i++) {
+        var omit = false;
+        for (var bit = 0; bit < nullablePositions.length; bit++) {
+          if (nullablePositions[bit] == i && ((mask >> bit) & 1) == 1) {
+            omit = true;
+            break;
+          }
+        }
+        if (!omit) rhs.add(p.rightSide[i]);
+      }
+
+      if (rhs.isEmpty) {
+        if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
+          addNullableExpansion(p, rhs, isLambda: true);
+        }
+      } else {
+        addNullableExpansion(p, rhs, isLambda: false);
+      }
+    }
+  }
+
+  // 1) Start from nullable-expanded productions; expand into CNF-friendly ones
+  final List<Production> work = [];
+  for (final p in nullableExpanded) {
+    // Keep epsilon only if left is start symbol.
     if (p.isLambda) {
       if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
         work.add(p);

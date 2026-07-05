@@ -351,6 +351,46 @@ void main() {
           );
         }
       });
+
+      test('single accepting self-loop keeps Kleene star', () {
+        final fa = _createSingleAcceptingSelfLoopFA();
+
+        final result = FAToRegexConverter.convert(fa, simplify: true);
+
+        expect(result.isSuccess, true);
+        if (result.isSuccess) {
+          final regex = result.data!;
+          expect(regex, isNot(equals('a')));
+          expect(regex, contains('*'));
+        }
+      });
+
+      test('initial accepting cycle keeps repetition', () {
+        final fa = _createInitialAcceptingAbCycleFA();
+
+        final result = FAToRegexConverter.convert(fa, simplify: true);
+
+        expect(result.isSuccess, true);
+        if (result.isSuccess) {
+          final regex = result.data!;
+          expect(regex, isNot(equals('ab')));
+          expect(regex, contains('*'));
+        }
+      });
+
+      test('parallel transitions through eliminated state are unioned', () {
+        final fa = _createParallelTransitionsThroughMiddleFA();
+
+        final result = FAToRegexConverter.convert(fa, simplify: true);
+
+        expect(result.isSuccess, true);
+        if (result.isSuccess) {
+          final regex = result.data!;
+          expect(regex, contains('a'));
+          expect(regex, contains('b'));
+          expect(regex, contains('c'));
+        }
+      });
     });
 
     group('Edge Case Tests', () {
@@ -888,6 +928,136 @@ FSA _createSingleStateFA() {
     created: DateTime.now(),
     modified: DateTime.now(),
     bounds: const math.Rectangle(0, 0, 300, 300),
+  );
+}
+
+FSA _createSingleAcceptingSelfLoopFA() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(100.0, 200.0),
+    isInitial: true,
+    isAccepting: true,
+  );
+  final loop = FSATransition(
+    id: 't0',
+    fromState: q0,
+    toState: q0,
+    label: 'a',
+    inputSymbols: {'a'},
+  );
+
+  return FSA(
+    id: 'single_loop',
+    name: 'Single Accepting Self Loop',
+    states: {q0},
+    transitions: {loop},
+    alphabet: {'a'},
+    initialState: q0,
+    acceptingStates: {q0},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 300, 300),
+  );
+}
+
+FSA _createInitialAcceptingAbCycleFA() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(100.0, 200.0),
+    isInitial: true,
+    isAccepting: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(300.0, 200.0),
+  );
+  final transitions = {
+    FSATransition(
+      id: 't0',
+      fromState: q0,
+      toState: q1,
+      label: 'a',
+      inputSymbols: {'a'},
+    ),
+    FSATransition(
+      id: 't1',
+      fromState: q1,
+      toState: q0,
+      label: 'b',
+      inputSymbols: {'b'},
+    ),
+  };
+
+  return FSA(
+    id: 'ab_cycle',
+    name: 'Initial Accepting ab Cycle',
+    states: {q0, q1},
+    transitions: transitions,
+    alphabet: {'a', 'b'},
+    initialState: q0,
+    acceptingStates: {q0},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 500, 300),
+  );
+}
+
+FSA _createParallelTransitionsThroughMiddleFA() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2(100.0, 200.0),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(300.0, 200.0),
+  );
+  final q2 = State(
+    id: 'q2',
+    label: 'q2',
+    position: Vector2(500.0, 200.0),
+    isAccepting: true,
+  );
+  final transitions = {
+    FSATransition(
+      id: 't0',
+      fromState: q0,
+      toState: q1,
+      label: 'a',
+      inputSymbols: {'a'},
+    ),
+    FSATransition(
+      id: 't1',
+      fromState: q0,
+      toState: q1,
+      label: 'b',
+      inputSymbols: {'b'},
+    ),
+    FSATransition(
+      id: 't2',
+      fromState: q1,
+      toState: q2,
+      label: 'c',
+      inputSymbols: {'c'},
+    ),
+  };
+
+  return FSA(
+    id: 'parallel_middle',
+    name: 'Parallel Through Middle',
+    states: {q0, q1, q2},
+    transitions: transitions,
+    alphabet: {'a', 'b', 'c'},
+    initialState: q0,
+    acceptingStates: {q2},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 700, 300),
   );
 }
 

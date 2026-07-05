@@ -109,8 +109,28 @@ mixin GraphViewViewportHighlightMixin on GraphViewHighlightController {
     final safeCurrent = currentScale == 0 ? 1.0 : currentScale;
     final targetScale = (safeCurrent * factor).clamp(0.05, 10.0);
     final relativeScale = targetScale / safeCurrent;
-    final target = Matrix4.copy(matrix)
-      ..scaleByDouble(relativeScale, relativeScale, relativeScale, 1.0);
+    final viewport = currentViewportSize;
+    late final Matrix4 target;
+    if (viewport == null) {
+      target = Matrix4.copy(matrix)
+        ..scaleByDouble(relativeScale, relativeScale, relativeScale, 1.0);
+    } else {
+      target = Matrix4.identity()
+        ..translateByDouble(
+          viewport.width / 2,
+          viewport.height / 2,
+          0.0,
+          1.0,
+        )
+        ..scaleByDouble(relativeScale, relativeScale, relativeScale, 1.0)
+        ..translateByDouble(
+          -viewport.width / 2,
+          -viewport.height / 2,
+          0.0,
+          1.0,
+        )
+        ..multiply(matrix);
+    }
     graphController.animateToMatrix(target);
     _logViewportEvent(
       'Applied scale factor $relativeScale (target=$targetScale)',

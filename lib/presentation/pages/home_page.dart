@@ -10,6 +10,8 @@
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../providers/home_navigation_provider.dart';
 import '../widgets/mobile_navigation.dart';
 import '../widgets/desktop_navigation.dart';
@@ -32,41 +34,43 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  static const int _navigationItemCount = 6;
+
   late final PageController _pageController;
   int? _lastNavigationIndex;
   final SimulationHighlightService _fallbackHighlightService =
       SimulationHighlightService();
 
-  List<NavigationItem> get _navigationItems => [
-        const NavigationItem(
-          label: 'FSA',
+  List<NavigationItem> _navigationItems(AppLocalizations l10n) => [
+        NavigationItem(
+          label: l10n.homeNavigationLabel('fsa'),
           icon: Icons.account_tree,
-          description: 'Finite State Automata',
+          description: l10n.homeNavigationDescription('fsa'),
         ),
-        const NavigationItem(
-          label: 'Grammar',
+        NavigationItem(
+          label: l10n.homeNavigationLabel('grammar'),
           icon: Icons.text_fields,
-          description: 'Context-Free Grammars',
+          description: l10n.homeNavigationDescription('grammar'),
         ),
-        const NavigationItem(
-          label: 'PDA',
+        NavigationItem(
+          label: l10n.homeNavigationLabel('pda'),
           icon: Icons.storage,
-          description: 'Pushdown Automata',
+          description: l10n.homeNavigationDescription('pda'),
         ),
-        const NavigationItem(
-          label: 'TM',
+        NavigationItem(
+          label: l10n.homeNavigationLabel('tm'),
           icon: Icons.settings,
-          description: 'Turing Machines',
+          description: l10n.homeNavigationDescription('tm'),
         ),
-        const NavigationItem(
-          label: 'Regex',
+        NavigationItem(
+          label: l10n.homeNavigationLabel('regex'),
           icon: Icons.pattern,
-          description: 'Regular Expressions',
+          description: l10n.homeNavigationDescription('regex'),
         ),
-        const NavigationItem(
-          label: 'Pumping',
+        NavigationItem(
+          label: l10n.homeNavigationLabel('pumping'),
           icon: Icons.games,
-          description: 'Pumping Lemma',
+          description: l10n.homeNavigationDescription('pumping'),
         ),
       ];
 
@@ -83,7 +87,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (index < 0) {
       return 0;
     }
-    final lastIndex = _navigationItems.length - 1;
+    const lastIndex = _navigationItemCount - 1;
     if (index > lastIndex) {
       return lastIndex;
     }
@@ -116,15 +120,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   String _getCurrentPageTitle(int currentIndex) {
-    return _navigationItems[currentIndex].label;
+    return _navigationItems(jflapLocalizationsOf(context))[currentIndex].label;
   }
 
   String _getCurrentPageDescription(int currentIndex) {
-    return _navigationItems[currentIndex].description;
+    return _navigationItems(
+      jflapLocalizationsOf(context),
+    )[currentIndex].description;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = jflapLocalizationsOf(context);
+    final navigationItems = _navigationItems(l10n);
     final screenSize = MediaQuery.of(context).size;
     final currentIndex = ref.watch(homeNavigationProvider);
     final visibleCurrentIndex = _sanitizeNavigationIndex(currentIndex);
@@ -213,12 +221,12 @@ class _HomePageState extends ConsumerState<HomePage> {
             IconButton(
               onPressed: () => _showHelpDialog(context),
               icon: const Icon(Icons.help_outline),
-              tooltip: 'Help',
+              tooltip: l10n.homeHelpTooltip,
             ),
             IconButton(
               onPressed: () => _showSettingsDialog(context),
               icon: const Icon(Icons.settings),
-              tooltip: 'Settings',
+              tooltip: l10n.homeSettingsTooltip,
             ),
           ],
         ),
@@ -235,7 +243,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: DesktopNavigation(
                       currentIndex: visibleCurrentIndex,
                       onDestinationSelected: _onNavigationTap,
-                      items: _navigationItems,
+                      items: navigationItems,
                       extended: screenSize.width >= 1440,
                     ),
                   ),
@@ -247,7 +255,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ? MobileNavigation(
                 currentIndex: visibleCurrentIndex,
                 onTap: _onNavigationTap,
-                items: _navigationItems,
+                items: navigationItems,
               )
             : null,
         floatingActionButton: _buildFloatingActionButton(

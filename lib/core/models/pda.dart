@@ -17,6 +17,8 @@ import 'transition.dart';
 import 'pda_transition.dart';
 import 'automaton.dart';
 
+const Object _unset = Object();
+
 /// Pushdown Automaton (PDA) implementation
 class PDA extends Automaton {
   /// Stack alphabet symbols (unmodifiable)
@@ -51,7 +53,7 @@ class PDA extends Automaton {
     Set<State>? states,
     Set<Transition>? transitions,
     Set<String>? alphabet,
-    State? initialState,
+    Object? initialState = _unset,
     Set<State>? acceptingStates,
     AutomatonType? type,
     DateTime? created,
@@ -68,7 +70,8 @@ class PDA extends Automaton {
       states: states ?? this.states,
       transitions: transitions ?? this.transitions,
       alphabet: alphabet ?? this.alphabet,
-      initialState: initialState ?? this.initialState,
+      initialState:
+          initialState == _unset ? this.initialState : initialState as State?,
       acceptingStates: acceptingStates ?? this.acceptingStates,
       created: created ?? this.created,
       modified: modified ?? this.modified,
@@ -113,15 +116,22 @@ class PDA extends Automaton {
   factory PDA.fromJson(Map<String, dynamic> json) {
     final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
     final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
+    final states = (json['states'] as List)
+        .map((s) => State.fromJson(s as Map<String, dynamic>))
+        .toSet();
+    final statesById = {for (final state in states) state.id: state};
 
     return PDA(
       id: json['id'] as String,
       name: json['name'] as String,
-      states: (json['states'] as List)
-          .map((s) => State.fromJson(s as Map<String, dynamic>))
-          .toSet(),
+      states: states,
       transitions: (json['transitions'] as List)
-          .map((t) => PDATransition.fromJson(t as Map<String, dynamic>))
+          .map(
+            (t) => PDATransition.fromJson(
+              t as Map<String, dynamic>,
+              statesById: statesById,
+            ),
+          )
           .toSet(),
       alphabet: Set<String>.from(json['alphabet'] as List),
       initialState: json['initialState'] != null

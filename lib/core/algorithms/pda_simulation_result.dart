@@ -4,6 +4,8 @@ part of 'pda_simulator.dart';
 
 const String PDA_SIMULATION_TIMEOUT_ERROR = 'Simulation timed out';
 const String PDA_SIMULATION_INFINITE_LOOP_ERROR = 'Infinite loop detected';
+const String PDA_SIMULATION_LIMIT_REACHED_ERROR =
+    'Search limit reached before acceptance could be determined';
 
 /// Result of simulating a PDA
 class PDASimulationResult {
@@ -73,6 +75,20 @@ class PDASimulationResult {
       accepted: false,
       steps: steps,
       errorMessage: PDA_SIMULATION_INFINITE_LOOP_ERROR,
+      executionTime: executionTime,
+    );
+  }
+
+  factory PDASimulationResult.limitReached({
+    required String inputString,
+    required List<SimulationStep> steps,
+    required Duration executionTime,
+  }) {
+    return PDASimulationResult._(
+      inputString: inputString,
+      accepted: false,
+      steps: steps,
+      errorMessage: PDA_SIMULATION_LIMIT_REACHED_ERROR,
       executionTime: executionTime,
     );
   }

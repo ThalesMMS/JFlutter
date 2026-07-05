@@ -1,0 +1,95 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:jflutter/core/models/grammar.dart';
+import 'package:jflutter/core/models/production.dart';
+import 'package:jflutter/core/parsers/grammar_xml_codec.dart';
+
+void main() {
+  group('GrammarXmlCodec', () {
+    const codec = GrammarXmlCodec();
+
+    test('round-trip preserves terminal and nonterminal sets', () {
+      final now = DateTime.utc(2024, 1, 1);
+      final grammar = Grammar(
+        id: 'palindrome',
+        name: 'Palindrome',
+        terminals: const {'a', 'b'},
+        nonterminals: const {'S'},
+        startSymbol: 'S',
+        productions: const {
+          Production(
+            id: 'p0',
+            leftSide: ['S'],
+            rightSide: ['a', 'S', 'b'],
+            order: 0,
+          ),
+          Production(
+            id: 'p1',
+            leftSide: ['S'],
+            rightSide: [],
+            isLambda: true,
+            order: 1,
+          ),
+        },
+        type: GrammarType.contextFree,
+        created: now,
+        modified: now,
+      );
+
+      final xml = codec.encodeGrammar(grammar);
+      final result = codec.decodeGrammarXml(xml);
+
+      expect(result.isSuccess, isTrue);
+      final decoded = result.data!;
+      expect(decoded.terminals, equals({'a', 'b'}));
+      expect(decoded.nonterminals, equals({'S'}));
+      expect(decoded.terminals, isNot(contains('S')));
+    });
+
+    test('round-trip preserves grammar type', () {
+      final now = DateTime.utc(2024, 1, 1);
+      final grammar = Grammar(
+        id: 'regular',
+        name: 'Regular',
+        terminals: const {'a'},
+        nonterminals: const {'S'},
+        startSymbol: 'S',
+        productions: const {
+          Production(
+            id: 'p0',
+            leftSide: ['S'],
+            rightSide: ['a'],
+            order: 0,
+          ),
+        },
+        type: GrammarType.regular,
+        created: now,
+        modified: now,
+      );
+
+      final xml = codec.encodeGrammar(grammar);
+      final result = codec.decodeGrammarXml(xml);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.type, equals(GrammarType.regular));
+    });
+
+    test('decode includes the start symbol in nonterminals', () {
+      const xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<structure type="grammar">
+  <grammar type="contextFree">
+    <start>S</start>
+    <production>
+      <left>A</left>
+      <right>a</right>
+    </production>
+  </grammar>
+</structure>''';
+
+      final result = codec.decodeGrammarXml(xml);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.nonterminals, equals({'S', 'A'}));
+      expect(result.data!.terminals, equals({'a'}));
+    });
+  });
+}

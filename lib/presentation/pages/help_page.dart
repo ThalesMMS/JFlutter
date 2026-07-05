@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_help.dart';
 import '../widgets/help_search_delegate.dart';
 
 part 'help_page_content.dart';
@@ -28,61 +30,66 @@ class HelpPage extends ConsumerStatefulWidget {
 }
 
 class _HelpPageState extends ConsumerState<HelpPage> {
+  static const int _helpSectionCount = 10;
+
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
   final ScrollController _chipScrollController = ScrollController();
   late final List<GlobalKey> _chipKeys = List.generate(
-    _helpSections.length,
+    _helpSectionCount,
     (_) => GlobalKey(),
   );
 
-  List<HelpSection> get _helpSections => const [
+  List<HelpSection> _helpSections(AppLocalizations l10n) => [
         HelpSection(
-          title: 'Getting Started',
+          title: l10n.helpSectionTitle('gettingStarted'),
           icon: Icons.play_circle_outline,
-          content: _GettingStartedContent(),
+          content: const _HelpArticleContent(articleId: 'gettingStarted'),
         ),
         HelpSection(
-          title: 'FSA',
+          title: l10n.helpSectionTitle('fsa'),
           icon: Icons.account_tree,
-          content: _FSAHelpContent(),
+          content: const _HelpArticleContent(articleId: 'fsa'),
         ),
         HelpSection(
-          title: 'Grammar',
+          title: l10n.helpSectionTitle('grammar'),
           icon: Icons.text_fields,
-          content: _GrammarHelpContent(),
+          content: const _HelpArticleContent(articleId: 'grammar'),
         ),
         HelpSection(
-            title: 'PDA', icon: Icons.storage, content: _PDAHelpContent()),
+          title: l10n.helpSectionTitle('pda'),
+          icon: Icons.storage,
+          content: const _HelpArticleContent(articleId: 'pda'),
+        ),
         HelpSection(
-          title: 'Turing Machine',
+          title: l10n.helpSectionTitle('tm'),
           icon: Icons.settings,
-          content: _TMHelpContent(),
+          content: const _HelpArticleContent(articleId: 'tm'),
         ),
         HelpSection(
-          title: 'Regular Expression',
+          title: l10n.helpSectionTitle('regex'),
           icon: Icons.pattern,
-          content: _RegexHelpContent(),
+          content: const _HelpArticleContent(articleId: 'regex'),
         ),
         HelpSection(
-          title: 'Pumping Lemma',
+          title: l10n.helpSectionTitle('pumping'),
           icon: Icons.games,
-          content: _PumpingLemmaHelpContent(),
+          content: const _HelpArticleContent(articleId: 'pumping'),
         ),
         HelpSection(
-          title: 'File Operations',
+          title: l10n.helpSectionTitle('fileOperations'),
           icon: Icons.folder_open,
-          content: _FileOperationsHelpContent(),
+          content: const _HelpArticleContent(articleId: 'fileOperations'),
         ),
         HelpSection(
-          title: 'Troubleshooting',
+          title: l10n.helpSectionTitle('troubleshooting'),
           icon: Icons.help_outline,
-          content: _TroubleshootingContent(),
+          content: const _HelpArticleContent(articleId: 'troubleshooting'),
         ),
         HelpSection(
-          title: 'Licenses',
+          title: l10n.helpSectionTitle('licenses'),
           icon: Icons.policy_outlined,
-          content: _LicensesHelpContent(),
+          content: const _LicensesHelpContent(),
         ),
       ];
 
@@ -134,34 +141,39 @@ class _HelpPageState extends ConsumerState<HelpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = jflapLocalizationsOf(context);
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Help & Documentation'),
+        title: Text(l10n.helpPageTitle),
         actions: [
           IconButton(
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: HelpSearchDelegate(ref: ref),
+                delegate: HelpSearchDelegate(
+                  ref: ref,
+                  searchFieldLabel: l10n.helpSearchFieldLabel,
+                ),
               );
             },
             icon: const Icon(Icons.search),
-            tooltip: 'Search Help',
+            tooltip: l10n.helpSearchTooltip,
           ),
           IconButton(
             onPressed: _showQuickStart,
             icon: const Icon(Icons.rocket_launch),
-            tooltip: 'Quick Start Guide',
+            tooltip: l10n.helpQuickStartTitle,
           ),
         ],
       ),
-      body: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      body: isMobile ? _buildMobileLayout(l10n) : _buildDesktopLayout(l10n),
     );
   }
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout(AppLocalizations l10n) {
+    final helpSections = _helpSections(l10n);
     return Column(
       children: [
         SafeArea(
@@ -172,9 +184,9 @@ class _HelpPageState extends ConsumerState<HelpPage> {
               controller: _chipScrollController,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               scrollDirection: Axis.horizontal,
-              itemCount: _helpSections.length,
+              itemCount: helpSections.length,
               itemBuilder: (context, index) {
-                final section = _helpSections[index];
+                final section = helpSections[index];
                 final isSelected = index == _selectedIndex;
 
                 return Padding(
@@ -203,8 +215,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
               onPageChanged: (index) {
                 _updateSelectedIndex(index);
               },
-              children:
-                  _helpSections.map((section) => section.content).toList(),
+              children: helpSections.map((section) => section.content).toList(),
             ),
           ),
         ),
@@ -212,15 +223,16 @@ class _HelpPageState extends ConsumerState<HelpPage> {
     );
   }
 
-  Widget _buildDesktopLayout() {
+  Widget _buildDesktopLayout(AppLocalizations l10n) {
+    final helpSections = _helpSections(l10n);
     return Row(
       children: [
         SizedBox(
           width: 250,
           child: ListView.builder(
-            itemCount: _helpSections.length,
+            itemCount: helpSections.length,
             itemBuilder: (context, index) {
-              final section = _helpSections[index];
+              final section = helpSections[index];
               final isSelected = index == _selectedIndex;
 
               return ListTile(
@@ -237,7 +249,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
           child: PageView(
             controller: _pageController,
             onPageChanged: (index) => _updateSelectedIndex(index),
-            children: _helpSections.map((section) => section.content).toList(),
+            children: helpSections.map((section) => section.content).toList(),
           ),
         ),
       ],
@@ -245,48 +257,21 @@ class _HelpPageState extends ConsumerState<HelpPage> {
   }
 
   void _showQuickStart() {
+    final l10n = jflapLocalizationsOf(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Quick Start Guide'),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Welcome to JFlutter. Here\'s a quick way to get started:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(
-                '1. Choose a workspace such as FSA, Grammar, PDA, TM, or Regex',
-              ),
-              Text(
-                '2. Start with a blank workspace or open a supported example or file',
-              ),
-              Text(
-                '3. Use the editor to build your machine or grammar (double-tap a state for quick actions)',
-              ),
-              Text('4. Run simulations to test your work'),
-              Text('5. Use algorithms to transform structures'),
-              SizedBox(height: 16),
-              Text('Tips:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text(
-                '• Use the navigation tabs or section chips to switch between workspaces quickly',
-              ),
-              Text('• Double-tap a state to open its quick action menu'),
-              Text('• Pinch to zoom on canvas'),
-              Text(
-                '• Tap the Quick Start icon in the app bar whenever you need a refresher',
-              ),
-            ],
+        title: Text(l10n.helpQuickStartTitle),
+        content: SingleChildScrollView(
+          child: Text(
+            l10n.helpQuickStartBody,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Got it!'),
+            child: Text(l10n.helpGotIt),
           ),
         ],
       ),

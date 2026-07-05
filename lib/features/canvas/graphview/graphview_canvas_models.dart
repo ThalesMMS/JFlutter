@@ -19,31 +19,53 @@ class GraphViewAutomatonMetadata {
     required this.id,
     required this.name,
     required this.alphabet,
+    this.tapeAlphabet = const <String>[],
+    this.blankSymbol,
+    this.tapeCount,
   });
 
   const GraphViewAutomatonMetadata.empty()
     : id = null,
       name = null,
-      alphabet = const <String>[];
+      alphabet = const <String>[],
+      tapeAlphabet = const <String>[],
+      blankSymbol = null,
+      tapeCount = null;
 
   final String? id;
   final String? name;
   final List<String> alphabet;
+  final List<String> tapeAlphabet;
+  final String? blankSymbol;
+  final int? tapeCount;
 
   GraphViewAutomatonMetadata copyWith({
     String? id,
     String? name,
     List<String>? alphabet,
+    List<String>? tapeAlphabet,
+    String? blankSymbol,
+    int? tapeCount,
   }) {
     return GraphViewAutomatonMetadata(
       id: id ?? this.id,
       name: name ?? this.name,
       alphabet: alphabet ?? this.alphabet,
+      tapeAlphabet: tapeAlphabet ?? this.tapeAlphabet,
+      blankSymbol: blankSymbol ?? this.blankSymbol,
+      tapeCount: tapeCount ?? this.tapeCount,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'alphabet': alphabet};
+    return {
+      'id': id,
+      'name': name,
+      'alphabet': alphabet,
+      'tapeAlphabet': tapeAlphabet,
+      'blankSymbol': blankSymbol,
+      'tapeCount': tapeCount,
+    };
   }
 
   factory GraphViewAutomatonMetadata.fromJson(Map<String, dynamic>? json) {
@@ -54,10 +76,17 @@ class GraphViewAutomatonMetadata {
     final alphabet = rawAlphabet is List
         ? rawAlphabet.cast<String>()
         : const <String>[];
+    final rawTapeAlphabet = json['tapeAlphabet'];
+    final tapeAlphabet = rawTapeAlphabet is List
+        ? rawTapeAlphabet.cast<String>()
+        : const <String>[];
     return GraphViewAutomatonMetadata(
       id: json['id'] as String?,
       name: json['name'] as String?,
       alphabet: alphabet,
+      tapeAlphabet: tapeAlphabet,
+      blankSymbol: json['blankSymbol'] as String?,
+      tapeCount: json['tapeCount'] as int?,
     );
   }
 }
@@ -284,7 +313,7 @@ class GraphViewCanvasEdge {
 
   factory GraphViewCanvasEdge.fromJson(Map<String, dynamic> json) {
     final rawSymbols = json['symbols'];
-    final symbols = rawSymbols is String
+    final symbols = rawSymbols is String && rawSymbols.isNotEmpty
         ? rawSymbols.split(',')
         : const <String>[];
     return GraphViewCanvasEdge(
@@ -423,7 +452,13 @@ class GraphViewAutomatonSnapshot {
         const ListEquality<String>().equals(
           metadata.alphabet,
           other.metadata.alphabet,
-        );
+        ) &&
+        const ListEquality<String>().equals(
+          metadata.tapeAlphabet,
+          other.metadata.tapeAlphabet,
+        ) &&
+        metadata.blankSymbol == other.metadata.blankSymbol &&
+        metadata.tapeCount == other.metadata.tapeCount;
   }
 
   @override
@@ -433,5 +468,8 @@ class GraphViewAutomatonSnapshot {
     metadata.id,
     metadata.name,
     const ListEquality<String>().hash(metadata.alphabet),
+    const ListEquality<String>().hash(metadata.tapeAlphabet),
+    metadata.blankSymbol,
+    metadata.tapeCount,
   );
 }

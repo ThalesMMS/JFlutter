@@ -150,6 +150,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
 
   Widget _buildInputArea(AlgorithmOperationState algorithmState) {
     final l10n = AppLocalizations.of(context);
+    final regexState = ref.watch(regexEditorProvider);
     final faToRegexWidget = _buildFaToRegexResult(algorithmState);
 
     return Column(
@@ -189,7 +190,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
 
         // Validation status
         const SizedBox(height: 8),
-        if (_currentRegex.isEmpty)
+        if (regexState.currentRegex.isEmpty)
           ErrorBanner(
             message: l10n.enterRegexToValidate,
             severity: ErrorSeverity.info,
@@ -198,12 +199,13 @@ extension _RegexPageLayoutSections on _RegexPageState {
           )
         else
           ErrorBanner(
-            message: _isValid
+            message: regexState.isValid
                 ? l10n.validRegex
-                : (_errorMessage.isNotEmpty
-                    ? _errorMessage
+                : (regexState.errorMessage.isNotEmpty
+                    ? regexState.errorMessage
                     : l10n.invalidRegex),
-            severity: _isValid ? ErrorSeverity.success : ErrorSeverity.error,
+            severity:
+                regexState.isValid ? ErrorSeverity.success : ErrorSeverity.error,
             showRetryButton: false,
             showDismissButton: false,
           ),
@@ -234,10 +236,12 @@ extension _RegexPageLayoutSections on _RegexPageState {
 
         // Match result
         const SizedBox(height: 8),
-        if (_hasTested)
+        if (regexState.hasTested)
           ErrorBanner(
-            message: _matches ? l10n.matches : l10n.doesNotMatch,
-            severity: _matches ? ErrorSeverity.success : ErrorSeverity.warning,
+            message: regexState.matches ? l10n.matches : l10n.doesNotMatch,
+            severity: regexState.matches
+                ? ErrorSeverity.success
+                : ErrorSeverity.warning,
             showRetryButton: false,
             showDismissButton: false,
           ),
@@ -313,7 +317,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
             child: SwitchSettingTile(
               title: l10n.simplifyOutput,
               subtitle: l10n.simplifyOutputSubtitle,
-              value: _simplifyOutput,
+              value: regexState.simplifyOutput,
               onChanged: _setSimplifyOutput,
               switchKey: const ValueKey('regex_simplify_output_switch'),
             ),
@@ -361,11 +365,11 @@ extension _RegexPageLayoutSections on _RegexPageState {
             label: Text(l10n.compareEquivalence),
           ),
         ),
-        if (_equivalenceMessage.isNotEmpty) ...[
+        if (regexState.equivalenceMessage.isNotEmpty) ...[
           const SizedBox(height: 8),
           ErrorBanner(
-            message: _equivalenceMessage,
-            severity: _equivalenceResult == true
+            message: regexState.equivalenceMessage,
+            severity: regexState.equivalenceResult == true
                 ? ErrorSeverity.success
                 : ErrorSeverity.warning,
             showRetryButton: false,
@@ -410,13 +414,14 @@ extension _RegexPageLayoutSections on _RegexPageState {
     _testStringController.clear();
     _comparisonRegexController.clear();
     ref.read(automatonAlgorithmProvider.notifier).clearAlgorithmResults();
-    _resetClearedInputsState();
+    ref.read(regexEditorProvider.notifier).clearInputs();
   }
 
   Widget? _buildFaToRegexResult(
     AlgorithmOperationState algorithmState,
   ) {
     final l10n = AppLocalizations.of(context);
+    final regexState = ref.watch(regexEditorProvider);
 
     // Only show if we have conversion results
     if (algorithmState.rawRegexResult == null &&
@@ -427,8 +432,10 @@ extension _RegexPageLayoutSections on _RegexPageState {
     final rawRegex = algorithmState.rawRegexResult;
     final simplifiedRegex = algorithmState.simplifiedRegexResult;
     final displayedFromSimplified =
-        (_simplifyOutput && simplifiedRegex != null) ||
-            (!_simplifyOutput && rawRegex == null && simplifiedRegex != null);
+        (regexState.simplifyOutput && simplifiedRegex != null) ||
+            (!regexState.simplifyOutput &&
+                rawRegex == null &&
+                simplifiedRegex != null);
     final displayedRegex = displayedFromSimplified ? simplifiedRegex : rawRegex;
 
     if (displayedRegex == null) return null;
@@ -506,7 +513,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  _simplifyOutput
+                  regexState.simplifyOutput
                       ? l10n.toggleOffRawOutput
                       : l10n.toggleOnSimplifiedOutput,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(

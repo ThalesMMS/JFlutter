@@ -76,6 +76,67 @@ void main() {
       );
     });
 
+    test('concurrent saves preserve all traces with unique ids', () async {
+      final inputs = List<String>.generate(12, (index) => 'input-$index');
+
+      await Future.wait(
+        inputs.map(
+          (input) => service.saveTraceToHistory(
+            traceFixture(input: input),
+            automatonType: 'dfa',
+          ),
+        ),
+      );
+
+      final history = await service.getTraceHistory();
+      final ids = history.map((entry) => entry['id'] as String).toList();
+      final savedInputs = history
+          .map((entry) =>
+              (entry['trace'] as Map<String, dynamic>)['inputString'])
+          .toSet();
+
+      expect(history, hasLength(inputs.length));
+      expect(ids.toSet(), hasLength(ids.length));
+      expect(savedInputs, containsAll(inputs));
+    });
+
+    test('concurrent deletes preserve every requested deletion', () async {
+      final trace = traceFixture(input: 'existing');
+      await prefs.setString(
+        'trace_history',
+        jsonEncode(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'trace-0',
+            'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+            'automatonType': 'dfa',
+            'trace': trace.toJson(),
+          },
+          <String, dynamic>{
+            'id': 'trace-1',
+            'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+            'automatonType': 'dfa',
+            'trace': trace.toJson(),
+          },
+          <String, dynamic>{
+            'id': 'trace-2',
+            'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+            'automatonType': 'dfa',
+            'trace': trace.toJson(),
+          },
+        ]),
+      );
+
+      await Future.wait([
+        service.deleteTrace('trace-0'),
+        service.deleteTrace('trace-1'),
+      ]);
+
+      final history = await service.getTraceHistory();
+      final ids = history.map((entry) => entry['id']).toSet();
+
+      expect(ids, equals({'trace-2'}));
+    });
+
     test('evicts the oldest trace when the 51st trace is saved', () async {
       for (var i = 0; i < 51; i++) {
         await service.saveTraceToHistory(

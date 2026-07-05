@@ -198,6 +198,38 @@ void main() {
 
       transformationController.dispose();
     });
+
+    testWidgets('disposes explicitly owned transformation controller',
+        (WidgetTester tester) async {
+      final graph = Graph();
+      final node = Node.Id('target');
+      graph.addNode(node);
+
+      final transformationController = TransformationController();
+      final controller = GraphViewController(
+        transformationController: transformationController,
+        ownsTransformationController: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GraphView.builder(
+            graph: graph,
+            algorithm: buildTestAlgorithm(),
+            controller: controller,
+            builder: (node) => const SizedBox(width: 20, height: 20),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      expect(
+        () => transformationController.value = Matrix4.identity()
+          ..translateByDouble(1.0, 0.0, 0.0, 1.0),
+        throwsFlutterError,
+      );
+    });
   });
 
   group('Collapse Tests', () {

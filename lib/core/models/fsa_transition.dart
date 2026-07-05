@@ -108,7 +108,10 @@ class FSATransition extends Transition {
   }
 
   /// Creates an FSA transition from a JSON representation
-  factory FSATransition.fromJson(Map<String, dynamic> json) {
+  factory FSATransition.fromJson(
+    Map<String, dynamic> json, {
+    Map<String, State>? statesById,
+  }) {
     final controlPointData = (json['controlPoint'] as Map?)
         ?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
@@ -116,8 +119,16 @@ class FSATransition extends Transition {
 
     return FSATransition(
       id: json['id'] as String,
-      fromState: State.fromJson(json['fromState'] as Map<String, dynamic>),
-      toState: State.fromJson(json['toState'] as Map<String, dynamic>),
+      fromState: _resolveSerializedState(
+        json['fromState'],
+        statesById,
+        'fromState',
+      ),
+      toState: _resolveSerializedState(
+        json['toState'],
+        statesById,
+        'toState',
+      ),
       label: json['label'] as String,
       controlPoint: Vector2(controlPointX, controlPointY),
       type: TransitionType.values.firstWhere(
@@ -277,4 +288,29 @@ class FSATransition extends Transition {
       lambdaSymbol: null,
     );
   }
+}
+
+State _resolveSerializedState(
+  Object? value,
+  Map<String, State>? statesById,
+  String fieldName,
+) {
+  if (value is String) {
+    final state = statesById?[value];
+    if (state == null) {
+      throw ArgumentError(
+        'Unknown $fieldName state id "$value" in FSA transition JSON',
+      );
+    }
+    return state;
+  }
+
+  if (value is Map) {
+    final state = State.fromJson(value.cast<String, dynamic>());
+    return statesById?[state.id] ?? state;
+  }
+
+  throw ArgumentError(
+    'Expected $fieldName to be a state object or state id string',
+  );
 }

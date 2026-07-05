@@ -20,6 +20,9 @@ import 'regex_simplifier.dart';
 
 /// Converts Finite Automata (FA) to Regular Expressions using the state elimination method
 class FAToRegexConverter {
+  static const String _epsilonRegex = '\u03B5';
+  static const String _lambdaRegex = '\u03BB';
+
   /// Converts a Finite Automaton to an equivalent regular expression
   ///
   /// If [simplify] is true, applies algebraic simplification to produce
@@ -90,88 +93,174 @@ class FAToRegexConverter {
     return ResultFactory.success(null);
   }
 
+  static String _uniqueStateId(Set<State> states, String baseId) {
+    if (!states.any((state) => state.id == baseId)) {
+      return baseId;
+    }
+
+    var suffix = 1;
+    var candidate = '${baseId}_$suffix';
+    while (states.any((state) => state.id == candidate)) {
+      suffix++;
+      candidate = '${baseId}_$suffix';
+    }
+    return candidate;
+  }
+
+  static bool _isEpsilonRegex(String regex) {
+    return regex == _epsilonRegex || regex == _lambdaRegex;
+  }
+
+  static String _transitionRegex(FSATransition transition) {
+    if (transition.isEpsilonTransition) {
+      return _epsilonRegex;
+    }
+    if (transition.label.isNotEmpty) {
+      return transition.label;
+    }
+    return _unionRegex(transition.inputSymbols);
+  }
+
+  static String _unionRegex(Iterable<String> regexes) {
+    final parts = <String>[];
+    for (final regex in regexes) {
+      if (regex.isEmpty || parts.contains(regex)) {
+        continue;
+      }
+      parts.add(regex);
+    }
+
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts.single;
+    return '(${parts.join('|')})';
+  }
+
+  static String _starRegex(String regex) {
+    if (regex.isEmpty) return '';
+    if (_isEpsilonRegex(regex)) return _epsilonRegex;
+    return '($regex)*';
+  }
+
+  static String _concatRegex(Iterable<String> regexes) {
+    final parts = <String>[];
+    for (final regex in regexes) {
+      if (regex.isEmpty || _isEpsilonRegex(regex)) {
+        continue;
+      }
+      parts.add(regex);
+    }
+    return parts.isEmpty ? _epsilonRegex : parts.join();
+  }
+
+  static String _regexBetween(
+    Iterable<FSATransition> transitions,
+    State fromState,
+    State toState,
+  ) {
+    return _unionRegex(
+      transitions
+          .where(
+            (transition) =>
+                transition.fromState == fromState &&
+                transition.toState == toState,
+          )
+          .map(_transitionRegex),
+    );
+  }
+
+  static FSATransition _addOrUnionTransition(
+    Set<FSATransition> transitions, {
+    required State fromState,
+    required State toState,
+    required String regex,
+    required String id,
+  }) {
+    final existingTransitions = transitions
+        .where(
+          (transition) =>
+              transition.fromState == fromState &&
+              transition.toState == toState,
+        )
+        .toList();
+    final combinedRegex = _unionRegex([
+      ...existingTransitions.map(_transitionRegex),
+      regex,
+    ]);
+
+    for (final transition in existingTransitions) {
+      transitions.remove(transition);
+    }
+
+    final combinedTransition = FSATransition(
+      id: id,
+      fromState: fromState,
+      toState: toState,
+      label: combinedRegex,
+      inputSymbols: {combinedRegex},
+    );
+    transitions.add(combinedTransition);
+    return combinedTransition;
+  }
+
   /// Ensures the FA has a single initial state and a single final state
   static FSA _ensureSingleInitialAndFinalStates(FSA fa) {
     final now = DateTime.now();
 
-    // Create new initial state if needed
-    State newInitialState;
-    if (fa.initialState != null && fa.acceptingStates.length == 1) {
-      newInitialState = fa.initialState!;
-    } else {
-      newInitialState = State(
-        id: 'q_initial',
-        label: 'q_initial',
-        position: Vector2(50, 100),
-        isInitial: true,
-        isAccepting: false,
+    final newInitialState = State(
+      id: _uniqueStateId(fa.states, 'q_initial'),
+      label: 'q_initial',
+      position: Vector2(50, 100),
+      isInitial: true,
+      isAccepting: false,
+    );
+    final statesWithInitial = {...fa.states, newInitialState};
+    final newFinalState = State(
+      id: _uniqueStateId(statesWithInitial, 'q_final'),
+      label: 'q_final',
+      position: Vector2(350, 100),
+      isInitial: false,
+      isAccepting: true,
+    );
+
+    final newStates = Set<State>.from(fa.states)
+      ..add(newInitialState)
+      ..add(newFinalState);
+    final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
+
+    newTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps_${newInitialState.id}_${fa.initialState!.id}',
+        fromState: newInitialState,
+        toState: fa.initialState!,
+        label: _epsilonRegex,
+      ),
+    );
+
+    for (final acceptingState in fa.acceptingStates) {
+      newTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps_${acceptingState.id}_${newFinalState.id}',
+          fromState: acceptingState,
+          toState: newFinalState,
+          label: _epsilonRegex,
+        ),
       );
     }
 
-    // Create new final state if needed
-    State newFinalState;
-    if (fa.acceptingStates.length == 1) {
-      newFinalState = fa.acceptingStates.first;
-    } else {
-      newFinalState = State(
-        id: 'q_final',
-        label: 'q_final',
-        position: Vector2(350, 100),
-        isInitial: false,
-        isAccepting: true,
-      );
-    }
-
-    // If we need to add new states
-    if (newInitialState.id == 'q_initial' || newFinalState.id == 'q_final') {
-      final newStates = Set<State>.from(fa.states);
-      final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
-
-      // Add new initial state if needed
-      if (newInitialState.id == 'q_initial') {
-        newStates.add(newInitialState);
-        // Add epsilon transition from new initial to old initial
-        newTransitions.add(
-          FSATransition.epsilon(
-            id: 't_eps_initial',
-            fromState: newInitialState,
-            toState: fa.initialState!,
-          ),
-        );
-      }
-
-      // Add new final state if needed
-      if (newFinalState.id == 'q_final') {
-        newStates.add(newFinalState);
-        // Add epsilon transitions from old accepting states to new final
-        for (final acceptingState in fa.acceptingStates) {
-          newTransitions.add(
-            FSATransition.epsilon(
-              id: 't_eps_final_${acceptingState.id}',
-              fromState: acceptingState,
-              toState: newFinalState,
-            ),
-          );
-        }
-      }
-
-      return FSA(
-        id: '${fa.id}_single_states',
-        name: '${fa.name} (Single States)',
-        states: newStates,
-        transitions: newTransitions,
-        alphabet: fa.alphabet,
-        initialState: newInitialState,
-        acceptingStates: {newFinalState},
-        created: fa.created,
-        modified: now,
-        bounds: fa.bounds,
-        zoomLevel: fa.zoomLevel,
-        panOffset: fa.panOffset,
-      );
-    }
-
-    return fa;
+    return FSA(
+      id: '${fa.id}_single_states',
+      name: '${fa.name} (Single States)',
+      states: newStates,
+      transitions: newTransitions,
+      alphabet: fa.alphabet,
+      initialState: newInitialState,
+      acceptingStates: {newFinalState},
+      created: fa.created,
+      modified: now,
+      bounds: fa.bounds,
+      zoomLevel: fa.zoomLevel,
+      panOffset: fa.panOffset,
+    );
   }
 
   /// Applies the state elimination algorithm
@@ -214,7 +303,8 @@ class FAToRegexConverter {
     final incomingStates = <State>{};
     final incomingTransitions = <FSATransition>[];
     for (final transition in fa.fsaTransitions) {
-      if (transition.toState == stateToEliminate) {
+      if (transition.toState == stateToEliminate &&
+          transition.fromState != stateToEliminate) {
         incomingStates.add(transition.fromState);
         incomingTransitions.add(transition);
       }
@@ -224,85 +314,47 @@ class FAToRegexConverter {
     final outgoingStates = <State>{};
     final outgoingTransitions = <FSATransition>[];
     for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate) {
+      if (transition.fromState == stateToEliminate &&
+          transition.toState != stateToEliminate) {
         outgoingStates.add(transition.toState);
         outgoingTransitions.add(transition);
       }
     }
 
-    // Find self-loop on the state to eliminate
-    String selfLoopRegex = '';
-    for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate &&
-          transition.toState == stateToEliminate) {
-        if (selfLoopRegex.isEmpty) {
-          selfLoopRegex = transition.label;
-        } else {
-          selfLoopRegex = '($selfLoopRegex|${transition.label})';
-        }
-      }
-    }
-
-    // Add Kleene star if there's a self-loop
-    if (selfLoopRegex.isNotEmpty) {
-      selfLoopRegex = '($selfLoopRegex)*';
-    }
+    final selfLoopRegex = _starRegex(
+      _regexBetween(fa.fsaTransitions, stateToEliminate, stateToEliminate),
+    );
 
     // Create new transitions for all combinations of incoming and outgoing states
     for (final incomingState in incomingStates) {
       for (final outgoingState in outgoingStates) {
-        // Find the incoming transition
-        final incomingTransition = incomingTransitions
-            .where((t) => t.fromState == incomingState)
-            .firstOrNull;
-
-        // Find the outgoing transition
-        final outgoingTransition = outgoingTransitions
-            .where((t) => t.toState == outgoingState)
-            .firstOrNull;
-
-        if (incomingTransition != null && outgoingTransition != null) {
-          // Build the regex for this path
-          String pathRegex = incomingTransition.label;
-          if (selfLoopRegex.isNotEmpty) {
-            pathRegex += selfLoopRegex;
-          }
-          pathRegex += outgoingTransition.label;
-
-          // Check if there's already a transition between these states
-          final existingTransition = newTransitions
-              .where(
-                (t) =>
-                    t.fromState == incomingState && t.toState == outgoingState,
-              )
-              .firstOrNull;
-
-          if (existingTransition != null) {
-            // Combine with existing transition
-            final combinedRegex = '(${existingTransition.label}|$pathRegex)';
-            newTransitions.remove(existingTransition);
-            newTransitions.add(
-              FSATransition(
-                id: 't_combined_${incomingState.id}_${outgoingState.id}',
-                fromState: incomingState,
-                toState: outgoingState,
-                label: combinedRegex,
-                inputSymbols: {combinedRegex}, // Simplified
-              ),
-            );
-          } else {
-            // Add new transition
-            newTransitions.add(
-              FSATransition(
-                id: 't_new_${incomingState.id}_${outgoingState.id}',
-                fromState: incomingState,
-                toState: outgoingState,
-                label: pathRegex,
-                inputSymbols: {pathRegex}, // Simplified
-              ),
-            );
-          }
+        final incomingRegex = _regexBetween(
+          incomingTransitions,
+          incomingState,
+          stateToEliminate,
+        );
+        final outgoingRegex = _regexBetween(
+          outgoingTransitions,
+          stateToEliminate,
+          outgoingState,
+        );
+        if (incomingRegex.isEmpty || outgoingRegex.isEmpty) {
+          continue;
         }
+
+        final pathRegex = _concatRegex([
+          incomingRegex,
+          selfLoopRegex,
+          outgoingRegex,
+        ]);
+
+        _addOrUnionTransition(
+          newTransitions,
+          fromState: incomingState,
+          toState: outgoingState,
+          regex: pathRegex,
+          id: 't_combined_${incomingState.id}_${outgoingState.id}',
+        );
       }
     }
 
@@ -336,13 +388,7 @@ class FAToRegexConverter {
       return '∅'; // Empty language
     }
 
-    if (transitions.length == 1) {
-      return transitions.first.label;
-    }
-
-    // Combine multiple transitions with union
-    final regexParts = transitions.map((t) => t.label).toList();
-    return '(${regexParts.join('|')})';
+    return _unionRegex(transitions.map(_transitionRegex));
   }
 
   /// Ensures single initial and final states with detailed step capture
@@ -352,105 +398,79 @@ class FAToRegexConverter {
   ) {
     final now = DateTime.now();
 
-    // Create new initial state if needed
-    State newInitialState;
-    bool needsNewInitial = false;
-    if (fa.initialState != null && fa.acceptingStates.length == 1) {
-      newInitialState = fa.initialState!;
-    } else {
-      newInitialState = State(
-        id: 'q_initial',
-        label: 'q_initial',
-        position: Vector2(50, 100),
-        isInitial: true,
-        isAccepting: false,
-      );
-      needsNewInitial = true;
-    }
+    final newInitialState = State(
+      id: _uniqueStateId(fa.states, 'q_initial'),
+      label: 'q_initial',
+      position: Vector2(50, 100),
+      isInitial: true,
+      isAccepting: false,
+    );
+    final statesWithInitial = {...fa.states, newInitialState};
+    final newFinalState = State(
+      id: _uniqueStateId(statesWithInitial, 'q_final'),
+      label: 'q_final',
+      position: Vector2(350, 100),
+      isInitial: false,
+      isAccepting: true,
+    );
 
-    // Create new final state if needed
-    State newFinalState;
-    final needsNewFinal = fa.acceptingStates.length != 1;
-    if (fa.acceptingStates.length == 1) {
-      newFinalState = fa.acceptingStates.first;
-    } else {
-      newFinalState = State(
-        id: 'q_final',
-        label: 'q_final',
-        position: Vector2(350, 100),
-        isInitial: false,
-        isAccepting: true,
-      );
-    }
+    final newStates = Set<State>.from(fa.states)
+      ..add(newInitialState)
+      ..add(newFinalState);
+    final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
 
-    // If we need to add new states
-    if (needsNewInitial || needsNewFinal) {
-      final newStates = Set<State>.from(fa.states);
-      final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
+    steps.add(
+      FAToRegexStep.addInitialState(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        oldInitialState: fa.initialState!,
+        newInitialState: newInitialState,
+      ),
+    );
 
-      // Add new initial state if needed
-      if (needsNewInitial) {
-        steps.add(
-          FAToRegexStep.addInitialState(
-            id: 'step_${steps.length + 1}',
-            stepNumber: steps.length + 1,
-            oldInitialState: fa.initialState!,
-            newInitialState: newInitialState,
-          ),
-        );
+    newTransitions.add(
+      FSATransition.epsilon(
+        id: 't_eps_${newInitialState.id}_${fa.initialState!.id}',
+        fromState: newInitialState,
+        toState: fa.initialState!,
+        label: _epsilonRegex,
+      ),
+    );
 
-        newStates.add(newInitialState);
-        // Add epsilon transition from new initial to old initial
-        newTransitions.add(
-          FSATransition.epsilon(
-            id: 't_eps_initial',
-            fromState: newInitialState,
-            toState: fa.initialState!,
-          ),
-        );
-      }
+    steps.add(
+      FAToRegexStep.addFinalState(
+        id: 'step_${steps.length + 1}',
+        stepNumber: steps.length + 1,
+        oldAcceptingStates: fa.acceptingStates,
+        newFinalState: newFinalState,
+      ),
+    );
 
-      // Add new final state if needed
-      if (needsNewFinal) {
-        steps.add(
-          FAToRegexStep.addFinalState(
-            id: 'step_${steps.length + 1}',
-            stepNumber: steps.length + 1,
-            oldAcceptingStates: fa.acceptingStates,
-            newFinalState: newFinalState,
-          ),
-        );
-
-        newStates.add(newFinalState);
-        // Add epsilon transitions from old accepting states to new final
-        for (final acceptingState in fa.acceptingStates) {
-          newTransitions.add(
-            FSATransition.epsilon(
-              id: 't_eps_final_${acceptingState.id}',
-              fromState: acceptingState,
-              toState: newFinalState,
-            ),
-          );
-        }
-      }
-
-      return FSA(
-        id: '${fa.id}_single_states',
-        name: '${fa.name} (Single States)',
-        states: newStates,
-        transitions: newTransitions,
-        alphabet: fa.alphabet,
-        initialState: newInitialState,
-        acceptingStates: {newFinalState},
-        created: fa.created,
-        modified: now,
-        bounds: fa.bounds,
-        zoomLevel: fa.zoomLevel,
-        panOffset: fa.panOffset,
+    for (final acceptingState in fa.acceptingStates) {
+      newTransitions.add(
+        FSATransition.epsilon(
+          id: 't_eps_${acceptingState.id}_${newFinalState.id}',
+          fromState: acceptingState,
+          toState: newFinalState,
+          label: _epsilonRegex,
+        ),
       );
     }
 
-    return fa;
+    return FSA(
+      id: '${fa.id}_single_states',
+      name: '${fa.name} (Single States)',
+      states: newStates,
+      transitions: newTransitions,
+      alphabet: fa.alphabet,
+      initialState: newInitialState,
+      acceptingStates: {newFinalState},
+      created: fa.created,
+      modified: now,
+      bounds: fa.bounds,
+      zoomLevel: fa.zoomLevel,
+      panOffset: fa.panOffset,
+    );
   }
 
   /// Applies state elimination algorithm with detailed step capture
@@ -520,7 +540,8 @@ class FAToRegexConverter {
     final incomingStates = <State>{};
     final incomingTransitions = <FSATransition>[];
     for (final transition in fa.fsaTransitions) {
-      if (transition.toState == stateToEliminate) {
+      if (transition.toState == stateToEliminate &&
+          transition.fromState != stateToEliminate) {
         incomingStates.add(transition.fromState);
         incomingTransitions.add(transition);
       }
@@ -540,7 +561,8 @@ class FAToRegexConverter {
     final outgoingStates = <State>{};
     final outgoingTransitions = <FSATransition>[];
     for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate) {
+      if (transition.fromState == stateToEliminate &&
+          transition.toState != stateToEliminate) {
         outgoingStates.add(transition.toState);
         outgoingTransitions.add(transition);
       }
@@ -557,24 +579,16 @@ class FAToRegexConverter {
     );
 
     // Step 4: Find self-loop on the state to eliminate
-    String selfLoopRegex = '';
-    final selfLoopTransitions = <FSATransition>[];
-    for (final transition in fa.fsaTransitions) {
-      if (transition.fromState == stateToEliminate &&
-          transition.toState == stateToEliminate) {
-        selfLoopTransitions.add(transition);
-        if (selfLoopRegex.isEmpty) {
-          selfLoopRegex = transition.label;
-        } else {
-          selfLoopRegex = '($selfLoopRegex|${transition.label})';
-        }
-      }
-    }
-
-    // Add Kleene star if there's a self-loop
-    if (selfLoopRegex.isNotEmpty) {
-      selfLoopRegex = '($selfLoopRegex)*';
-    }
+    final selfLoopTransitions = fa.fsaTransitions
+        .where(
+          (transition) =>
+              transition.fromState == stateToEliminate &&
+              transition.toState == stateToEliminate,
+        )
+        .toList();
+    final selfLoopRegex = _starRegex(
+      _unionRegex(selfLoopTransitions.map(_transitionRegex)),
+    );
 
     steps.add(
       FAToRegexStep.findSelfLoop(
@@ -582,7 +596,7 @@ class FAToRegexConverter {
         stepNumber: steps.length + 1,
         eliminatedState: stateToEliminate,
         selfLoopTransitions: selfLoopTransitions.toSet(),
-        selfLoopRegex: selfLoopRegex.isNotEmpty ? selfLoopRegex : 'ε',
+        selfLoopRegex: selfLoopRegex.isNotEmpty ? selfLoopRegex : _epsilonRegex,
       ),
     );
 
@@ -590,58 +604,33 @@ class FAToRegexConverter {
     final createdTransitions = <FSATransition>[];
     for (final incomingState in incomingStates) {
       for (final outgoingState in outgoingStates) {
-        // Find the incoming transition
-        final incomingTransition = incomingTransitions
-            .where((t) => t.fromState == incomingState)
-            .firstOrNull;
-
-        // Find the outgoing transition
-        final outgoingTransition = outgoingTransitions
-            .where((t) => t.toState == outgoingState)
-            .firstOrNull;
-
-        if (incomingTransition != null && outgoingTransition != null) {
-          // Build the regex for this path
-          String pathRegex = incomingTransition.label;
-          if (selfLoopRegex.isNotEmpty) {
-            pathRegex += selfLoopRegex;
-          }
-          pathRegex += outgoingTransition.label;
-
-          // Check if there's already a transition between these states
-          final existingTransition = newTransitions
-              .where(
-                (t) =>
-                    t.fromState == incomingState && t.toState == outgoingState,
-              )
-              .firstOrNull;
-
-          if (existingTransition != null) {
-            // Combine with existing transition
-            final combinedRegex = '(${existingTransition.label}|$pathRegex)';
-            newTransitions.remove(existingTransition);
-            final newTransition = FSATransition(
-              id: 't_combined_${incomingState.id}_${outgoingState.id}',
-              fromState: incomingState,
-              toState: outgoingState,
-              label: combinedRegex,
-              inputSymbols: {combinedRegex},
-            );
-            newTransitions.add(newTransition);
-            createdTransitions.add(newTransition);
-          } else {
-            // Add new transition
-            final newTransition = FSATransition(
-              id: 't_new_${incomingState.id}_${outgoingState.id}',
-              fromState: incomingState,
-              toState: outgoingState,
-              label: pathRegex,
-              inputSymbols: {pathRegex},
-            );
-            newTransitions.add(newTransition);
-            createdTransitions.add(newTransition);
-          }
+        final incomingRegex = _regexBetween(
+          incomingTransitions,
+          incomingState,
+          stateToEliminate,
+        );
+        final outgoingRegex = _regexBetween(
+          outgoingTransitions,
+          stateToEliminate,
+          outgoingState,
+        );
+        if (incomingRegex.isEmpty || outgoingRegex.isEmpty) {
+          continue;
         }
+
+        final pathRegex = _concatRegex([
+          incomingRegex,
+          selfLoopRegex,
+          outgoingRegex,
+        ]);
+        final newTransition = _addOrUnionTransition(
+          newTransitions,
+          fromState: incomingState,
+          toState: outgoingState,
+          regex: pathRegex,
+          id: 't_combined_${incomingState.id}_${outgoingState.id}',
+        );
+        createdTransitions.add(newTransition);
       }
     }
 

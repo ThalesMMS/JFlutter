@@ -150,5 +150,15 @@ void main() {
       expect(mergedTransition.controlPoint.x, closeTo(8, 0.0001));
       expect(mergedTransition.controlPoint.y, closeTo(12, 0.0001));
     });
+
+    test('mergeIntoTemplate drops initial state missing from snapshot', () {
+      final merged = GraphViewAutomatonMapper.mergeIntoTemplate(
+        const GraphViewAutomatonSnapshot.empty(),
+        baseAutomaton,
+      );
+
+      expect(merged.states, isEmpty);
+      expect(merged.initialState, isNull);
+    });
   });
 }

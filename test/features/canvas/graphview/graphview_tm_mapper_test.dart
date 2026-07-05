@@ -65,7 +65,7 @@ void main() {
         created: DateTime.utc(2023, 1, 1),
         modified: DateTime.utc(2023, 1, 1),
         bounds: const math.Rectangle<double>(0, 0, 400, 300),
-        tapeAlphabet: {'a', 'b', 'B'},
+        tapeAlphabet: {'a', 'b', 'X', 'B'},
         blankSymbol: 'B',
         tapeCount: 1,
         panOffset: Vector2.zero(),
@@ -79,6 +79,12 @@ void main() {
       expect(snapshot.metadata.id, equals('tm-1'));
       expect(snapshot.metadata.name, equals('Sample TM'));
       expect(snapshot.metadata.alphabet, containsAll(['a', 'b']));
+      expect(
+        snapshot.metadata.tapeAlphabet,
+        containsAll(['a', 'b', 'X', 'B']),
+      );
+      expect(snapshot.metadata.blankSymbol, equals('B'));
+      expect(snapshot.metadata.tapeCount, equals(1));
 
       expect(snapshot.nodes, hasLength(2));
       final nodeIds = snapshot.nodes.map((node) => node.id).toSet();
@@ -156,5 +162,64 @@ void main() {
       expect(rebuilt.initialState?.id, equals('q0'));
       expect(rebuilt.acceptingStates.single.id, equals('q1'));
     });
+
+    test(
+      'merge preserves tape alphabet without adding write markers to input alphabet',
+      () {
+        final template = machine.copyWith(
+          alphabet: {'a', 'b'},
+          tapeAlphabet: {'a', 'b', 'X', 'B'},
+        );
+
+        const snapshot = GraphViewAutomatonSnapshot(
+          nodes: [
+            GraphViewCanvasNode(
+              id: 'q0',
+              label: 'start',
+              x: 10,
+              y: 20,
+              isInitial: true,
+              isAccepting: false,
+            ),
+            GraphViewCanvasNode(
+              id: 'q1',
+              label: 'accept',
+              x: 180,
+              y: 150,
+              isInitial: false,
+              isAccepting: true,
+            ),
+          ],
+          edges: [
+            GraphViewCanvasEdge(
+              id: 't0',
+              fromStateId: 'q0',
+              toStateId: 'q1',
+              symbols: <String>[],
+              readSymbol: 'a',
+              writeSymbol: 'X',
+              direction: TapeDirection.right,
+            ),
+          ],
+          metadata: GraphViewAutomatonMetadata(
+            id: 'tm-1',
+            name: 'Marker TM',
+            alphabet: ['a', 'b'],
+            tapeAlphabet: ['a', 'b', 'X', 'B'],
+            blankSymbol: 'B',
+            tapeCount: 1,
+          ),
+        );
+
+        final rebuilt = GraphViewTmMapper.mergeIntoTemplate(snapshot, template);
+
+        expect(rebuilt.alphabet, containsAll({'a', 'b'}));
+        expect(rebuilt.alphabet, hasLength(2));
+        expect(rebuilt.alphabet, isNot(contains('X')));
+        expect(rebuilt.tapeAlphabet, containsAll({'a', 'b', 'X', 'B'}));
+        expect(rebuilt.blankSymbol, 'B');
+        expect(rebuilt.validate(), isEmpty);
+      },
+    );
   });
 }

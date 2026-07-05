@@ -17,6 +17,8 @@ import '../../core/models/simulation_step.dart';
 typedef PDASimulationResult = pda_core.PDASimulationResult;
 typedef PDAAcceptanceMode = pda_core.PDAAcceptanceMode;
 
+const Object _unset = Object();
+
 class PDASimulationState {
   final PDA? pda;
   final PDASimulationResult? result;
@@ -37,8 +39,8 @@ class PDASimulationState {
   });
 
   PDASimulationState copyWith({
-    PDA? pda,
-    PDASimulationResult? result,
+    Object? pda = _unset,
+    Object? result = _unset,
     bool? isRunning,
     bool? stepByStep,
     PDAAcceptanceMode? mode,
@@ -46,8 +48,8 @@ class PDASimulationState {
     int? currentStepIndex,
   }) {
     return PDASimulationState(
-      pda: pda ?? this.pda,
-      result: result ?? this.result,
+      pda: pda == _unset ? this.pda : pda as PDA?,
+      result: result == _unset ? this.result : result as PDASimulationResult?,
       isRunning: isRunning ?? this.isRunning,
       stepByStep: stepByStep ?? this.stepByStep,
       mode: mode ?? this.mode,
@@ -101,7 +103,7 @@ class PDASimulationNotifier extends StateNotifier<PDASimulationState> {
   PDASimulationNotifier() : super(const PDASimulationState());
 
   void setPda(PDA pda) {
-    state = state.copyWith(pda: pda);
+    state = state.copyWith(pda: pda, result: null, currentStepIndex: 0);
   }
 
   void setStepByStep(bool enabled) {

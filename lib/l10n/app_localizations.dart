@@ -122,6 +122,78 @@ abstract class AppLocalizations {
   /// **'Algorithms'**
   String get algorithms;
 
+  String get homeHelpTooltip;
+
+  String get homeSettingsTooltip;
+
+  String get homeNavigationFsaLabel;
+
+  String get homeNavigationFsaDescription;
+
+  String get homeNavigationGrammarLabel;
+
+  String get homeNavigationGrammarDescription;
+
+  String get homeNavigationPdaLabel;
+
+  String get homeNavigationPdaDescription;
+
+  String get homeNavigationTmLabel;
+
+  String get homeNavigationTmDescription;
+
+  String get homeNavigationRegexLabel;
+
+  String get homeNavigationRegexDescription;
+
+  String get homeNavigationPumpingLabel;
+
+  String get homeNavigationPumpingDescription;
+
+  String get helpPageTitle;
+
+  String get helpSearchTooltip;
+
+  String get helpQuickStartTitle;
+
+  String get helpQuickStartBody;
+
+  String get helpGotIt;
+
+  String get helpSearchFieldLabel;
+
+  String get helpSearchClear;
+
+  String get helpSearchClose;
+
+  String get helpSearchTitle;
+
+  String get helpSearchSubtitle;
+
+  String get helpSearchNoResults;
+
+  String get helpSearchNoResultsDescription;
+
+  String get helpSectionGettingStarted;
+
+  String get helpSectionFsa;
+
+  String get helpSectionGrammar;
+
+  String get helpSectionPda;
+
+  String get helpSectionTm;
+
+  String get helpSectionRegex;
+
+  String get helpSectionPumping;
+
+  String get helpSectionFileOperations;
+
+  String get helpSectionTroubleshooting;
+
+  String get helpSectionLicenses;
+
   /// Title for the regular expression page.
   ///
   /// In en, this message translates to:

@@ -77,12 +77,14 @@ class LanguageComparator {
       });
 
       // Convert NFAs to DFAs if necessary
-      final dfaA = automatonA.isDeterministic
-          ? automatonA.copyWith(alphabet: sharedAlphabet)
-          : (NFAToDFAConverter.convert(
-                  automatonA.copyWith(alphabet: sharedAlphabet),
-                ).data ??
-                automatonA);
+      final dfaAResult = _determinizeIfNeeded(
+        automatonA.copyWith(alphabet: sharedAlphabet),
+        'A',
+      );
+      if (dfaAResult.isFailure) {
+        return ResultFactory.failure(dfaAResult.error!);
+      }
+      final dfaA = dfaAResult.data!;
 
       if (!automatonA.isDeterministic) {
         steps.add({
@@ -97,12 +99,14 @@ class LanguageComparator {
         });
       }
 
-      final dfaB = automatonB.isDeterministic
-          ? automatonB.copyWith(alphabet: sharedAlphabet)
-          : (NFAToDFAConverter.convert(
-                  automatonB.copyWith(alphabet: sharedAlphabet),
-                ).data ??
-                automatonB);
+      final dfaBResult = _determinizeIfNeeded(
+        automatonB.copyWith(alphabet: sharedAlphabet),
+        'B',
+      );
+      if (dfaBResult.isFailure) {
+        return ResultFactory.failure(dfaBResult.error!);
+      }
+      final dfaB = dfaBResult.data!;
 
       if (!automatonB.isDeterministic) {
         steps.add({
@@ -213,6 +217,22 @@ class LanguageComparator {
     } catch (e) {
       return ResultFactory.failure('Error comparing languages: $e');
     }
+  }
+
+  static Result<FSA> _determinizeIfNeeded(FSA automaton, String label) {
+    if (automaton.isDeterministic) {
+      return ResultFactory.success(automaton);
+    }
+
+    final conversion = NFAToDFAConverter.convert(automaton);
+    if (conversion.isFailure || conversion.data == null) {
+      return ResultFactory.failure(
+        'Failed to determinize automaton $label: '
+        '${conversion.error ?? 'unknown conversion failure'}',
+      );
+    }
+
+    return ResultFactory.success(conversion.data!);
   }
 
   /// Validates the input automata

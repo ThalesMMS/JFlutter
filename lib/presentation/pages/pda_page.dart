@@ -368,12 +368,8 @@ class _PDAPageState extends ConsumerState<PDAPage>
                   states: const <automaton_state.State>[],
                   transitions: const <PDATransition>[],
                 ),
-                onUndo: _canvasController.canUndo
-                    ? () => _canvasController.undo()
-                    : null,
-                onRedo: _canvasController.canRedo
-                    ? () => _canvasController.redo()
-                    : null,
+                onUndo: _canvasController.undo,
+                onRedo: _canvasController.redo,
                 canUndo: _canvasController.canUndo,
                 canRedo: _canvasController.canRedo,
                 onSimulate: null,

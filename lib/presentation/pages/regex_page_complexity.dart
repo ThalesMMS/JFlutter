@@ -2,6 +2,7 @@ part of 'regex_page.dart';
 
 extension _RegexPageComplexitySections on _RegexPageState {
   Widget _buildComplexityAnalysisSection() {
+    final regexState = ref.watch(regexEditorProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -27,27 +28,26 @@ extension _RegexPageComplexitySections on _RegexPageState {
                   ),
                 ),
                 const Spacer(),
-                if (_regexAnalysis != null)
+                if (regexState.regexAnalysis != null)
                   IconButton(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _showAnalysisDetails = !_showAnalysisDetails;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .toggleAnalysisDetails(),
                     icon: Icon(
-                      _showAnalysisDetails
+                      regexState.showAnalysisDetails
                           ? Icons.expand_less
                           : Icons.expand_more,
                     ),
-                    tooltip:
-                        _showAnalysisDetails ? 'Hide details' : 'Show details',
+                    tooltip: regexState.showAnalysisDetails
+                        ? 'Hide details'
+                        : 'Show details',
                   ),
               ],
             ),
             const SizedBox(height: 12),
 
             // Analyze button
-            if (_regexAnalysis == null)
+            if (regexState.regexAnalysis == null)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -62,7 +62,7 @@ extension _RegexPageComplexitySections on _RegexPageState {
               const SizedBox(height: 12),
 
               // Expandable details
-              if (_showAnalysisDetails) ...[
+              if (regexState.showAnalysisDetails) ...[
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildComplexityDetails(),
@@ -74,12 +74,9 @@ extension _RegexPageComplexitySections on _RegexPageState {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _regexAnalysis = null;
-                        _showAnalysisDetails = false;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .clearComplexityAnalysis(),
                     icon: const Icon(Icons.refresh, size: 18),
                     label: const Text('Clear'),
                   ),
@@ -100,7 +97,7 @@ extension _RegexPageComplexitySections on _RegexPageState {
 
   /// Builds the complexity level indicator with color coding
   Widget _buildComplexityLevelIndicator() {
-    final analysis = _regexAnalysis;
+    final analysis = ref.watch(regexEditorProvider).regexAnalysis;
     if (analysis == null) return const SizedBox.shrink();
 
     final complexityColors = _getComplexityColors(
@@ -217,7 +214,7 @@ extension _RegexPageComplexitySections on _RegexPageState {
 
   /// Builds the detailed complexity analysis view
   Widget _buildComplexityDetails() {
-    final analysis = _regexAnalysis;
+    final analysis = ref.watch(regexEditorProvider).regexAnalysis;
     if (analysis == null) return const SizedBox.shrink();
 
     final colorScheme = Theme.of(context).colorScheme;

@@ -3,6 +3,7 @@ part of 'regex_page.dart';
 extension _RegexPageSimplificationSections on _RegexPageState {
   Widget _buildSimplificationStepsSection() {
     final l10n = AppLocalizations.of(context);
+    final regexState = ref.watch(regexEditorProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -24,19 +25,17 @@ extension _RegexPageSimplificationSections on _RegexPageState {
                   ),
                 ),
                 const Spacer(),
-                if (_simplificationResult != null)
+                if (regexState.simplificationResult != null)
                   IconButton(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _showSimplificationSteps = !_showSimplificationSteps;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .toggleSimplificationSteps(),
                     icon: Icon(
-                      _showSimplificationSteps
+                      regexState.showSimplificationSteps
                           ? Icons.expand_less
                           : Icons.expand_more,
                     ),
-                    tooltip: _showSimplificationSteps
+                    tooltip: regexState.showSimplificationSteps
                         ? l10n.hideSteps
                         : l10n.showSteps,
                   ),
@@ -45,7 +44,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
             const SizedBox(height: 12),
 
             // Simplify button
-            if (_simplificationResult == null)
+            if (regexState.simplificationResult == null)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -60,7 +59,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
               const SizedBox(height: 12),
 
               // Expandable steps list
-              if (_showSimplificationSteps) ...[
+              if (regexState.showSimplificationSteps) ...[
                 const Divider(),
                 const SizedBox(height: 8),
                 _buildStepsList(),
@@ -72,13 +71,9 @@ extension _RegexPageSimplificationSections on _RegexPageState {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () {
-                      _updatePageState(() {
-                        _simplificationResult = null;
-                        _showSimplificationSteps = false;
-                        _selectedStepIndex = 0;
-                      });
-                    },
+                    onPressed: () => ref
+                        .read(regexEditorProvider.notifier)
+                        .clearSimplification(),
                     icon: const Icon(Icons.refresh, size: 18),
                     label: Text(l10n.clear),
                   ),
@@ -99,7 +94,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
 
   /// Builds the simplification summary showing original vs simplified
   Widget _buildSimplificationSummary() {
-    final result = _simplificationResult;
+    final result = ref.watch(regexEditorProvider).simplificationResult;
     if (result == null) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
@@ -281,7 +276,8 @@ extension _RegexPageSimplificationSections on _RegexPageState {
 
   /// Builds the list of simplification steps
   Widget _buildStepsList() {
-    final result = _simplificationResult;
+    final regexState = ref.watch(regexEditorProvider);
+    final result = regexState.simplificationResult;
     if (result == null) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
@@ -296,7 +292,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
           Row(
             children: [
               Text(
-                '${l10n.stepLabel} ${_selectedStepIndex + 1} '
+                '${l10n.stepLabel} ${regexState.selectedStepIndex + 1} '
                 '${l10n.ofLabel} ${result.steps.length}',
                 style: textTheme.labelMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
@@ -304,15 +300,19 @@ extension _RegexPageSimplificationSections on _RegexPageState {
               ),
               const Spacer(),
               IconButton(
-                onPressed: _selectedStepIndex > 0
-                    ? () => _updatePageState(() => _selectedStepIndex--)
+                onPressed: regexState.selectedStepIndex > 0
+                    ? () => ref
+                        .read(regexEditorProvider.notifier)
+                        .setSelectedStepIndex(regexState.selectedStepIndex - 1)
                     : null,
                 icon: const Icon(Icons.chevron_left),
                 tooltip: l10n.previousStep,
               ),
               IconButton(
-                onPressed: _selectedStepIndex < result.steps.length - 1
-                    ? () => _updatePageState(() => _selectedStepIndex++)
+                onPressed: regexState.selectedStepIndex < result.steps.length - 1
+                    ? () => ref
+                        .read(regexEditorProvider.notifier)
+                        .setSelectedStepIndex(regexState.selectedStepIndex + 1)
                     : null,
                 icon: const Icon(Icons.chevron_right),
                 tooltip: l10n.nextStep,
@@ -324,7 +324,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
 
         // Current step detail
         if (result.steps.isNotEmpty)
-          _buildStepCard(result.steps[_selectedStepIndex]),
+          _buildStepCard(result.steps[regexState.selectedStepIndex]),
 
         const SizedBox(height: 12),
 
@@ -345,7 +345,7 @@ extension _RegexPageSimplificationSections on _RegexPageState {
               itemCount: result.steps.length,
               itemBuilder: (context, index) {
                 final step = result.steps[index];
-                final isSelected = index == _selectedStepIndex;
+                final isSelected = index == regexState.selectedStepIndex;
                 return _buildStepTimelineItem(step, index, isSelected);
               },
             ),
@@ -669,7 +669,9 @@ extension _RegexPageSimplificationSections on _RegexPageState {
     final textTheme = Theme.of(context).textTheme;
 
     return InkWell(
-      onTap: () => _updatePageState(() => _selectedStepIndex = index),
+      onTap: () => ref
+          .read(regexEditorProvider.notifier)
+          .setSelectedStepIndex(index),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

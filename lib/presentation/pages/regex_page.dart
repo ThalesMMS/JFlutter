@@ -12,13 +12,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/algorithms/automaton_simulator.dart';
-import '../../core/algorithms/dfa_completer.dart';
-import '../../core/algorithms/equivalence_checker.dart';
-import '../../core/algorithms/nfa_to_dfa_converter.dart';
-import '../../core/algorithms/regex_analyzer.dart';
-import '../../core/algorithms/regex_simplifier.dart';
-import '../../core/algorithms/regex_to_nfa_converter.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/regex_analysis.dart';
 import '../../core/models/regex_simplification_step.dart';
@@ -27,6 +20,7 @@ import '../providers/automaton_algorithm_provider.dart';
 import '../providers/automaton_state_provider.dart';
 import '../providers/help_provider.dart';
 import '../providers/home_navigation_provider.dart';
+import '../providers/regex_editor_provider.dart';
 import '../widgets/algorithm_panel.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/context_aware_help_panel.dart';
@@ -54,32 +48,43 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   final TextEditingController _testStringController = TextEditingController();
   final TextEditingController _comparisonRegexController =
       TextEditingController();
-  String _currentRegex = '';
-  String _testString = '';
-  bool _isValid = false;
-  bool _matches = false;
-  bool _hasTested = false;
-  String _errorMessage = '';
-  bool? _equivalenceResult;
-  String _equivalenceMessage = '';
-  bool _simplifyOutput = true;
-  RegexSimplificationResult? _simplificationResult;
-  bool _showSimplificationSteps = false;
-  int _selectedStepIndex = 0;
-  RegexAnalysis? _regexAnalysis;
-  bool _showAnalysisDetails = false;
-  RegexSampleStrings? _sampleStrings;
-  bool _showSampleStringsDetails = false;
+  ProviderSubscription<RegexEditorState>? _regexEditorSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncInputControllers(ref.read(regexEditorProvider));
+    _regexEditorSub = ref.listenManual<RegexEditorState>(
+      regexEditorProvider,
+      (_, next) => _syncInputControllers(next),
+    );
+  }
 
   @override
   void dispose() {
+    _regexEditorSub?.close();
     _regexController.dispose();
     _testStringController.dispose();
     _comparisonRegexController.dispose();
     super.dispose();
   }
 
-  void _updatePageState(VoidCallback callback) => setState(callback);
+  void _syncInputControllers(RegexEditorState state) {
+    _syncControllerText(_regexController, state.currentRegex);
+    _syncControllerText(_testStringController, state.testString);
+  }
+
+  void _syncControllerText(TextEditingController controller, String value) {
+    if (controller.text == value) {
+      return;
+    }
+
+    controller.value = controller.value.copyWith(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+      composing: TextRange.empty,
+    );
+  }
 
   void _showFeedback(String message,
       {AppSnackBarTone tone = AppSnackBarTone.info}) {
@@ -87,163 +92,30 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   }
 
   void _setSimplifyOutput(bool value) {
-    setState(() {
-      _simplifyOutput = value;
-    });
-  }
-
-  void _resetClearedInputsState() {
-    setState(() {
-      _currentRegex = '';
-      _testString = '';
-      _isValid = false;
-      _matches = false;
-      _hasTested = false;
-      _errorMessage = '';
-      _equivalenceResult = null;
-      _equivalenceMessage = '';
-      _simplificationResult = null;
-      _showSimplificationSteps = false;
-      _selectedStepIndex = 0;
-      _regexAnalysis = null;
-      _showAnalysisDetails = false;
-      _sampleStrings = null;
-      _showSampleStringsDetails = false;
-    });
+    ref.read(regexEditorProvider.notifier).setSimplifyOutput(value);
   }
 
   void _validateRegex() {
-    setState(() {
-      _currentRegex = _regexController.text;
-      _errorMessage = '';
-      _hasTested = false;
-
-      if (_currentRegex.isEmpty) {
-        _isValid = false;
-        return;
-      }
-
-      try {
-        // Basic regex validation - check for balanced parentheses and valid characters
-        if (_isValidRegex(_currentRegex)) {
-          _isValid = true;
-        } else {
-          _isValid = false;
-          _errorMessage = 'Invalid regular expression syntax';
-        }
-      } catch (e) {
-        _isValid = false;
-        _errorMessage = 'Invalid regular expression: $e';
-      }
-    });
-  }
-
-  bool _isValidRegex(String regex) {
-    // Basic validation for common regex patterns
-    // This is a simplified validation - in a real implementation,
-    // you would use a proper regex parser
-    int parenCount = 0;
-    bool inBracket = false;
-    bool escapeNext = false;
-
-    for (int i = 0; i < regex.length; i++) {
-      final char = regex[i];
-
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-
-      if (char == '\\') {
-        escapeNext = true;
-        continue;
-      }
-
-      if (char == '[' && !escapeNext) {
-        inBracket = true;
-        continue;
-      }
-
-      if (char == ']' && !escapeNext) {
-        inBracket = false;
-        continue;
-      }
-
-      if (!inBracket) {
-        if (char == '(') {
-          parenCount++;
-        } else if (char == ')') {
-          parenCount--;
-          if (parenCount < 0) return false;
-        }
-      }
-    }
-
-    return parenCount == 0 && !inBracket;
+    ref.read(regexEditorProvider.notifier).validateRegex(_regexController.text);
   }
 
   Future<void> _testStringMatch() async {
-    setState(() {
-      _testString = _testStringController.text;
-      _errorMessage = '';
-      _hasTested = true;
-
-      if (!_isValid || _currentRegex.isEmpty) {
-        _matches = false;
-        return;
-      }
-    });
-
-    if (!_isValid || _currentRegex.isEmpty) {
-      return;
-    }
-
-    try {
-      final conversionResult = RegexToNFAConverter.convert(_currentRegex);
-      if (!conversionResult.isSuccess || conversionResult.data == null) {
-        setState(() {
-          _matches = false;
-          _errorMessage =
-              conversionResult.error ?? 'Unable to convert regex to NFA';
-        });
-        return;
-      }
-
-      final simulationResult = await AutomatonSimulator.simulateNFA(
-        conversionResult.data!,
-        _testString,
-      );
-
-      setState(() {
-        if (simulationResult.isSuccess && simulationResult.data != null) {
-          _matches = simulationResult.data!.isAccepted;
-          if (!_matches && simulationResult.data!.errorMessage.isNotEmpty) {
-            _errorMessage = simulationResult.data!.errorMessage;
-          }
-        } else {
-          _matches = false;
-          _errorMessage =
-              simulationResult.error ?? 'Failed to simulate automaton';
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _matches = false;
-        _errorMessage = 'Error testing string: $e';
-      });
-    }
+    await ref
+        .read(regexEditorProvider.notifier)
+        .testStringMatch(_testStringController.text);
   }
 
   void _convertToNFA() {
     final l10n = AppLocalizations.of(context);
-
-    if (!_isValid) {
+    final regexState = ref.read(regexEditorProvider);
+    if (!regexState.canRunRegexOperation) {
       _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
-    final result = RegexToNFAConverter.convert(_currentRegex);
-    if (!result.isSuccess || result.data == null) {
+    final result = ref.read(regexEditorProvider.notifier).convertToNfa();
+
+    if (result.isFailure || result.data == null) {
       _showFeedback(
         result.error ?? l10n.failedConvertRegexToNfa,
         tone: AppSnackBarTone.error,
@@ -258,36 +130,25 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
   void _convertToDFA() {
     final l10n = AppLocalizations.of(context);
-
-    if (!_isValid) {
+    final regexState = ref.read(regexEditorProvider);
+    if (!regexState.canRunRegexOperation) {
       _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
-    final regexToNfaResult = RegexToNFAConverter.convert(_currentRegex);
-    if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
+    final result = ref.read(regexEditorProvider.notifier).convertToDfa();
+
+    if (result.isFailure || result.data == null) {
       _showFeedback(
-        regexToNfaResult.error ?? l10n.failedConvertRegexToNfa,
+        result.error ?? l10n.failedConvertNfaToDfa,
         tone: AppSnackBarTone.error,
       );
       return;
     }
-
-    final nfa = regexToNfaResult.data!;
-    final nfaToDfaResult = NFAToDFAConverter.convert(nfa);
-    if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
-      _showFeedback(
-        nfaToDfaResult.error ?? l10n.failedConvertNfaToDfa,
-        tone: AppSnackBarTone.error,
-      );
-      return;
-    }
-
-    final completedDfa = DFACompleter.complete(nfaToDfaResult.data!);
 
     _showFeedback(l10n.convertedRegexToDfa, tone: AppSnackBarTone.success);
 
-    _pushAutomatonToProvider(completedDfa);
+    _pushAutomatonToProvider(result.data!);
 
     // Keep navigation consistent with the rest of the app: switch the HomePage
     // workspace instead of pushing a standalone FSAPage route.
@@ -299,91 +160,19 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   }
 
   void _compareRegexEquivalence() {
-    final primary = _regexController.text.trim();
-    final secondary = _comparisonRegexController.text.trim();
-
-    setState(() {
-      _equivalenceResult = null;
-      _equivalenceMessage = '';
-    });
-
-    if (primary.isEmpty || secondary.isEmpty) {
-      setState(() {
-        _equivalenceResult = false;
-        _equivalenceMessage = 'Enter both regular expressions to compare.';
-      });
-      return;
-    }
-
-    try {
-      final firstConversion = RegexToNFAConverter.convert(primary);
-      if (!firstConversion.isSuccess || firstConversion.data == null) {
-        setState(() {
-          _equivalenceResult = false;
-          _equivalenceMessage =
-              firstConversion.error ?? 'Unable to convert first regex to NFA';
-        });
-        return;
-      }
-
-      final secondConversion = RegexToNFAConverter.convert(secondary);
-      if (!secondConversion.isSuccess || secondConversion.data == null) {
-        setState(() {
-          _equivalenceResult = false;
-          _equivalenceMessage =
-              secondConversion.error ?? 'Unable to convert second regex to NFA';
-        });
-        return;
-      }
-
-      final firstDfaResult = NFAToDFAConverter.convert(firstConversion.data!);
-      if (!firstDfaResult.isSuccess || firstDfaResult.data == null) {
-        setState(() {
-          _equivalenceResult = false;
-          _equivalenceMessage =
-              firstDfaResult.error ?? 'Unable to convert first regex to DFA';
-        });
-        return;
-      }
-
-      final secondDfaResult = NFAToDFAConverter.convert(secondConversion.data!);
-      if (!secondDfaResult.isSuccess || secondDfaResult.data == null) {
-        setState(() {
-          _equivalenceResult = false;
-          _equivalenceMessage =
-              secondDfaResult.error ?? 'Unable to convert second regex to DFA';
-        });
-        return;
-      }
-
-      final completedFirst = DFACompleter.complete(firstDfaResult.data!);
-      final completedSecond = DFACompleter.complete(secondDfaResult.data!);
-
-      final equivalent = EquivalenceChecker.areEquivalent(
-        completedFirst,
-        completedSecond,
+    ref.read(regexEditorProvider.notifier).compareRegexEquivalence(
+          _regexController.text,
+          _comparisonRegexController.text,
       );
-
-      setState(() {
-        _equivalenceResult = equivalent;
-        _equivalenceMessage = equivalent
-            ? 'The regular expressions are equivalent.'
-            : 'The regular expressions are not equivalent.';
-      });
-    } catch (e) {
-      setState(() {
-        _equivalenceResult = false;
-        _equivalenceMessage = 'Error comparing regular expressions: $e';
-      });
-    }
   }
 
   void _showContextualHelp() {
     final helpNotifier = ref.read(helpProvider.notifier);
+    final regexState = ref.read(regexEditorProvider);
 
     // Determine the most relevant help content based on current regex state
     String helpContextId;
-    if (_currentRegex.isNotEmpty && _isValid) {
+    if (regexState.currentRegex.isNotEmpty && regexState.isValid) {
       // Show conversion help if user has a valid regex
       helpContextId = 'algo_regex_to_nfa';
     } else {
@@ -399,76 +188,57 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
   void _runSimplificationWithSteps() {
     final l10n = AppLocalizations.of(context);
-
-    if (!_isValid || _currentRegex.isEmpty) {
+    if (!ref.read(regexEditorProvider).canRunRegexOperation) {
       _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
-    final result = RegexSimplifier.simplifyWithSteps(_currentRegex);
-    if (!result.isSuccess || result.data == null) {
+    final result =
+        ref.read(regexEditorProvider.notifier).runSimplificationWithSteps();
+
+    if (result.isFailure) {
       _showFeedback(
         result.error ?? l10n.failedSimplifyRegex,
         tone: AppSnackBarTone.error,
       );
-      return;
     }
-
-    setState(() {
-      _simplificationResult = result.data;
-      _showSimplificationSteps = true;
-      _selectedStepIndex = 0;
-    });
   }
 
   void _runComplexityAnalysis() {
     final l10n = AppLocalizations.of(context);
-
-    if (!_isValid || _currentRegex.isEmpty) {
+    if (!ref.read(regexEditorProvider).canRunRegexOperation) {
       _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
-    final result = RegexAnalyzer.analyze(_currentRegex);
-    if (!result.isSuccess || result.data == null) {
+    final result =
+        ref.read(regexEditorProvider.notifier).runComplexityAnalysis();
+
+    if (result.isFailure) {
       _showFeedback(
         result.error ?? l10n.failedAnalyzeRegex,
         tone: AppSnackBarTone.error,
       );
-      return;
     }
-
-    setState(() {
-      _regexAnalysis = result.data;
-      _showAnalysisDetails = true;
-    });
   }
 
   void _runSampleGeneration({int maxSamples = 10}) {
     final l10n = AppLocalizations.of(context);
-
-    if (!_isValid || _currentRegex.isEmpty) {
+    if (!ref.read(regexEditorProvider).canRunRegexOperation) {
       _showFeedback(l10n.enterValidRegexFirst, tone: AppSnackBarTone.error);
       return;
     }
 
-    final result = RegexAnalyzer.generateSampleStrings(
-      _currentRegex,
-      maxSamples: maxSamples,
-      maxLength: 30,
-    );
-    if (!result.isSuccess || result.data == null) {
+    final result = ref
+        .read(regexEditorProvider.notifier)
+        .runSampleGeneration(maxSamples: maxSamples);
+
+    if (result.isFailure) {
       _showFeedback(
         result.error ?? l10n.failedGenerateSampleStrings,
         tone: AppSnackBarTone.error,
       );
-      return;
     }
-
-    setState(() {
-      _sampleStrings = result.data;
-      _showSampleStringsDetails = true;
-    });
   }
 
   @override

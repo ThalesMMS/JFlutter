@@ -12,6 +12,8 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/models/simulation_result.dart';
@@ -54,6 +56,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   final int _foldSize = defaultFoldSize;
   int? _selectedIndex;
   bool _isPlaying = false;
+  Timer? _playbackTimer;
 
   bool get _highlightEnabled =>
       widget.result.steps.isNotEmpty &&
@@ -67,6 +70,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   @override
   void dispose() {
+    _playbackTimer?.cancel();
     _isPlaying = false;
     super.dispose();
   }
@@ -76,6 +80,8 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     super.didUpdateWidget(oldWidget);
     if (widget.result != oldWidget.result ||
         widget.highlightService != oldWidget.highlightService) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
       setState(() {
         _selectedIndex = _highlightEnabled ? 0 : null;
         _isPlaying = false;
@@ -106,6 +112,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   void _playSteps() {
     if (!_highlightEnabled) return;
+    if (_isPlaying) return;
     setState(() {
       _isPlaying = true;
     });
@@ -113,6 +120,8 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   }
 
   void _pauseSteps() {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
     setState(() {
       _isPlaying = false;
     });
@@ -120,14 +129,25 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   void _playStepAnimation() {
     if (!_isPlaying || !mounted) return;
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
+
     final current = _selectedIndex ?? 0;
     if (current < widget.result.steps.length - 1) {
       // Calculate delay based on animation speed: slower speed = longer delay
       final delayMs = (1000 / widget.animationSpeed).round();
-      Future.delayed(Duration(milliseconds: delayMs), () {
+      _playbackTimer = Timer(Duration(milliseconds: delayMs), () {
+        _playbackTimer = null;
         if (_isPlaying && mounted) {
-          _updateSelectedIndex(current + 1);
-          _playStepAnimation();
+          final current = _selectedIndex ?? 0;
+          if (current < widget.result.steps.length - 1) {
+            _updateSelectedIndex(current + 1, fromPlayback: true);
+            _playStepAnimation();
+          } else {
+            setState(() {
+              _isPlaying = false;
+            });
+          }
         }
       });
     } else {
@@ -139,15 +159,23 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   void _resetSteps() {
     _updateSelectedIndex(0, emitHighlight: false);
-    setState(() {
-      _isPlaying = false;
-    });
     widget.highlightService?.clear();
   }
 
-  void _updateSelectedIndex(int index, {bool emitHighlight = true}) {
+  void _updateSelectedIndex(
+    int index, {
+    bool emitHighlight = true,
+    bool fromPlayback = false,
+  }) {
+    if (!fromPlayback) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
+    }
     setState(() {
       _selectedIndex = index;
+      if (!fromPlayback) {
+        _isPlaying = false;
+      }
     });
     if (emitHighlight) {
       widget.highlightService?.emitFromSteps(widget.result.steps, index);

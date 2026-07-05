@@ -250,6 +250,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
             GraphViewController(
               transformationController:
                   transformationController ?? TransformationController(),
+              ownsTransformationController: transformationController == null,
             ),
         _ownsTransformationController =
             viewController == null && transformationController == null;
@@ -384,17 +385,18 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   /// Releases the resources owned by the controller.
   void dispose() {
     _logGraphViewBase(
-      'Disposing controller (ownsTransformation=$_ownsTransformationController)',
+      'Disposing controller '
+      '(ownsTransformation=$_ownsTransformationController, '
+      'graphViewAttached=${graphController.hasAttachedView})',
     );
     _undoHistory.clear();
     _redoHistory.clear();
     highlightedTransitionIds.clear();
     _evictGraphCaches(notifyGraph: false);
     disposeViewportHighlight();
-    // GraphView internally disposes the transformation controller when the
-    // widget is removed from the tree. Disposing it here causes the controller
-    // to be accessed after disposal during widget teardown, so we intentionally
-    // skip manual disposal even when we created it.
+    if (_ownsTransformationController && !graphController.hasAttachedView) {
+      graphController.transformationController?.dispose();
+    }
   }
 
   /// Synchronises the canvas with the provided domain [data].

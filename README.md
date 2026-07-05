@@ -1,6 +1,6 @@
 # JFlutter
 
-JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, pushdown automata, Turing machines, and regular expressions on mobile and desktop platforms.
+JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers an interactive, touch-first workspace for creating, analysing, and simulating finite automata, grammars, pushdown automata, Turing machines, and regular expressions. The current release focus is Apple v1.0 for iPhone, iPad, and macOS, with Android build support and preview web/desktop targets tracked separately.
 
 <p align="center">
   <img src="./screenshots/screenshot1.png" alt="Automaton canvas screenshot" width="600" />
@@ -10,7 +10,11 @@ JFlutter is a Flutter reimplementation of the JFLAP educational tool. It offers 
 
 ## Project Status
 
-**Status:** Work in Progress. The Apple v1.0 release scope is frozen to the FSA, Grammar, PDA, TM, and Regex workspaces documented in `V1_SCOPE.md`.
+**Status:** Work in Progress. The Apple v1.0 release scope is frozen to the FSA, Grammar, PDA, TM, Regex, and Pumping Lemma workspaces documented in `V1_SCOPE.md`.
+
+- Release notes: `CHANGELOG.md`
+- Roadmap and deferred JFLAP parity work: `ROADMAP.md`
+- Current Apple v1.0 scope and limitations: `V1_SCOPE.md`
 
 ## Public Links
 
@@ -145,11 +149,23 @@ export JFLUTTER_KEY_PASSWORD="$JFLUTTER_KEY_PASSWORD"
 ```
 
 ### Platform Support
-- **Android** – Primary target with touch-first workflows
-- **iOS / iPadOS** – Daily-driver support on iPhone and iPad
-- **macOS** – Native desktop experience, planned for inclusion in the v1.0 App Store release
-- **Web** – Responsive build suitable for classroom demos
-- **Windows / Linux** – Desktop builds share the same UI architecture
+
+JFlutter is a Flutter project with multiple build targets, but release support
+depends on documented signing, QA, and distribution evidence.
+
+- **iOS / iPadOS** - Apple v1.0 release target. Release QA is tracked in
+  `release/APPLE_QA_MATRIX.md`.
+- **macOS** - Apple v1.0 release target. Release validation is tracked in
+  `release/MACOS_QA_CHECKLIST.md`,
+  `release/MACOS_PLATFORM_VALIDATION.md`, and the Apple release docs.
+- **Android** - Supported build target with release signing documented above.
+  A full Android QA checklist is still a follow-up item.
+- **Web** - Preview/classroom-demo target. The responsive UI is maintained, but
+  web has platform-specific limitations such as no PNG export.
+- **Windows / Linux** - Development and community-supported preview targets.
+  The platform folders are present, but the repository does not yet include
+  Windows or Linux release checklists. Do not treat these as release-supported
+  until matching `release/WINDOWS_*` and `release/LINUX_*` evidence exists.
 
 ## How to Use
 
@@ -185,7 +201,6 @@ Run `flutter test` (Flutter 3.27.0+ / Dart 3.6.0+) to execute the full suite. 
 
 ### Placeholder and Pending Work
 
-- `test/widget/presentation/visualizations_test.dart` is a golden-test infrastructure suite and should remain aligned with the current golden harness setup.
 - `test/widget/presentation/ux_error_handling_test.dart` is an active widget suite covering import-error UX flows.
 
 #### Running Tests
@@ -199,6 +214,10 @@ flutter test test/unit/                    # Core algorithm suites
 flutter test test/features/                # Feature-level canvas suites
 flutter test test/integration/             # Integration tests
 flutter test test/widget/                  # Widget harnesses
+
+# Golden visual regression tests
+./run_golden_tests.sh
+./tool/update_goldens.sh                   # Re-record intentional golden changes
 
 # Run with code coverage
 flutter test --coverage
@@ -225,7 +244,7 @@ Each algorithm modification is cross-validated against the recorded upstream ref
 ### Quality Assurance
 - **Algorithm Coverage** - Deterministic automata, grammar, and regex suites in `test/unit/` back the domain layer.
 - **Integration Guardrails** - Serialization and examples are validated through the IO round-trip suites in `test/integration/io/`.
-- **UI Exercisers** - Canvas and control widgets are kept regression-safe via the harnesses in `test/widget/presentation/`, with golden coverage supported by the `visualizations_test.dart` infrastructure suite.
+- **UI Exercisers** - Canvas and control widgets are kept regression-safe via the harnesses in `test/widget/presentation/` and the component golden suites in `test/goldens/`.
 - **Performance Monitoring** - Regular benchmarking against reference implementations.
 - **Deviation Tracking** - All deviations documented with impact assessment and cross-checked with references.
 - **Continuous Validation** - Ongoing comparison with reference implementations.

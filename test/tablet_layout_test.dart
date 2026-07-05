@@ -71,7 +71,11 @@ void main() {
             await _sharedPreferencesOverride(),
             grammarProvider.overrideWith((ref) => GrammarProvider()),
           ],
-          child: const MaterialApp(home: GrammarPage()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: GrammarPage(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -88,7 +92,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [await _sharedPreferencesOverride()],
-          child: const MaterialApp(home: TMPage()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: TMPage(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -105,7 +113,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [await _sharedPreferencesOverride()],
-          child: const MaterialApp(home: PDAPage()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: PDAPage(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -122,7 +134,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [await _sharedPreferencesOverride()],
-          child: const MaterialApp(home: PumpingLemmaPage()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: PumpingLemmaPage(),
+          ),
         ),
       );
       await tester.pumpAndSettle();

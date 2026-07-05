@@ -697,6 +697,122 @@ void main() {
       expect(find.byIcon(Icons.play_arrow), findsAtLeastNWidgets(2));
     });
 
+    testWidgets('cancels stale playback timer after pause and replay', (
+      tester,
+    ) async {
+      final callback = _SimulationCallback();
+      final result = SimulationResult.success(
+        inputString: 'aaa',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'aaa',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'aa',
+            stepNumber: 1,
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'a',
+            stepNumber: 2,
+          ),
+          const SimulationStep(
+            currentState: 'q3',
+            remainingInput: '',
+            stepNumber: 3,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
+
+      await _pumpSimulationPanel(
+        tester,
+        onSimulate: callback,
+        simulationResult: result,
+        animationSpeed: 10,
+      );
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Play'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 40));
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+
+      await tester.pump(const Duration(milliseconds: 65));
+
+      expect(find.text('Step 1 of 4'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 40));
+
+      expect(find.text('Step 2 of 4'), findsOneWidget);
+    });
+
+    testWidgets('manual navigation pauses playback and cancels pending timer', (
+      tester,
+    ) async {
+      final callback = _SimulationCallback();
+      final result = SimulationResult.success(
+        inputString: 'aaa',
+        steps: [
+          const SimulationStep(
+            currentState: 'q0',
+            remainingInput: 'aaa',
+            stepNumber: 0,
+          ),
+          const SimulationStep(
+            currentState: 'q1',
+            remainingInput: 'aa',
+            stepNumber: 1,
+          ),
+          const SimulationStep(
+            currentState: 'q2',
+            remainingInput: 'a',
+            stepNumber: 2,
+          ),
+          const SimulationStep(
+            currentState: 'q3',
+            remainingInput: '',
+            stepNumber: 3,
+          ),
+        ],
+        executionTime: const Duration(milliseconds: 100),
+      );
+
+      await _pumpSimulationPanel(
+        tester,
+        onSimulate: callback,
+        simulationResult: result,
+        animationSpeed: 10,
+      );
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Play'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump();
+      await tester.ensureVisible(find.byTooltip('Next Step'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pump();
+
+      expect(find.text('Step 2 of 4'), findsOneWidget);
+      expect(find.byTooltip('Play'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 110));
+
+      expect(find.text('Step 2 of 4'), findsOneWidget);
+    });
+
     testWidgets('clears highlight service on dispose', (tester) async {
       final callback = _SimulationCallback();
       final highlightService = _TestSimulationHighlightService();

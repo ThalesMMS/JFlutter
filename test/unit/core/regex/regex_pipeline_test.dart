@@ -22,6 +22,22 @@ Future<bool> _accepts(FSA nfa, String input) async {
   return sim.data!.accepted;
 }
 
+void _expectStateFlagsMatchRoles(FSA nfa) {
+  final initialIds = nfa.initialState == null
+      ? <String>{}
+      : <String>{nfa.initialState!.id};
+  final acceptingIds = nfa.acceptingStates.map((state) => state.id).toSet();
+
+  expect(
+    nfa.states.where((state) => state.isInitial).map((state) => state.id),
+    unorderedEquals(initialIds),
+  );
+  expect(
+    nfa.states.where((state) => state.isAccepting).map((state) => state.id),
+    unorderedEquals(acceptingIds),
+  );
+}
+
 void main() {
   group('Regex→AST→Thompson NFA pipeline', () {
     test('Literal symbol', () async {
@@ -49,6 +65,14 @@ void main() {
       expect(await _accepts(nfa, 'a'), true);
       expect(await _accepts(nfa, 'b'), true);
       expect(await _accepts(nfa, 'ab'), false);
+    });
+
+    test('Composite NFA state flags match the final automaton roles', () {
+      for (final regex in const ['ab', 'a|b']) {
+        final res = RegexToNFAConverter.convert(regex);
+        expect(res.isSuccess, true, reason: regex);
+        _expectStateFlagsMatchRoles(res.data!);
+      }
     });
 
     test('Kleene star', () async {

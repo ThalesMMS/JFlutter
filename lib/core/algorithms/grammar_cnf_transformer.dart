@@ -15,6 +15,7 @@ import '../models/grammar_diagnostic_severity.dart';
 import '../models/grammar_transformation_step.dart';
 import '../models/production.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 import 'grammar_analyzer.dart';
 
 class GrammarCnfTransformationReport {
@@ -248,13 +249,6 @@ class GrammarCnfTransformer {
       if (!b.contains(v)) return false;
     }
     return true;
-  }
-
-  static bool _isEpsilonSymbol(String symbol) {
-    return symbol == 'ε' ||
-        symbol == 'λ' ||
-        symbol == 'epsilon' ||
-        symbol.isEmpty;
   }
 
   static String _newProductionId(String prefix, Set<Production> used) {
@@ -511,6 +505,27 @@ _TransformResult _removeUnitProductions(Grammar grammar) {
 
 _TransformResult _removeUselessSymbols(Grammar grammar) {
   final diagnostics = <GrammarDiagnostic>[];
+  final removedIds = <String>{};
+
+  Grammar removeSymbols(Grammar source, Set<String> symbols) {
+    if (symbols.isEmpty) return source;
+
+    final productions = <Production>{};
+    for (final production in source.productions) {
+      if (production.leftSide.any(symbols.contains) ||
+          production.rightSide.any(symbols.contains)) {
+        removedIds.add(production.id);
+      } else {
+        productions.add(production);
+      }
+    }
+
+    return source.copyWith(
+      nonterminals: source.nonterminals.difference(symbols),
+      productions: productions,
+      modified: source.modified,
+    );
+  }
 
   final productiveReport =
       GrammarAnalyzer.detectUnproductiveNonTerminals(grammar);
@@ -525,8 +540,9 @@ _TransformResult _removeUselessSymbols(Grammar grammar) {
     }
   }
 
+  final productiveGrammar = removeSymbols(grammar, unproductive);
   final reachableReport =
-      GrammarAnalyzer.detectUnreachableNonTerminals(grammar);
+      GrammarAnalyzer.detectUnreachableNonTerminals(productiveGrammar);
   final unreachable = <String>{};
   if (reachableReport.isSuccess) {
     for (final d
@@ -542,29 +558,10 @@ _TransformResult _removeUselessSymbols(Grammar grammar) {
   if (toRemove.isEmpty) {
     return _TransformResult(grammar: grammar, diagnostics: diagnostics);
   }
-
-  final keptNonTerminals = grammar.nonterminals.difference(toRemove);
-  final newProductions = <Production>{};
-  final removedIds = <String>{};
-
-  for (final p in grammar.productions) {
-    if (p.leftSide.any(toRemove.contains)) {
-      removedIds.add(p.id);
-      continue;
-    }
-    if (p.rightSide.any(toRemove.contains)) {
-      removedIds.add(p.id);
-      continue;
-    }
-    newProductions.add(p);
-  }
+  final reducedGrammar = removeSymbols(productiveGrammar, unreachable);
 
   return _TransformResult(
-    grammar: grammar.copyWith(
-      nonterminals: keptNonTerminals,
-      productions: newProductions,
-      modified: DateTime.now(),
-    ),
+    grammar: reducedGrammar,
     diagnostics: diagnostics,
     changedSymbols: toRemove,
     changedProductionIds: removedIds,
@@ -786,8 +783,7 @@ class _GrammarCnfInternals {
   static String derivedId(String base, String suffix) => '${base}_$suffix';
 
   static bool Function(String) isNullableSymbol(Set<String> nullable) {
-    return (String sym) =>
-        nullable.contains(sym) || GrammarCnfTransformer._isEpsilonSymbol(sym);
+    return (String sym) => nullable.contains(sym) || isEpsilonSymbol(sym);
   }
 
   static List<Set<int>> subsetsOfPositions(List<int> positions) {

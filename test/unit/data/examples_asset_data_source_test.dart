@@ -134,7 +134,7 @@ void main() {
       expect(example.name, 'AFD - Termina com A');
       expect(example.category, ExampleCategory.dfa);
       expect(example.difficultyLevel, DifficultyLevel.easy);
-      expect(example.complexityLevel, ComplexityLevel.low);
+      expect(example.complexityLevel, ExampleComplexityLevel.low);
       expect(example.tags, containsAll(['dfa', 'basic']));
 
       final fsa = example.payload;

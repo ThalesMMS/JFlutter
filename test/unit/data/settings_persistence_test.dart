@@ -92,7 +92,6 @@ Future<void> _flushNotifierLoad() async {
 Map<String, Object?> _settingsValues(SettingsModel settings) {
   return <String, Object?>{
     'settings_empty_string_symbol': settings.emptyStringSymbol,
-    'settings_epsilon_symbol': settings.epsilonSymbol,
     'settings_theme_mode': settings.themeMode,
     'settings_show_grid': settings.showGrid,
     'settings_show_coordinates': settings.showCoordinates,
@@ -108,7 +107,6 @@ Map<String, Object?> _settingsValues(SettingsModel settings) {
 SettingsModel _customSettings() {
   return const SettingsModel(
     emptyStringSymbol: '∅',
-    epsilonSymbol: 'λ',
     themeMode: 'dark',
     showGrid: false,
     showCoordinates: true,
@@ -123,7 +121,18 @@ SettingsModel _customSettings() {
 
 void main() {
   group('Settings persistence', () {
-    test('saveSettings writes all 11 keys correctly', () async {
+    test('removes the obsolete epsilon symbol preference on load', () async {
+      final storage = _RecordingSettingsStorage({
+        'settings_epsilon_symbol': 'λ',
+      });
+      final repository = SharedPreferencesSettingsRepository(storage: storage);
+
+      await repository.loadSettings();
+
+      expect(storage.values, isNot(contains('settings_epsilon_symbol')));
+    });
+
+    test('saveSettings writes all 10 keys correctly', () async {
       final storage = _RecordingSettingsStorage();
       final repository = SharedPreferencesSettingsRepository(storage: storage);
       final settings = _customSettings();
@@ -131,7 +140,7 @@ void main() {
       await repository.saveSettings(settings);
 
       expect(storage.values, equals(_settingsValues(settings)));
-      expect(storage.values.length, equals(11));
+      expect(storage.values.length, equals(10));
     });
 
     test('loadSettings restores all persisted settings accurately', () async {
@@ -158,8 +167,7 @@ void main() {
       expect(loaded, equals(settings));
     });
 
-    test('saveSettings rolls back written keys when one write fails',
-        () async {
+    test('saveSettings rolls back written keys when one write fails', () async {
       final original = _settingsValues(const SettingsModel());
       final storage = _FailingSettingsStorage(
         original,
@@ -194,6 +202,18 @@ void main() {
       expect(storage.values, equals(original));
     });
 
+    test('saveSettings overwrites corrupt persisted values', () async {
+      final settings = _customSettings();
+      final storage = _RecordingSettingsStorage(<String, Object?>{
+        'settings_grid_size': 'large',
+      });
+      final repository = SharedPreferencesSettingsRepository(storage: storage);
+
+      await repository.saveSettings(settings);
+
+      expect(storage.values['settings_grid_size'], equals(settings.gridSize));
+    });
+
     test('restores string, bool, and double settings by type', () async {
       final storage = _RecordingSettingsStorage(<String, Object?>{
         'settings_theme_mode': 'light',
@@ -216,10 +236,6 @@ void main() {
         'settings_empty_string_symbol': (settings) => expect(
               settings.emptyStringSymbol,
               equals(defaults.emptyStringSymbol),
-            ),
-        'settings_epsilon_symbol': (settings) => expect(
-              settings.epsilonSymbol,
-              equals(defaults.epsilonSymbol),
             ),
         'settings_theme_mode': (settings) => expect(
               settings.themeMode,

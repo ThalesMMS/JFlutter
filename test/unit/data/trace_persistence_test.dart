@@ -172,6 +172,18 @@ void main() {
       );
     });
 
+    test('serializes current trace save and clear operations', () async {
+      final save = service.saveCurrentTrace(
+        traceFixture(input: 'pending-current'),
+        1,
+      );
+      final clear = service.clearCurrentTrace();
+
+      await Future.wait([save, clear]);
+
+      expect(await service.getCurrentTrace(), isNull);
+    });
+
     test('loads legacy core trace history when unified history is absent',
         () async {
       final trace = traceFixture(input: 'legacy');
@@ -239,6 +251,120 @@ void main() {
       expect(metadata['trace-1']!['automatonId'], equals('tm-1'));
       expect(metadata['trace-1']!['stepCount'], equals(7));
       expect(metadata['trace-1']!['executionTime'], equals(25));
+    });
+
+    test('concurrent metadata writes preserve every trace entry', () async {
+      final traceIds = List<String>.generate(12, (index) => 'trace-$index');
+
+      await Future.wait(
+        traceIds.map(
+          (traceId) => service.saveTraceMetadata(
+            traceId: traceId,
+            automatonType: 'dfa',
+          ),
+        ),
+      );
+
+      final metadata = await service.getTraceMetadata();
+      expect(metadata.keys, containsAll(traceIds));
+      expect(metadata, hasLength(traceIds.length));
+    });
+
+    test('clear queued after a save leaves trace history empty', () async {
+      final save = service.saveTraceToHistory(
+        traceFixture(input: 'pending-save'),
+        automatonType: 'dfa',
+      );
+      final clear = service.clearAllTraces();
+
+      await Future.wait([save, clear]);
+
+      expect(await service.getTraceHistory(), isEmpty);
+    });
+
+    test('import queued after a save replaces the saved history', () async {
+      final importedTrace = <String, dynamic>{
+        'id': 'imported-trace',
+        'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+        'automatonType': 'pda',
+        'trace': traceFixture(input: 'imported').toJson(),
+      };
+      final importPayload = jsonEncode(<String, dynamic>{
+        'traces': [importedTrace],
+        'metadata': <String, dynamic>{},
+      });
+
+      final save = service.saveTraceToHistory(
+        traceFixture(input: 'pending-save'),
+        automatonType: 'dfa',
+      );
+      final import = service.importTraceHistory(importPayload);
+
+      await Future.wait([save, import]);
+
+      final history = await service.getTraceHistory();
+      expect(history, hasLength(1));
+      expect(history.single['id'], 'imported-trace');
+    });
+
+    test('import clamps trace history to the configured maximum', () async {
+      final traces = List<Map<String, dynamic>>.generate(
+        75,
+        (index) => <String, dynamic>{
+          'id': 'imported-$index',
+          'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+          'automatonType': 'dfa',
+          'trace': traceFixture(input: 'input-$index').toJson(),
+        },
+      );
+
+      await service.importTraceHistory(
+        jsonEncode(<String, dynamic>{
+          'traces': traces,
+          'metadata': <String, dynamic>{},
+        }),
+      );
+
+      final history = await service.getTraceHistory();
+      expect(history, hasLength(50));
+      expect(history.first['id'], 'imported-0');
+      expect(history.last['id'], 'imported-49');
+    });
+
+    test('gets a trace by id without a sentinel value', () async {
+      await service.saveTraceToHistory(
+        traceFixture(input: 'lookup'),
+        automatonType: 'tm',
+      );
+      final history = await service.getTraceHistory();
+      final traceId = history.single['id'] as String;
+
+      expect(await service.getTraceById(traceId), history.single);
+      expect(await service.getTraceById('missing'), isNull);
+    });
+
+    test('invalidates the in-memory history cache on external writes',
+        () async {
+      await service.saveTraceToHistory(
+        traceFixture(input: 'cached'),
+        automatonType: 'dfa',
+      );
+      expect(await service.getTraceHistory(), hasLength(1));
+
+      await prefs.setString(
+        'trace_history',
+        jsonEncode(<Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 'external-trace',
+            'timestamp': DateTime(2026, 4, 22).toIso8601String(),
+            'automatonType': 'pda',
+            'trace': traceFixture(input: 'external').toJson(),
+          },
+        ]),
+      );
+
+      final refreshed = await service.getTraceHistory();
+      expect(refreshed.single['id'], 'external-trace');
     });
 
     test('returns an empty history for malformed trace_history JSON', () async {

@@ -105,8 +105,8 @@ void main() {
       expect(tm, isNotNull);
       expect(tm!.states.length, equals(1));
       final state = tm.states.single;
-      expect(state.position.x, closeTo(12, 0.0001));
-      expect(state.position.y, closeTo(24, 0.0001));
+      expect(state.position.x, closeTo(-36, 0.0001));
+      expect(state.position.y, closeTo(-24, 0.0001));
     });
 
     test('addStateAt skips used TM ids and labels after sync', () {
@@ -150,8 +150,8 @@ void main() {
         (state) => state.id == 'state_1',
       );
       expect(inserted.label, equals('q1'));
-      expect(inserted.position.x, closeTo(12, 0.0001));
-      expect(inserted.position.y, closeTo(24, 0.0001));
+      expect(inserted.position.x, closeTo(-36, 0.0001));
+      expect(inserted.position.y, closeTo(-24, 0.0001));
     });
 
     test('addStateAtCenter resolves world position from viewport centre', () {
@@ -167,8 +167,8 @@ void main() {
       expect(tm, isNotNull);
       var states = tm!.states.toList(growable: false);
       expect(states, hasLength(1));
-      expect(states.first.position.x, closeTo(300, 0.0001));
-      expect(states.first.position.y, closeTo(200, 0.0001));
+      expect(states.first.position.x, closeTo(252, 0.0001));
+      expect(states.first.position.y, closeTo(152, 0.0001));
 
       transformation.value = Matrix4.identity()
         ..translateByDouble(-120.0, 80.0, 0.0, 1.0)
@@ -180,8 +180,8 @@ void main() {
       states = tm!.states.toList(growable: false);
       expect(states, hasLength(2));
       final latest = states.last;
-      expect(latest.position.x, closeTo((300 - (-120)) / 0.8, 0.0001));
-      expect(latest.position.y, closeTo((200 - 80) / 0.8, 0.0001));
+      expect(latest.position.x, closeTo((300 - (-120)) / 0.8 - 48, 0.0001));
+      expect(latest.position.y, closeTo((200 - 80) / 0.8 - 48, 0.0001));
     });
 
     test('addOrUpdateTransition stores TM transition data', () {

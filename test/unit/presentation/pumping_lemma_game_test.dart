@@ -46,6 +46,15 @@ Future<void> _answerCorrectly(
   await _tapVisibleText(tester, 'Submit Answer');
 }
 
+int _expectedScoreForCorrectAnswer(PumpingLemmaChallenge challenge) {
+  final basePoints = switch (challenge.difficulty) {
+    ChallengeDifficulty.easy => 10,
+    ChallengeDifficulty.medium => 20,
+    ChallengeDifficulty.hard => 30,
+  };
+  return basePoints + challenge.level * 2;
+}
+
 void main() {
   group('Pumping lemma game mode', () {
     late ProviderContainer container;
@@ -248,9 +257,13 @@ void main() {
         expect(find.textContaining('Streak:'), findsNothing);
 
         await _tapVisibleText(tester, 'Start Game');
-        await _answerCorrectly(tester, pumpingLemmaChallenges.first);
+        final firstChallenge = pumpingLemmaChallenges.first;
+        await _answerCorrectly(tester, firstChallenge);
 
-        expect(find.text('Score: 12'), findsOneWidget);
+        expect(
+          find.text('Score: ${_expectedScoreForCorrectAnswer(firstChallenge)}'),
+          findsOneWidget,
+        );
         expect(find.text('Retry'), findsNothing);
       });
     });

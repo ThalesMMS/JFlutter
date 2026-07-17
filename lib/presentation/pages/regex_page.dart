@@ -46,6 +46,7 @@ class RegexPage extends ConsumerStatefulWidget {
 class _RegexPageState extends ConsumerState<RegexPage> {
   final TextEditingController _regexController = TextEditingController();
   final TextEditingController _testStringController = TextEditingController();
+  final TextEditingController _alphabetController = TextEditingController();
   final TextEditingController _comparisonRegexController =
       TextEditingController();
   ProviderSubscription<RegexEditorState>? _regexEditorSub;
@@ -65,6 +66,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     _regexEditorSub?.close();
     _regexController.dispose();
     _testStringController.dispose();
+    _alphabetController.dispose();
     _comparisonRegexController.dispose();
     super.dispose();
   }
@@ -72,6 +74,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
   void _syncInputControllers(RegexEditorState state) {
     _syncControllerText(_regexController, state.currentRegex);
     _syncControllerText(_testStringController, state.testString);
+    _syncControllerText(_alphabetController, state.alphabet);
   }
 
   void _syncControllerText(TextEditingController controller, String value) {
@@ -93,6 +96,10 @@ class _RegexPageState extends ConsumerState<RegexPage> {
 
   void _setSimplifyOutput(bool value) {
     ref.read(regexEditorProvider.notifier).setSimplifyOutput(value);
+  }
+
+  void _setAlphabet(String value) {
+    ref.read(regexEditorProvider.notifier).setAlphabet(value);
   }
 
   void _validateRegex() {
@@ -163,7 +170,7 @@ class _RegexPageState extends ConsumerState<RegexPage> {
     ref.read(regexEditorProvider.notifier).compareRegexEquivalence(
           _regexController.text,
           _comparisonRegexController.text,
-      );
+        );
   }
 
   void _showContextualHelp() {

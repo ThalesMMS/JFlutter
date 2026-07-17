@@ -336,6 +336,13 @@ class FAToRegexStep {
     required Set<FSATransition> newTransitions,
     required String pathRegexExample,
   }) {
+    final predecessorStates = newTransitions.isEmpty
+        ? null
+        : newTransitions.map((transition) => transition.fromState).toSet();
+    final successorStates = newTransitions.isEmpty
+        ? null
+        : newTransitions.map((transition) => transition.toState).toSet();
+
     return FAToRegexStep(
       baseStep: AlgorithmStep(
         id: id,
@@ -350,6 +357,8 @@ class FAToRegexStep {
       ),
       stepType: FAToRegexStepType.createBypass,
       eliminatedState: eliminatedState,
+      incomingStates: predecessorStates,
+      outgoingStates: successorStates,
       newTransitions: newTransitions,
       resultingRegex: pathRegexExample,
     );
@@ -528,6 +537,48 @@ class FAToRegexStep {
 
   /// Creates a step from a JSON representation
   factory FAToRegexStep.fromJson(Map<String, dynamic> json) {
+    final statesById = <String, State>{};
+
+    State? readState(String key) {
+      final stateJson = json[key];
+      if (stateJson == null) return null;
+
+      final state = State.fromJson((stateJson as Map).cast<String, dynamic>());
+      return statesById.putIfAbsent(state.id, () => state);
+    }
+
+    Set<State>? readStates(String key) {
+      final stateList = json[key] as List?;
+      if (stateList == null) return null;
+
+      return stateList.map((stateJson) {
+        final state = State.fromJson(
+          (stateJson as Map).cast<String, dynamic>(),
+        );
+        return statesById.putIfAbsent(state.id, () => state);
+      }).toSet();
+    }
+
+    Set<FSATransition>? readTransitions(String key) {
+      final transitionList = json[key] as List?;
+      if (transitionList == null) return null;
+
+      return transitionList
+          .map(
+            (transitionJson) => FSATransition.fromJson(
+              (transitionJson as Map).cast<String, dynamic>(),
+              statesById: statesById,
+            ),
+          )
+          .toSet();
+    }
+
+    final eliminatedState = readState('eliminatedState');
+    final incomingStates = readStates('incomingStates');
+    final outgoingStates = readStates('outgoingStates');
+    final addedInitialState = readState('addedInitialState');
+    final addedFinalState = readState('addedFinalState');
+
     return FAToRegexStep(
       baseStep: AlgorithmStep.fromJson(
         json['baseStep'] as Map<String, dynamic>,
@@ -536,38 +587,20 @@ class FAToRegexStep {
         (e) => e.name == json['stepType'],
         orElse: () => FAToRegexStepType.validation,
       ),
-      eliminatedState: json['eliminatedState'] != null
-          ? State.fromJson(json['eliminatedState'] as Map<String, dynamic>)
-          : null,
-      incomingStates: (json['incomingStates'] as List?)
-          ?.map((s) => State.fromJson(s as Map<String, dynamic>))
-          .toSet(),
-      incomingTransitions: (json['incomingTransitions'] as List?)
-          ?.map((t) => FSATransition.fromJson(t as Map<String, dynamic>))
-          .toSet(),
-      outgoingStates: (json['outgoingStates'] as List?)
-          ?.map((s) => State.fromJson(s as Map<String, dynamic>))
-          .toSet(),
-      outgoingTransitions: (json['outgoingTransitions'] as List?)
-          ?.map((t) => FSATransition.fromJson(t as Map<String, dynamic>))
-          .toSet(),
-      selfLoopTransitions: (json['selfLoopTransitions'] as List?)
-          ?.map((t) => FSATransition.fromJson(t as Map<String, dynamic>))
-          .toSet(),
+      eliminatedState: eliminatedState,
+      incomingStates: incomingStates,
+      incomingTransitions: readTransitions('incomingTransitions'),
+      outgoingStates: outgoingStates,
+      outgoingTransitions: readTransitions('outgoingTransitions'),
+      selfLoopTransitions: readTransitions('selfLoopTransitions'),
       selfLoopRegex: json['selfLoopRegex'] as String?,
-      newTransitions: (json['newTransitions'] as List?)
-          ?.map((t) => FSATransition.fromJson(t as Map<String, dynamic>))
-          .toSet(),
+      newTransitions: readTransitions('newTransitions'),
       combinedRegexes: (json['combinedRegexes'] as List?)
           ?.map((r) => r as String)
           .toList(),
       resultingRegex: json['resultingRegex'] as String?,
-      addedInitialState: json['addedInitialState'] != null
-          ? State.fromJson(json['addedInitialState'] as Map<String, dynamic>)
-          : null,
-      addedFinalState: json['addedFinalState'] != null
-          ? State.fromJson(json['addedFinalState'] as Map<String, dynamic>)
-          : null,
+      addedInitialState: addedInitialState,
+      addedFinalState: addedFinalState,
       remainingStateCount: json['remainingStateCount'] as int?,
       currentStateCount: json['currentStateCount'] as int?,
       finalRegex: json['finalRegex'] as String?,

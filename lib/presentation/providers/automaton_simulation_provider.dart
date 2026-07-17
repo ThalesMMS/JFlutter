@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/automaton_simulator.dart';
 import '../../core/models/simulation_result.dart';
-import '../../data/services/trace_persistence_service.dart' as data_trace;
+import '../../core/repositories/trace_repository.dart';
 import 'automaton_state_provider.dart';
 import 'unified_trace_provider.dart';
 
@@ -68,11 +68,11 @@ class SimulationState {
 /// Provider for automaton simulation operations
 class AutomatonSimulationNotifier extends StateNotifier<SimulationState> {
   final Ref ref;
-  final data_trace.TracePersistenceService _tracePersistenceService;
+  final TraceRepository _tracePersistenceService;
 
   AutomatonSimulationNotifier({
     required this.ref,
-    required data_trace.TracePersistenceService tracePersistenceService,
+    required TraceRepository tracePersistenceService,
   })  : _tracePersistenceService = tracePersistenceService,
         super(const SimulationState()) {
     // Listen to automaton state changes and clear simulation when automaton changes

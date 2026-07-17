@@ -33,6 +33,9 @@ class RegexEditorOperationResult<T> {
 }
 
 class RegexEditorState {
+  static const defaultAlphabet =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?_-';
+
   const RegexEditorState({
     this.currentRegex = '',
     this.testString = '',
@@ -40,6 +43,8 @@ class RegexEditorState {
     this.matches = false,
     this.hasTested = false,
     this.errorMessage = '',
+    this.validationDiagnostic,
+    this.alphabet = defaultAlphabet,
     this.equivalenceResult,
     this.equivalenceMessage = '',
     this.simplifyOutput = true,
@@ -60,6 +65,8 @@ class RegexEditorState {
   final bool matches;
   final bool hasTested;
   final String errorMessage;
+  final RegexValidationDiagnostic? validationDiagnostic;
+  final String alphabet;
   final bool? equivalenceResult;
   final String equivalenceMessage;
   final bool simplifyOutput;
@@ -71,7 +78,10 @@ class RegexEditorState {
   final RegexSampleStrings? sampleStrings;
   final bool showSampleStringsDetails;
 
-  bool get canRunRegexOperation => isValid && currentRegex.isNotEmpty;
+  bool get canRunRegexOperation =>
+      isValid && currentRegex.isNotEmpty && alphabet.isNotEmpty;
+  Set<String> get resolvedAlphabet =>
+      alphabet.runes.map(String.fromCharCode).toSet();
 
   RegexEditorState copyWith({
     String? currentRegex,
@@ -80,6 +90,8 @@ class RegexEditorState {
     bool? matches,
     bool? hasTested,
     String? errorMessage,
+    Object? validationDiagnostic = _unset,
+    String? alphabet,
     Object? equivalenceResult = _unset,
     String? equivalenceMessage,
     bool? simplifyOutput,
@@ -98,6 +110,10 @@ class RegexEditorState {
       matches: matches ?? this.matches,
       hasTested: hasTested ?? this.hasTested,
       errorMessage: errorMessage ?? this.errorMessage,
+      validationDiagnostic: validationDiagnostic == _unset
+          ? this.validationDiagnostic
+          : validationDiagnostic as RegexValidationDiagnostic?,
+      alphabet: alphabet ?? this.alphabet,
       equivalenceResult: equivalenceResult == _unset
           ? this.equivalenceResult
           : equivalenceResult as bool?,
@@ -125,18 +141,43 @@ class RegexEditorState {
 class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
   RegexEditorNotifier() : super(const RegexEditorState());
 
+  int _testStringMatchVersion = 0;
+
   void setSimplifyOutput(bool value) {
     state = state.copyWith(simplifyOutput: value);
+  }
+
+  void setAlphabet(String value) {
+    if (value == state.alphabet) return;
+    _testStringMatchVersion++;
+    state = state.copyWith(
+      alphabet: value,
+      matches: false,
+      hasTested: false,
+      errorMessage: '',
+      equivalenceResult: null,
+      equivalenceMessage: '',
+      simplificationResult: null,
+      showSimplificationSteps: false,
+      selectedStepIndex: 0,
+      regexAnalysis: null,
+      showAnalysisDetails: false,
+      sampleStrings: null,
+      showSampleStringsDetails: false,
+    );
   }
 
   void restorePersistedInput({
     required String currentRegex,
     required String testString,
     required bool simplifyOutput,
+    String alphabet = RegexEditorState.defaultAlphabet,
   }) {
+    _testStringMatchVersion++;
     state = RegexEditorState(
       testString: testString,
       simplifyOutput: simplifyOutput,
+      alphabet: alphabet,
     );
 
     if (currentRegex.isNotEmpty) {
@@ -146,55 +187,80 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
   }
 
   void clearInputs() {
-    state = RegexEditorState(simplifyOutput: state.simplifyOutput);
+    _testStringMatchVersion++;
+    state = RegexEditorState(
+      simplifyOutput: state.simplifyOutput,
+      alphabet: state.alphabet,
+    );
   }
 
   void validateRegex(String regex) {
+    _testStringMatchVersion++;
+    final sourceChanged = regex != state.currentRegex;
     final nextState = state.copyWith(
       currentRegex: regex,
+      errorMessage: '',
+      validationDiagnostic: null,
+      hasTested: false,
+      matches: sourceChanged ? false : state.matches,
+      equivalenceResult: sourceChanged ? null : state.equivalenceResult,
+      equivalenceMessage: sourceChanged ? '' : state.equivalenceMessage,
+      simplificationResult: sourceChanged ? null : state.simplificationResult,
+      showSimplificationSteps:
+          sourceChanged ? false : state.showSimplificationSteps,
+      selectedStepIndex: sourceChanged ? 0 : state.selectedStepIndex,
+      regexAnalysis: sourceChanged ? null : state.regexAnalysis,
+      showAnalysisDetails: sourceChanged ? false : state.showAnalysisDetails,
+      sampleStrings: sourceChanged ? null : state.sampleStrings,
+      showSampleStringsDetails:
+          sourceChanged ? false : state.showSampleStringsDetails,
+    );
+
+    if (regex.isEmpty) {
+      state = nextState.copyWith(
+        isValid: false,
+        validationDiagnostic: RegexToNFAConverter.validate(regex).diagnostic,
+      );
+      return;
+    }
+
+    final validation = RegexToNFAConverter.validate(regex);
+    final diagnostic = validation.diagnostic;
+    state = nextState.copyWith(
+      isValid: validation.isValid,
+      errorMessage: diagnostic?.displayMessage ?? '',
+      validationDiagnostic: diagnostic,
+    );
+  }
+
+  Future<void> testStringMatch(String input) async {
+    final requestVersion = ++_testStringMatchVersion;
+    final canRunRegexOperation = state.canRunRegexOperation;
+
+    if (!canRunRegexOperation) {
+      state = state.copyWith(testString: input);
+      return;
+    }
+
+    state = state.copyWith(
+      testString: input,
+      matches: false,
       errorMessage: '',
       hasTested: false,
     );
 
-    if (regex.isEmpty) {
-      state = nextState.copyWith(isValid: false);
-      return;
-    }
-
     try {
-      if (_isValidRegex(regex)) {
-        state = nextState.copyWith(isValid: true);
-      } else {
-        state = nextState.copyWith(
-          isValid: false,
-          errorMessage: 'Invalid regular expression syntax',
-        );
-      }
-    } catch (error) {
-      state = nextState.copyWith(
-        isValid: false,
-        errorMessage: 'Invalid regular expression: $error',
+      final conversionResult = RegexToNFAConverter.convert(
+        state.currentRegex,
+        contextAlphabet: state.resolvedAlphabet,
       );
-    }
-  }
-
-  Future<void> testStringMatch(String input) async {
-    state = state.copyWith(
-      testString: input,
-      errorMessage: '',
-      hasTested: true,
-      matches: state.canRunRegexOperation ? state.matches : false,
-    );
-
-    if (!state.canRunRegexOperation) {
-      return;
-    }
-
-    try {
-      final conversionResult = RegexToNFAConverter.convert(state.currentRegex);
       if (!conversionResult.isSuccess || conversionResult.data == null) {
+        if (!_isLatestTestStringRequest(requestVersion)) {
+          return;
+        }
         state = state.copyWith(
           matches: false,
+          hasTested: true,
           errorMessage:
               conversionResult.error ?? 'Unable to convert regex to NFA',
         );
@@ -206,10 +272,15 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
         input,
       );
 
+      if (!_isLatestTestStringRequest(requestVersion)) {
+        return;
+      }
+
       if (simulationResult.isSuccess && simulationResult.data != null) {
         final result = simulationResult.data!;
         state = state.copyWith(
           matches: result.isAccepted,
+          hasTested: true,
           errorMessage: !result.isAccepted && result.errorMessage.isNotEmpty
               ? result.errorMessage
               : state.errorMessage,
@@ -217,16 +288,25 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       } else {
         state = state.copyWith(
           matches: false,
+          hasTested: true,
           errorMessage:
               simulationResult.error ?? 'Failed to simulate automaton',
         );
       }
     } catch (error) {
+      if (!_isLatestTestStringRequest(requestVersion)) {
+        return;
+      }
       state = state.copyWith(
         matches: false,
+        hasTested: true,
         errorMessage: 'Error testing string: $error',
       );
     }
+  }
+
+  bool _isLatestTestStringRequest(int requestVersion) {
+    return requestVersion == _testStringMatchVersion;
   }
 
   RegexEditorOperationResult<FSA> convertToNfa() {
@@ -234,7 +314,10 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       return RegexEditorOperationResult<FSA>.failure();
     }
 
-    final result = RegexToNFAConverter.convert(state.currentRegex);
+    final result = RegexToNFAConverter.convert(
+      state.currentRegex,
+      contextAlphabet: state.resolvedAlphabet,
+    );
     if (!result.isSuccess || result.data == null) {
       return RegexEditorOperationResult<FSA>.failure(result.error);
     }
@@ -247,18 +330,9 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       return RegexEditorOperationResult<FSA>.failure();
     }
 
-    final regexToNfaResult = RegexToNFAConverter.convert(state.currentRegex);
-    if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
-      return RegexEditorOperationResult<FSA>.failure(regexToNfaResult.error);
-    }
-
-    final nfaToDfaResult = NFAToDFAConverter.convert(regexToNfaResult.data!);
-    if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
-      return RegexEditorOperationResult<FSA>.failure(nfaToDfaResult.error);
-    }
-
-    return RegexEditorOperationResult<FSA>.success(
-      DFACompleter.complete(nfaToDfaResult.data!),
+    return _regexToDfa(
+      state.currentRegex,
+      contextAlphabet: state.resolvedAlphabet,
     );
   }
 
@@ -277,28 +351,13 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
     }
 
     try {
-      final firstConversion = RegexToNFAConverter.convert(primary);
-      if (!firstConversion.isSuccess || firstConversion.data == null) {
-        state = state.copyWith(
-          equivalenceResult: false,
-          equivalenceMessage:
-              firstConversion.error ?? 'Unable to convert first regex to NFA',
-        );
-        return;
-      }
-
-      final secondConversion = RegexToNFAConverter.convert(secondary);
-      if (!secondConversion.isSuccess || secondConversion.data == null) {
-        state = state.copyWith(
-          equivalenceResult: false,
-          equivalenceMessage: secondConversion.error ??
-              'Unable to convert second regex to NFA',
-        );
-        return;
-      }
-
-      final firstDfaResult = NFAToDFAConverter.convert(firstConversion.data!);
-      if (!firstDfaResult.isSuccess || firstDfaResult.data == null) {
+      final firstDfaResult = _regexToDfa(
+        primary,
+        contextAlphabet: state.resolvedAlphabet,
+        nfaFailureMessage: 'Unable to convert first regex to NFA',
+        dfaFailureMessage: 'Unable to convert first regex to DFA',
+      );
+      if (firstDfaResult.isFailure || firstDfaResult.data == null) {
         state = state.copyWith(
           equivalenceResult: false,
           equivalenceMessage:
@@ -307,8 +366,13 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
         return;
       }
 
-      final secondDfaResult = NFAToDFAConverter.convert(secondConversion.data!);
-      if (!secondDfaResult.isSuccess || secondDfaResult.data == null) {
+      final secondDfaResult = _regexToDfa(
+        secondary,
+        contextAlphabet: state.resolvedAlphabet,
+        nfaFailureMessage: 'Unable to convert second regex to NFA',
+        dfaFailureMessage: 'Unable to convert second regex to DFA',
+      );
+      if (secondDfaResult.isFailure || secondDfaResult.data == null) {
         state = state.copyWith(
           equivalenceResult: false,
           equivalenceMessage:
@@ -318,8 +382,8 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       }
 
       final equivalent = EquivalenceChecker.areEquivalent(
-        DFACompleter.complete(firstDfaResult.data!),
-        DFACompleter.complete(secondDfaResult.data!),
+        firstDfaResult.data!,
+        secondDfaResult.data!,
       );
 
       state = state.copyWith(
@@ -334,6 +398,34 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
         equivalenceMessage: 'Error comparing regular expressions: $error',
       );
     }
+  }
+
+  RegexEditorOperationResult<FSA> _regexToDfa(
+    String regex, {
+    required Set<String> contextAlphabet,
+    String nfaFailureMessage = 'Unable to convert regex to NFA',
+    String dfaFailureMessage = 'Unable to convert regex to DFA',
+  }) {
+    final regexToNfaResult = RegexToNFAConverter.convert(
+      regex,
+      contextAlphabet: contextAlphabet,
+    );
+    if (!regexToNfaResult.isSuccess || regexToNfaResult.data == null) {
+      return RegexEditorOperationResult<FSA>.failure(
+        regexToNfaResult.error ?? nfaFailureMessage,
+      );
+    }
+
+    final nfaToDfaResult = NFAToDFAConverter.convert(regexToNfaResult.data!);
+    if (!nfaToDfaResult.isSuccess || nfaToDfaResult.data == null) {
+      return RegexEditorOperationResult<FSA>.failure(
+        nfaToDfaResult.error ?? dfaFailureMessage,
+      );
+    }
+
+    return RegexEditorOperationResult<FSA>.success(
+      DFACompleter.complete(nfaToDfaResult.data!),
+    );
   }
 
   RegexEditorOperationResult<void> runSimplificationWithSteps() {
@@ -381,7 +473,10 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       return RegexEditorOperationResult<void>.failure();
     }
 
-    final result = RegexAnalyzer.analyze(state.currentRegex);
+    final result = RegexAnalyzer.analyze(
+      state.currentRegex,
+      contextAlphabet: state.resolvedAlphabet,
+    );
     if (!result.isSuccess || result.data == null) {
       return RegexEditorOperationResult<void>.failure(result.error);
     }
@@ -412,6 +507,7 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
       state.currentRegex,
       maxSamples: maxSamples,
       maxLength: 30,
+      contextAlphabet: state.resolvedAlphabet,
     );
     if (!result.isSuccess || result.data == null) {
       return RegexEditorOperationResult<void>.failure(result.error);
@@ -425,54 +521,14 @@ class RegexEditorNotifier extends StateNotifier<RegexEditorState> {
   }
 
   void clearSampleStrings() {
-    state = state.copyWith(sampleStrings: null, showSampleStringsDetails: false);
+    state =
+        state.copyWith(sampleStrings: null, showSampleStringsDetails: false);
   }
 
   void toggleSampleStringsDetails() {
     state = state.copyWith(
       showSampleStringsDetails: !state.showSampleStringsDetails,
     );
-  }
-
-  bool _isValidRegex(String regex) {
-    int parenCount = 0;
-    bool inBracket = false;
-    bool escapeNext = false;
-
-    for (var i = 0; i < regex.length; i++) {
-      final char = regex[i];
-
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-
-      if (char == '\\') {
-        escapeNext = true;
-        continue;
-      }
-
-      if (char == '[' && !escapeNext) {
-        inBracket = true;
-        continue;
-      }
-
-      if (char == ']' && !escapeNext) {
-        inBracket = false;
-        continue;
-      }
-
-      if (!inBracket) {
-        if (char == '(') {
-          parenCount++;
-        } else if (char == ')') {
-          parenCount--;
-          if (parenCount < 0) return false;
-        }
-      }
-    }
-
-    return parenCount == 0 && !inBracket;
   }
 }
 

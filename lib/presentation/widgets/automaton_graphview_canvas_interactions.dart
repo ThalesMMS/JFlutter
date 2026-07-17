@@ -9,19 +9,7 @@ void _logAutomatonGraphViewCanvasInteraction(String message) {
 extension _AutomatonGraphViewCanvasInteractions
     on _AutomatonGraphViewCanvasState {
   Offset _screenToWorldExtracted(Offset localPosition) {
-    final controller = _transformationController;
-    if (controller == null) {
-      return localPosition;
-    }
-    final matrix = Matrix4.copy(controller.value);
-    final determinant = matrix.invert();
-    if (determinant == 0) {
-      return localPosition;
-    }
-    final vector = matrix.transform3(
-      vmath.Vector3(localPosition.dx, localPosition.dy, 0),
-    );
-    return Offset(vector.x, vector.y);
+    return _controller.toWorldOffset(localPosition);
   }
 
   GraphViewCanvasNode? _hitTestNodeExtracted(
@@ -155,7 +143,8 @@ extension _AutomatonGraphViewCanvasInteractions
     _draggingNodeId = node.id;
     _dragStartWorldPosition = _screenToWorld(localPosition);
     final current = _controller.nodeById(node.id) ?? node;
-    _dragStartNodeCenter = Offset(current.x, current.y);
+    _dragStartNodePosition = Offset(current.x, current.y);
+    _dragCurrentNodePosition = _dragStartNodePosition;
     _isDraggingNode = true;
     _didMoveDraggedNode = false;
   }
@@ -163,23 +152,25 @@ extension _AutomatonGraphViewCanvasInteractions
   void _updateNodeDragExtracted(Offset localPosition) {
     final nodeId = _draggingNodeId;
     final dragStartWorld = _dragStartWorldPosition;
-    final dragStartNodeCenter = _dragStartNodeCenter;
+    final dragStartNodePosition = _dragStartNodePosition;
     if (nodeId == null ||
         dragStartWorld == null ||
-        dragStartNodeCenter == null) {
+        dragStartNodePosition == null) {
       return;
     }
     final currentWorld = _screenToWorld(localPosition);
     final delta = currentWorld - dragStartWorld;
-    final nextPosition = dragStartNodeCenter + delta;
-    _controller.moveState(nodeId, nextPosition);
+    final nextPosition = dragStartNodePosition + delta;
+    _controller.previewStatePosition(nodeId, nextPosition);
+    _dragCurrentNodePosition = nextPosition;
     _didMoveDraggedNode = true;
   }
 
   void _endNodeDragExtracted() {
     _draggingNodeId = null;
     _dragStartWorldPosition = null;
-    _dragStartNodeCenter = null;
+    _dragStartNodePosition = null;
+    _dragCurrentNodePosition = null;
     _setCanvasPanSuppressed(false, reason: 'drag ended');
     _isDraggingNode = false;
     _didMoveDraggedNode = false;
@@ -254,10 +245,15 @@ extension _AutomatonGraphViewCanvasInteractions
   void _handleNodePanEndExtracted(DragEndDetails details) {
     final nodeId = _draggingNodeId;
     final didMove = _didMoveDraggedNode;
+    final finalPosition = _dragCurrentNodePosition;
     _logAutomatonGraphViewCanvasInteraction(
       'pan end velocity=${details.velocity}',
     );
     _endNodeDrag();
+    if (didMove && nodeId != null && finalPosition != null) {
+      _controller.moveState(nodeId, finalPosition);
+      return;
+    }
     if (!didMove &&
         nodeId != null &&
         _activeTool != AutomatonCanvasTool.transition) {
@@ -267,6 +263,11 @@ extension _AutomatonGraphViewCanvasInteractions
 
   void _handleNodePanCancelExtracted() {
     _logAutomatonGraphViewCanvasInteraction('pan cancel');
+    final nodeId = _draggingNodeId;
+    final startPosition = _dragStartNodePosition;
+    if (nodeId != null && startPosition != null) {
+      _controller.previewStatePosition(nodeId, startPosition);
+    }
     _endNodeDrag();
   }
 

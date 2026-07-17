@@ -470,14 +470,18 @@ void _countOperatorsRecursive(RegexNode node, Map<String, int> counts) {
 ///
 /// Traverses the AST and collects all terminal symbols,
 /// excluding epsilon and empty set.
-Set<String> _extractAlphabet(RegexNode node) {
+Set<String> _extractAlphabet(RegexNode node, [Set<String>? contextAlphabet]) {
   final alphabet = <String>{};
-  _extractAlphabetRecursive(node, alphabet);
+  _extractAlphabetRecursive(node, alphabet, contextAlphabet);
   return alphabet;
 }
 
 /// Recursive helper for extracting alphabet
-void _extractAlphabetRecursive(RegexNode node, Set<String> alphabet) {
+void _extractAlphabetRecursive(
+  RegexNode node,
+  Set<String> alphabet,
+  Set<String>? contextAlphabet,
+) {
   switch (node) {
     case SymbolNode(:final symbol):
       alphabet.add(symbol);
@@ -487,28 +491,32 @@ void _extractAlphabetRecursive(RegexNode node, Set<String> alphabet) {
       break;
     case ShortcutNode(:final code):
       // Expand shortcut to symbols
-      alphabet.addAll(_expandShortcut(code));
+      alphabet.addAll(_expandShortcut(code, contextAlphabet));
       break;
     case DotNode():
       // Dot matches any symbol - add common alphabet
-      alphabet.addAll({'a', 'b', 'c'});
+      alphabet.addAll(
+        contextAlphabet == null || contextAlphabet.isEmpty
+            ? {'a', 'b', 'c'}
+            : contextAlphabet,
+      );
       break;
     case UnionNode(:final left, :final right):
-      _extractAlphabetRecursive(left, alphabet);
-      _extractAlphabetRecursive(right, alphabet);
+      _extractAlphabetRecursive(left, alphabet, contextAlphabet);
+      _extractAlphabetRecursive(right, alphabet, contextAlphabet);
       break;
     case ConcatenationNode(:final left, :final right):
-      _extractAlphabetRecursive(left, alphabet);
-      _extractAlphabetRecursive(right, alphabet);
+      _extractAlphabetRecursive(left, alphabet, contextAlphabet);
+      _extractAlphabetRecursive(right, alphabet, contextAlphabet);
       break;
     case KleeneStarNode(:final child):
-      _extractAlphabetRecursive(child, alphabet);
+      _extractAlphabetRecursive(child, alphabet, contextAlphabet);
       break;
     case PlusNode(:final child):
-      _extractAlphabetRecursive(child, alphabet);
+      _extractAlphabetRecursive(child, alphabet, contextAlphabet);
       break;
     case QuestionNode(:final child):
-      _extractAlphabetRecursive(child, alphabet);
+      _extractAlphabetRecursive(child, alphabet, contextAlphabet);
       break;
     default:
       // EpsilonNode and EmptySetNode don't contribute to alphabet
@@ -517,20 +525,23 @@ void _extractAlphabetRecursive(RegexNode node, Set<String> alphabet) {
 }
 
 /// Expands character shortcuts to their full set
-Set<String> _expandShortcut(String code) {
+Set<String> _expandShortcut(String code, [Set<String>? contextAlphabet]) {
+  final universe = contextAlphabet == null || contextAlphabet.isEmpty
+      ? _regexAnalyzerAllChars
+      : contextAlphabet;
   switch (code) {
     case 'd':
       return _regexAnalyzerDigits;
     case 'D':
-      return _regexAnalyzerAllChars.difference(_regexAnalyzerDigits);
+      return universe.difference(_regexAnalyzerDigits);
     case 'w':
       return _regexAnalyzerWordChars;
     case 'W':
-      return _regexAnalyzerAllChars.difference(_regexAnalyzerWordChars);
+      return universe.difference(_regexAnalyzerWordChars);
     case 's':
       return _regexAnalyzerWhitespaceChars;
     case 'S':
-      return _regexAnalyzerAllChars.difference(_regexAnalyzerWhitespaceChars);
+      return universe.difference(_regexAnalyzerWhitespaceChars);
     default:
       return {};
   }
@@ -571,8 +582,12 @@ bool _acceptsEmptyString(RegexNode node) {
 ///
 /// Returns null if the node represents an empty language (∅).
 /// Uses randomization to produce varied samples.
-String? _generateSampleFromNode(RegexNode node, int maxLength) {
-  return _generateSampleRecursive(node, maxLength, 0);
+String? _generateSampleFromNode(
+  RegexNode node,
+  int maxLength,
+  Set<String>? contextAlphabet,
+) {
+  return _generateSampleRecursive(node, maxLength, 0, contextAlphabet);
 }
 
 /// Recursive helper for sample generation with depth tracking
@@ -580,6 +595,7 @@ String? _generateSampleRecursive(
   RegexNode node,
   int maxLength,
   int currentLength,
+  Set<String>? contextAlphabet,
 ) {
   // Stop if we've exceeded max length
   if (currentLength > maxLength) {
@@ -601,8 +617,10 @@ String? _generateSampleRecursive(
     case DotNode():
       // Return a random common character for 'any' match
       if (currentLength + 1 > maxLength) return null;
-      const commonChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      return commonChars[_random.nextInt(commonChars.length)];
+      final symbols = contextAlphabet?.toList() ??
+          'abcdefghijklmnopqrstuvwxyz0123456789'.split('');
+      if (symbols.isEmpty) return null;
+      return symbols[_random.nextInt(symbols.length)];
 
     case SetNode(:final symbols):
       if (symbols.isEmpty) return null;
@@ -613,7 +631,7 @@ String? _generateSampleRecursive(
       return symbolList[_random.nextInt(symbolList.length)];
 
     case ShortcutNode(:final code):
-      final expanded = _expandShortcut(code);
+      final expanded = _expandShortcut(code, contextAlphabet);
       if (expanded.isEmpty) return null;
       final expandedList = expanded
           .where((symbol) => currentLength + symbol.length <= maxLength)
@@ -628,12 +646,27 @@ String? _generateSampleRecursive(
       final second = choice ? right : left;
 
       // Try first choice, fallback to second if it fails
-      final result = _generateSampleRecursive(first, maxLength, currentLength);
+      final result = _generateSampleRecursive(
+        first,
+        maxLength,
+        currentLength,
+        contextAlphabet,
+      );
       if (result != null) return result;
-      return _generateSampleRecursive(second, maxLength, currentLength);
+      return _generateSampleRecursive(
+        second,
+        maxLength,
+        currentLength,
+        contextAlphabet,
+      );
 
     case ConcatenationNode(:final left, :final right):
-      final leftStr = _generateSampleRecursive(left, maxLength, currentLength);
+      final leftStr = _generateSampleRecursive(
+        left,
+        maxLength,
+        currentLength,
+        contextAlphabet,
+      );
       if (leftStr == null) return null;
       if (currentLength + leftStr.length > maxLength) return null;
 
@@ -641,6 +674,7 @@ String? _generateSampleRecursive(
         right,
         maxLength,
         currentLength + leftStr.length,
+        contextAlphabet,
       );
       if (rightStr == null) return null;
       if (currentLength + leftStr.length + rightStr.length > maxLength) {
@@ -658,7 +692,12 @@ String? _generateSampleRecursive(
       var totalLength = currentLength;
 
       for (int i = 0; i < repetitions; i++) {
-        final part = _generateSampleRecursive(child, maxLength, totalLength);
+        final part = _generateSampleRecursive(
+          child,
+          maxLength,
+          totalLength,
+          contextAlphabet,
+        );
         if (part == null) {
           // If we can't generate more, return what we have (at least 0 repetitions)
           break;
@@ -680,7 +719,12 @@ String? _generateSampleRecursive(
       var totalLength = currentLength;
 
       for (int i = 0; i < repetitions; i++) {
-        final part = _generateSampleRecursive(child, maxLength, totalLength);
+        final part = _generateSampleRecursive(
+          child,
+          maxLength,
+          totalLength,
+          contextAlphabet,
+        );
         if (part == null) {
           // For plus, we need at least one, so fail if first fails
           if (i == 0) return null;
@@ -703,7 +747,12 @@ String? _generateSampleRecursive(
       if (_random.nextBool()) {
         return '';
       }
-      return _generateSampleRecursive(child, maxLength, currentLength);
+      return _generateSampleRecursive(
+        child,
+        maxLength,
+        currentLength,
+        contextAlphabet,
+      );
 
     default:
       return null;
@@ -723,7 +772,7 @@ int _biasedRepetitions(int min, int max) {
 /// Finds the shortest string that matches the regex
 ///
 /// Returns null if the regex matches no strings (empty language).
-String? _findShortestString(RegexNode node) {
+String? _findShortestString(RegexNode node, [Set<String>? contextAlphabet]) {
   switch (node) {
     case EpsilonNode():
       return '';
@@ -735,7 +784,9 @@ String? _findShortestString(RegexNode node) {
       return symbol;
 
     case DotNode():
-      return 'a'; // Any single character
+      return contextAlphabet != null && contextAlphabet.isNotEmpty
+          ? contextAlphabet.first
+          : 'a';
 
     case SetNode(:final symbols):
       if (symbols.isEmpty) return null;
@@ -743,13 +794,13 @@ String? _findShortestString(RegexNode node) {
       return symbols.first;
 
     case ShortcutNode(:final code):
-      final expanded = _expandShortcut(code);
+      final expanded = _expandShortcut(code, contextAlphabet);
       if (expanded.isEmpty) return null;
       return expanded.first;
 
     case UnionNode(:final left, :final right):
-      final leftShortest = _findShortestString(left);
-      final rightShortest = _findShortestString(right);
+      final leftShortest = _findShortestString(left, contextAlphabet);
+      final rightShortest = _findShortestString(right, contextAlphabet);
 
       if (leftShortest == null) return rightShortest;
       if (rightShortest == null) return leftShortest;
@@ -760,8 +811,8 @@ String? _findShortestString(RegexNode node) {
           : rightShortest;
 
     case ConcatenationNode(:final left, :final right):
-      final leftShortest = _findShortestString(left);
-      final rightShortest = _findShortestString(right);
+      final leftShortest = _findShortestString(left, contextAlphabet);
+      final rightShortest = _findShortestString(right, contextAlphabet);
 
       if (leftShortest == null || rightShortest == null) return null;
 
@@ -773,7 +824,7 @@ String? _findShortestString(RegexNode node) {
 
     case PlusNode(:final child):
       // Plus requires at least one repetition
-      return _findShortestString(child);
+      return _findShortestString(child, contextAlphabet);
 
     case QuestionNode():
       // Optional can always produce empty string

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/core/models/fsa.dart';
@@ -52,28 +53,30 @@ Future<void> _pumpAlgorithmPanel(
   FileOperationsService? fileService,
 }) async {
   await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: AlgorithmPanel(
-          onNfaToDfa: onNfaToDfa,
-          onMinimizeDfa: onMinimizeDfa,
-          onClear: onClear,
-          onRegexToNfa: onRegexToNfa,
-          onFaToRegex: onFaToRegex,
-          onRemoveLambda: onRemoveLambda,
-          onCompleteDfa: onCompleteDfa,
-          onComplementDfa: onComplementDfa,
-          onUnionDfa: onUnionDfa,
-          onIntersectionDfa: onIntersectionDfa,
-          onDifferenceDfa: onDifferenceDfa,
-          onPrefixClosure: onPrefixClosure,
-          onSuffixClosure: onSuffixClosure,
-          onFsaToGrammar: onFsaToGrammar,
-          onAutoLayout: onAutoLayout,
-          onCompareEquivalence: onCompareEquivalence,
-          equivalenceResult: equivalenceResult,
-          equivalenceDetails: equivalenceDetails,
-          fileService: fileService,
+    ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: AlgorithmPanel(
+            onNfaToDfa: onNfaToDfa,
+            onMinimizeDfa: onMinimizeDfa,
+            onClear: onClear,
+            onRegexToNfa: onRegexToNfa,
+            onFaToRegex: onFaToRegex,
+            onRemoveLambda: onRemoveLambda,
+            onCompleteDfa: onCompleteDfa,
+            onComplementDfa: onComplementDfa,
+            onUnionDfa: onUnionDfa,
+            onIntersectionDfa: onIntersectionDfa,
+            onDifferenceDfa: onDifferenceDfa,
+            onPrefixClosure: onPrefixClosure,
+            onSuffixClosure: onSuffixClosure,
+            onFsaToGrammar: onFsaToGrammar,
+            onAutoLayout: onAutoLayout,
+            onCompareEquivalence: onCompareEquivalence,
+            equivalenceResult: equivalenceResult,
+            equivalenceDetails: equivalenceDetails,
+            fileService: fileService,
+          ),
         ),
       ),
     ),

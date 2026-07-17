@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jflutter/features/canvas/graphview/base_graphview_canvas_controller.dart';
 import 'package:jflutter/features/canvas/graphview/graphview_canvas_models.dart';
+import 'package:jflutter/features/canvas/graphview/graphview_state_notifier_adapter.dart';
 
 class _StateRecord {
   const _StateRecord({
@@ -68,91 +69,75 @@ class _SharedStateHarnessController
   _DomainRecord domain = const _DomainRecord();
   final List<String> logs = [];
 
+  @override
+  late final GraphViewStateNotifierAdapter<_DomainRecord> stateNotifierAdapter =
+      GraphViewStateNotifierAdapter<_DomainRecord>(
+    currentData: () => domain,
+    stateIdsOf: (data) => data.states.map((state) => state.id),
+    stateLabelsOf: (data) => data.states.map((state) => state.label),
+    transitionIdsOf: (data) =>
+        data.transitions.map((transition) => transition.id),
+    addState: ({required id, required label, required position}) {
+      domain = domain.copyWith(
+        states: [
+          ...domain.states,
+          _StateRecord(id: id, label: label, position: position),
+        ],
+      );
+    },
+    moveState: ({required id, required position}) {
+      domain = domain.copyWith(
+        states: [
+          for (final state in domain.states)
+            state.id == id ? state.copyWith(position: position) : state,
+        ],
+      );
+    },
+    updateStateLabel: ({required id, required label}) {
+      domain = domain.copyWith(
+        states: [
+          for (final state in domain.states)
+            state.id == id ? state.copyWith(label: label) : state,
+        ],
+      );
+    },
+    updateStateFlags: ({required id, isInitial, isAccepting}) {
+      domain = domain.copyWith(
+        states: [
+          for (final state in domain.states)
+            state.id == id
+                ? state.copyWith(
+                    isInitial: isInitial,
+                    isAccepting: isAccepting,
+                  )
+                : state,
+        ],
+      );
+    },
+    removeState: (id) {
+      domain = domain.copyWith(
+        states: [
+          for (final state in domain.states)
+            if (state.id != id) state,
+        ],
+      );
+    },
+    logMutation: logs.add,
+  );
+
   String nextNodeIdForTest() => generateNodeId();
   String nextEdgeIdForTest() => generateEdgeId();
   String nextStateLabelForTest() => nextAvailableStateLabel();
   void synchronizeForTest() => synchronizeGraph(domain);
 
   @override
-  _DomainRecord? get currentDomainData => domain;
-
-  @override
-  Iterable<String> get domainStateIds => domain.states.map((state) => state.id);
-
-  @override
-  Iterable<String> get domainStateLabels =>
-      domain.states.map((state) => state.label);
-
-  @override
-  Iterable<String> get domainTransitionIds =>
-      domain.transitions.map((transition) => transition.id);
-
-  @override
-  void addDomainState({
-    required String id,
-    required String label,
-    required Offset position,
-  }) {
+  void removeTransition(String id) {
     domain = domain.copyWith(
-      states: [
-        ...domain.states,
-        _StateRecord(id: id, label: label, position: position),
+      transitions: [
+        for (final transition in domain.transitions)
+          if (transition.id != id) transition,
       ],
     );
-  }
-
-  @override
-  void moveDomainState({required String id, required Offset position}) {
-    domain = domain.copyWith(
-      states: [
-        for (final state in domain.states)
-          state.id == id ? state.copyWith(position: position) : state,
-      ],
-    );
-  }
-
-  @override
-  void updateDomainStateLabel({required String id, required String label}) {
-    domain = domain.copyWith(
-      states: [
-        for (final state in domain.states)
-          state.id == id ? state.copyWith(label: label) : state,
-      ],
-    );
-  }
-
-  @override
-  void updateDomainStateFlags({
-    required String id,
-    bool? isInitial,
-    bool? isAccepting,
-  }) {
-    domain = domain.copyWith(
-      states: [
-        for (final state in domain.states)
-          state.id == id
-              ? state.copyWith(
-                  isInitial: isInitial,
-                  isAccepting: isAccepting,
-                )
-              : state,
-      ],
-    );
-  }
-
-  @override
-  void removeDomainState(String id) {
-    domain = domain.copyWith(
-      states: [
-        for (final state in domain.states)
-          if (state.id != id) state,
-      ],
-    );
-  }
-
-  @override
-  void logCanvasStateMutation(String message) {
-    logs.add(message);
   }
 
   @override
@@ -240,7 +225,7 @@ void main() {
       expect(states, hasLength(1));
       expect(states.single.id, equals('state_0'));
       expect(states.single.label, equals('q0'));
-      expect(states.single.position, equals(const Offset(12, 24)));
+      expect(states.single.position, equals(const Offset(-36, -24)));
       expect(controller.nodeById('state_0'), isNotNull);
 
       controller.moveState('state_0', const Offset(40, 80));

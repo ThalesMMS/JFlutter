@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/models/fsa.dart';
 import '../../../core/models/grammar.dart';
 import '../../../core/result.dart';
-import '../../../data/services/file_operations_service.dart';
+import '../../../core/services/file_operations_gateway.dart';
 
 const _kUnreadableFileMessage =
     'JFlutter could not access the selected file data. Pick the file again and keep it available until the import finishes.';
@@ -20,7 +20,7 @@ String? _normalizedPath(String? path) {
 /// Loads an automaton from the provided [PlatformFile], preferring in-memory
 /// bytes when available to support web targets where no physical path exists.
 Future<Result<FSA>> loadAutomatonFromPlatformFile(
-  FileOperationsService service,
+  FileOperationsGateway service,
   PlatformFile file,
 ) async {
   if (file.bytes != null) {
@@ -38,7 +38,7 @@ Future<Result<FSA>> loadAutomatonFromPlatformFile(
 /// Loads a grammar from the provided [PlatformFile], preferring in-memory
 /// bytes when available to support web targets where no physical path exists.
 Future<Result<Grammar>> loadGrammarFromPlatformFile(
-  FileOperationsService service,
+  FileOperationsGateway service,
   PlatformFile file,
 ) async {
   if (file.bytes != null) {

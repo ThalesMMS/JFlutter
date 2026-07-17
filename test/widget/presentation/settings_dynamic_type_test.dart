@@ -51,7 +51,7 @@ Future<void> _pumpSettingsPage(
             size: Size(width, 900),
             textScaler: TextScaler.linear(textScale),
           ),
-          child: SettingsPage(),
+          child: const SettingsPage(),
         ),
       ),
     ),

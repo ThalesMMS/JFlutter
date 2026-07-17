@@ -15,11 +15,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
 import '../../../core/services/simulation_highlight_service.dart';
+import '../../../l10n/app_localizations_resolver.dart';
 import '../common/simulation_speed_control.dart';
+import '../common/timer_playback_controller.dart';
 import 'timeline_scrubber.dart';
 
 /// Base trace viewer with folding support used by FA/PDA/TM viewers.
@@ -33,6 +36,7 @@ class BaseTraceViewer extends StatefulWidget {
   final double animationSpeed;
   final ValueChanged<int>? onStepChanged;
   final ValueChanged<double>? onSpeedChanged;
+  final bool ensureSelectedStepVisible;
 
   const BaseTraceViewer({
     super.key,
@@ -44,6 +48,7 @@ class BaseTraceViewer extends StatefulWidget {
     this.animationSpeed = 1.0,
     this.onStepChanged,
     this.onSpeedChanged,
+    this.ensureSelectedStepVisible = true,
   });
 
   @override
@@ -57,6 +62,8 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   int? _selectedIndex;
   bool _isPlaying = false;
   Timer? _playbackTimer;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _selectedRowKey = GlobalKey();
 
   bool get _highlightEnabled =>
       widget.result.steps.isNotEmpty &&
@@ -66,12 +73,15 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   void initState() {
     super.initState();
     _selectedIndex = _highlightEnabled ? 0 : null;
+    _scheduleSelectionSynchronization();
   }
 
   @override
   void dispose() {
-    _playbackTimer?.cancel();
+    _cancelPlaybackTimer();
     _isPlaying = false;
+    widget.highlightService?.clear();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -80,12 +90,13 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     super.didUpdateWidget(oldWidget);
     if (widget.result != oldWidget.result ||
         widget.highlightService != oldWidget.highlightService) {
-      _playbackTimer?.cancel();
-      _playbackTimer = null;
+      _cancelPlaybackTimer();
+      oldWidget.highlightService?.clear();
       setState(() {
         _selectedIndex = _highlightEnabled ? 0 : null;
         _isPlaying = false;
       });
+      _scheduleSelectionSynchronization();
     }
   }
 
@@ -120,46 +131,38 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
   }
 
   void _pauseSteps() {
-    _playbackTimer?.cancel();
-    _playbackTimer = null;
+    _cancelPlaybackTimer();
     setState(() {
       _isPlaying = false;
     });
   }
 
   void _playStepAnimation() {
-    if (!_isPlaying || !mounted) return;
-    _playbackTimer?.cancel();
-    _playbackTimer = null;
-
-    final current = _selectedIndex ?? 0;
-    if (current < widget.result.steps.length - 1) {
-      // Calculate delay based on animation speed: slower speed = longer delay
-      final delayMs = (1000 / widget.animationSpeed).round();
-      _playbackTimer = Timer(Duration(milliseconds: delayMs), () {
-        _playbackTimer = null;
-        if (_isPlaying && mounted) {
-          final current = _selectedIndex ?? 0;
-          if (current < widget.result.steps.length - 1) {
-            _updateSelectedIndex(current + 1, fromPlayback: true);
-            _playStepAnimation();
-          } else {
-            setState(() {
-              _isPlaying = false;
-            });
-          }
-        }
-      });
-    } else {
-      setState(() {
-        _isPlaying = false;
-      });
-    }
+    _playbackTimer = schedulePlaybackStep(
+      currentTimer: _playbackTimer,
+      isPlaying: () => _isPlaying,
+      isMounted: () => mounted,
+      canAdvance: () => (_selectedIndex ?? 0) < widget.result.steps.length - 1,
+      delay: Duration(milliseconds: (1000 / widget.animationSpeed).round()),
+      clearTimer: () => _playbackTimer = null,
+      advance: () {
+        _updateSelectedIndex((_selectedIndex ?? 0) + 1, fromPlayback: true);
+      },
+      stop: () {
+        setState(() {
+          _isPlaying = false;
+        });
+      },
+      scheduleNext: _playStepAnimation,
+    );
   }
 
   void _resetSteps() {
-    _updateSelectedIndex(0, emitHighlight: false);
-    widget.highlightService?.clear();
+    if (!_highlightEnabled) {
+      widget.highlightService?.clear();
+      return;
+    }
+    _updateSelectedIndex(0);
   }
 
   void _updateSelectedIndex(
@@ -168,8 +171,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
     bool fromPlayback = false,
   }) {
     if (!fromPlayback) {
-      _playbackTimer?.cancel();
-      _playbackTimer = null;
+      _cancelPlaybackTimer();
     }
     setState(() {
       _selectedIndex = index;
@@ -181,9 +183,72 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
       widget.highlightService?.emitFromSteps(widget.result.steps, index);
     }
     widget.onStepChanged?.call(index);
+    _scheduleSelectedRowVisibility();
+    if (!fromPlayback) {
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        appLocalizationsOf(context).stepOf(
+          index + 1,
+          widget.result.steps.length,
+        ),
+        Directionality.of(context),
+      );
+    }
+  }
+
+  void _cancelPlaybackTimer() {
+    _playbackTimer = cancelPlaybackTimer(_playbackTimer);
+  }
+
+  void _scheduleSelectionSynchronization() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final index = _selectedIndex;
+      if (index == null || index >= widget.result.steps.length) {
+        widget.highlightService?.clear();
+        return;
+      }
+      widget.highlightService?.emitFromSteps(widget.result.steps, index);
+      widget.onStepChanged?.call(index);
+      _scheduleSelectedRowVisibility();
+    });
+  }
+
+  void _scheduleSelectedRowVisibility() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      if (_folded) {
+        _scrollController.jumpTo(0);
+      } else {
+        final index = _selectedIndex ?? 0;
+        final approximateOffset = index * 48.0;
+        _scrollController.jumpTo(
+          approximateOffset.clamp(
+            0,
+            _scrollController.position.maxScrollExtent,
+          ),
+        );
+      }
+      if (!widget.ensureSelectedStepVisible) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final selectedContext = _selectedRowKey.currentContext;
+        if (!mounted || selectedContext == null) return;
+        Scrollable.ensureVisible(
+          selectedContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 150),
+        );
+      });
+    });
+  }
+
+  void _toggleFolded() {
+    setState(() => _folded = !_folded);
+    _scheduleSelectedRowVisibility();
   }
 
   Widget _buildNavigationControls(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     final current = _selectedIndex ?? 0;
     final maxIndex = widget.result.steps.length - 1;
 
@@ -205,19 +270,19 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
               IconButton(
                 onPressed: current > 0 ? _previousStep : null,
                 icon: const Icon(Icons.skip_previous),
-                tooltip: 'Previous Step',
+                tooltip: l10n.previousStep,
                 iconSize: 20,
               ),
               IconButton(
                 onPressed: _isPlaying ? _pauseSteps : _playSteps,
                 icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                tooltip: _isPlaying ? 'Pause' : 'Play',
+                tooltip: _isPlaying ? l10n.pause : l10n.play,
                 iconSize: 20,
               ),
               IconButton(
                 onPressed: current < maxIndex ? _nextStep : null,
                 icon: const Icon(Icons.skip_next),
-                tooltip: 'Next Step',
+                tooltip: l10n.nextStep,
                 iconSize: 20,
               ),
               const SizedBox(width: 8),
@@ -229,7 +294,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
               IconButton(
                 onPressed: _resetSteps,
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Reset',
+                tooltip: l10n.reset,
                 iconSize: 20,
               ),
             ],
@@ -248,11 +313,15 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     final steps = widget.result.steps;
     final isAccepted = widget.result.accepted;
     final color = isAccepted ? Colors.green : Colors.red;
-    final visibleCount =
-        _folded ? steps.length.clamp(0, _foldSize) : steps.length;
+    final selectedIndex = _selectedIndex ?? 0;
+    final visibleStart = _folded && selectedIndex > 0 ? selectedIndex : 0;
+    final visibleCount = _folded
+        ? (steps.length - visibleStart).clamp(0, _foldSize)
+        : steps.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,9 +344,9 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
             const Spacer(),
             if (steps.length > defaultFoldSize)
               TextButton.icon(
-                onPressed: () => setState(() => _folded = !_folded),
+                onPressed: _toggleFolded,
                 icon: Icon(_folded ? Icons.unfold_more : Icons.unfold_less),
-                label: Text(_folded ? 'Expand' : 'Collapse'),
+                label: Text(_folded ? l10n.expand : l10n.collapse),
               ),
           ],
         ),
@@ -292,7 +361,7 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'No steps recorded',
+              l10n.noStepsRecorded,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           )
@@ -300,33 +369,45 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
           SizedBox(
             height: 180,
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: visibleCount,
-              itemBuilder: (context, index) {
+              itemBuilder: (context, visibleIndex) {
+                final index = visibleStart + visibleIndex;
                 final step = steps[index];
                 final isSelected = _highlightEnabled && _selectedIndex == index;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: InkWell(
-                    onTap:
-                        _highlightEnabled ? () => _handleStepTap(index) : null,
-                    borderRadius: BorderRadius.circular(6),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 44),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        decoration: isSelected
-                            ? BoxDecoration(
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 1.2,
-                                ),
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.08),
-                              )
-                            : const BoxDecoration(),
-                        child: widget.buildStepLine(step, index),
+                return Semantics(
+                  key: isSelected ? _selectedRowKey : null,
+                  selected: isSelected,
+                  label: isSelected
+                      ? l10n.activeStepOf(index + 1, steps.length)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: InkWell(
+                      onTap: _highlightEnabled
+                          ? () => _handleStepTap(index)
+                          : null,
+                      borderRadius: BorderRadius.circular(6),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 44),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          decoration: isSelected
+                              ? BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 1.2,
+                                  ),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.08),
+                                )
+                              : const BoxDecoration(),
+                          child: widget.buildStepLine(step, index),
+                        ),
                       ),
                     ),
                   ),
@@ -338,7 +419,10 @@ class _BaseTraceViewerState extends State<BaseTraceViewer> {
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              '+${steps.length - visibleCount} more steps hidden',
+              l10n.hiddenStepsSummary(
+                visibleStart,
+                steps.length - visibleStart - visibleCount,
+              ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,

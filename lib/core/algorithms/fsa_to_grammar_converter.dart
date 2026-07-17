@@ -32,6 +32,16 @@ class FSAToGrammarConverter {
     for (final transition in fsa.fsaTransitions) {
       final fromNonTerminal = stateToNonTerminal[transition.fromState.id]!;
       final toNonTerminal = stateToNonTerminal[transition.toState.id]!;
+      if (transition.isEpsilonTransition) {
+        productions.add(
+          Production(
+            id: 'p${productionCounter++}',
+            leftSide: [fromNonTerminal],
+            rightSide: [toNonTerminal],
+          ),
+        );
+        continue;
+      }
       for (final symbol in transition.inputSymbols) {
         productions.add(
           Production(

@@ -221,5 +221,37 @@ void main() {
         expect(rebuilt.validate(), isEmpty);
       },
     );
+
+    test('merge includes resolved blank symbol in fallback tape alphabet', () {
+      final template = machine.copyWith(
+        tapeAlphabet: {'a', 'b'},
+        blankSymbol: 'B',
+      );
+
+      const snapshot = GraphViewAutomatonSnapshot(
+        nodes: [
+          GraphViewCanvasNode(
+            id: 'q0',
+            label: 'start',
+            x: 10,
+            y: 20,
+            isInitial: true,
+            isAccepting: false,
+          ),
+        ],
+        edges: [],
+        metadata: GraphViewAutomatonMetadata(
+          id: 'tm-1',
+          name: 'Blank TM',
+          alphabet: ['a', 'b'],
+          blankSymbol: '_',
+        ),
+      );
+
+      final rebuilt = GraphViewTmMapper.mergeIntoTemplate(snapshot, template);
+
+      expect(rebuilt.blankSymbol, '_');
+      expect(rebuilt.tapeAlphabet, containsAll({'a', 'b', '_'}));
+    });
   });
 }

@@ -343,7 +343,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
       }
 
       if (!transition.isLambdaPush && transition.pushSymbol.isNotEmpty) {
-        stackAlphabet.add(transition.pushSymbol);
+        stackAlphabet.addAll(transition.pushSymbols);
       }
     }
 
@@ -463,7 +463,7 @@ class PDAEditorNotifier extends StateNotifier<PDAEditorState> {
         stackAlphabet.add(transition.popSymbol);
       }
       if (!transition.isLambdaPush && transition.pushSymbol.isNotEmpty) {
-        stackAlphabet.add(transition.pushSymbol);
+        stackAlphabet.addAll(transition.pushSymbols);
       }
     }
 

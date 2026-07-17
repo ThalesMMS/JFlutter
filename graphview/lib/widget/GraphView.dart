@@ -109,6 +109,39 @@ class _GraphViewState extends State<GraphView> with TickerProviderStateMixin {
   }
 
   @override
+  void didUpdateWidget(covariant GraphView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.controller == widget.controller) return;
+
+    final previousController = oldWidget.controller;
+    final nextController = widget.controller;
+    final previousTransformationController = _transformationController;
+    final previousMatrix = previousTransformationController.value.clone();
+    final nextTransformationController =
+        nextController?.transformationController;
+
+    previousController?._detach();
+
+    _transformationController = nextTransformationController ??
+        TransformationController(previousMatrix);
+    if (nextTransformationController != null) {
+      nextTransformationController.value = previousMatrix;
+    }
+    nextController?._attach(this);
+
+    final shouldDisposePrevious =
+        previousController?._ownsTransformationController ?? true;
+    if (shouldDisposePrevious &&
+        !identical(
+          previousTransformationController,
+          _transformationController,
+        )) {
+      previousTransformationController.dispose();
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller?._detach();
     _panController.dispose();

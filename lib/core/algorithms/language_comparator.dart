@@ -17,20 +17,12 @@ import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/equivalence_comparison_result.dart';
 import '../result.dart';
-import 'nfa_to_dfa_converter.dart';
+import '../utils/epsilon_utils.dart';
 import 'dfa_completer.dart';
+import 'fsa_determinizer.dart';
 
 /// Compares two automata to determine if they recognize the same language
 class LanguageComparator {
-  /// Returns true if the provided symbol should be treated as epsilon.
-  static bool _isEpsilonSymbol(String s) {
-    final normalized = s.trim().toLowerCase();
-    return normalized.isEmpty ||
-        normalized == 'ε' ||
-        normalized == 'λ' ||
-        normalized == 'lambda';
-  }
-
   /// Compares two automata and determines if they recognize the same language
   ///
   /// Returns a Result containing EquivalenceComparisonResult with:
@@ -62,7 +54,7 @@ class LanguageComparator {
       // Normalize alphabets - combine both alphabets
       final sharedAlphabet = automatonA.alphabet
           .union(automatonB.alphabet)
-          .where((s) => !_isEpsilonSymbol(s))
+          .where((s) => !isEpsilonSymbol(s))
           .toSet();
 
       steps.add({
@@ -77,7 +69,7 @@ class LanguageComparator {
       });
 
       // Convert NFAs to DFAs if necessary
-      final dfaAResult = _determinizeIfNeeded(
+      final dfaAResult = FSADeterminizer.determinizeIfNeeded(
         automatonA.copyWith(alphabet: sharedAlphabet),
         'A',
       );
@@ -99,7 +91,7 @@ class LanguageComparator {
         });
       }
 
-      final dfaBResult = _determinizeIfNeeded(
+      final dfaBResult = FSADeterminizer.determinizeIfNeeded(
         automatonB.copyWith(alphabet: sharedAlphabet),
         'B',
       );
@@ -217,22 +209,6 @@ class LanguageComparator {
     } catch (e) {
       return ResultFactory.failure('Error comparing languages: $e');
     }
-  }
-
-  static Result<FSA> _determinizeIfNeeded(FSA automaton, String label) {
-    if (automaton.isDeterministic) {
-      return ResultFactory.success(automaton);
-    }
-
-    final conversion = NFAToDFAConverter.convert(automaton);
-    if (conversion.isFailure || conversion.data == null) {
-      return ResultFactory.failure(
-        'Failed to determinize automaton $label: '
-        '${conversion.error ?? 'unknown conversion failure'}',
-      );
-    }
-
-    return ResultFactory.success(conversion.data!);
   }
 
   /// Validates the input automata
@@ -453,15 +429,16 @@ class LanguageComparator {
     });
 
     // BFS queue: each entry is a state pair and the path to reach it
-    final queue = <_StatePairWithPath>[
-      _StatePairWithPath(stateA: initialA, stateB: initialB, path: []),
-    ];
+    final queue = Queue<_StatePairWithPath>()
+      ..add(
+        _StatePairWithPath(stateA: initialA, stateB: initialB, path: []),
+      );
 
     // Track visited state pairs to avoid cycles
     final visited = <String>{'${initialA.id},${initialB.id}'};
 
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
       final stateA = current.stateA;
       final stateB = current.stateB;
       final path = current.path;

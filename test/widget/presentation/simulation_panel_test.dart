@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,11 +32,21 @@ class _TestSimulationHighlightService extends SimulationHighlightService {
 }
 
 class _SimulationCallback {
-  final List<String> receivedInputs = [];
+  _SimulationCallback({this.completeImmediately = true});
 
-  void call(String input) {
+  final List<String> receivedInputs = [];
+  final bool completeImmediately;
+  final List<Completer<void>> _pending = [];
+
+  Future<void> call(String input) {
     receivedInputs.add(input);
+    if (completeImmediately) return Future.value();
+    final completer = Completer<void>();
+    _pending.add(completer);
+    return completer.future;
   }
+
+  void completeNext() => _pending.removeAt(0).complete();
 }
 
 Future<void> _pumpSimulationPanel(
@@ -88,7 +100,10 @@ void main() {
       expect(find.text('Simulation'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Input String'), findsOneWidget);
-      expect(find.text('Enter string to test'), findsOneWidget);
+      expect(
+        find.text('Leave blank for ε; whitespace is preserved'),
+        findsOneWidget,
+      );
       expect(find.text('Simulate'), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
       expect(find.text('Step-by-Step Mode'), findsOneWidget);
@@ -148,6 +163,18 @@ void main() {
       expect(callback.receivedInputs, contains('abc'));
     });
 
+    testWidgets('preserves a literal space input', (tester) async {
+      final callback = _SimulationCallback();
+
+      await _pumpSimulationPanel(tester, onSimulate: callback);
+      await tester.enterText(find.byType(TextField), ' ');
+      await tester.tap(find.text('Simulate'));
+      await tester.pump();
+
+      expect(callback.receivedInputs, [' ']);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
     testWidgets('calls onSimulate when Enter is pressed in text field', (
       tester,
     ) async {
@@ -162,7 +189,7 @@ void main() {
       expect(callback.receivedInputs, contains('test'));
     });
 
-    testWidgets('does not call onSimulate with empty input', (tester) async {
+    testWidgets('submits empty input as epsilon', (tester) async {
       final callback = _SimulationCallback();
 
       await _pumpSimulationPanel(tester, onSimulate: callback);
@@ -170,11 +197,11 @@ void main() {
       await tester.tap(find.text('Simulate'));
       await tester.pumpAndSettle();
 
-      expect(callback.receivedInputs, isEmpty);
+      expect(callback.receivedInputs, ['']);
     });
 
     testWidgets('shows simulating state when simulating', (tester) async {
-      final callback = _SimulationCallback();
+      final callback = _SimulationCallback(completeImmediately: false);
 
       await _pumpSimulationPanel(tester, onSimulate: callback);
 
@@ -198,9 +225,36 @@ void main() {
       final button = tester.widget<ButtonStyleButton>(buttonFinder);
       expect(button.onPressed, isNull);
 
-      // The production code starts a 2-second safety timeout timer in
-      // _simulate(). Pump past it to avoid a pending-timer assertion.
+      callback.completeNext();
+      await tester.pump();
+    });
+
+    testWidgets('an older run cannot end a newer run loading state',
+        (tester) async {
+      final callback = _SimulationCallback(completeImmediately: false);
+
+      await _pumpSimulationPanel(tester, onSimulate: callback);
+      await tester.enterText(find.byType(TextField), 'A');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      callback.completeNext();
+      await tester.pump();
+      expect(find.text('Simulate'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'B');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(find.text('Simulating...'), findsOneWidget);
+
+      // This is past the old run A safety timeout. Run B still owns loading.
       await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Simulating...'), findsOneWidget);
+      expect(callback.receivedInputs, ['A', 'B']);
+
+      callback.completeNext();
+      await tester.pump();
+      expect(find.text('Simulate'), findsOneWidget);
     });
 
     testWidgets('displays accepted simulation result', (tester) async {
@@ -754,6 +808,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 40));
 
       expect(find.text('Step 2 of 4'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pump();
     });
 
     testWidgets('manual navigation pauses playback and cancels pending timer', (
@@ -813,7 +870,8 @@ void main() {
       expect(find.text('Step 2 of 4'), findsOneWidget);
     });
 
-    testWidgets('clears highlight service on dispose', (tester) async {
+    testWidgets('does not clear an injected highlight service on dispose',
+        (tester) async {
       final callback = _SimulationCallback();
       final highlightService = _TestSimulationHighlightService();
 
@@ -828,7 +886,7 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
 
-      expect(highlightService.clearCallCount, greaterThan(clearCountBefore));
+      expect(highlightService.clearCallCount, clearCountBefore);
     });
 
     testWidgets('updates when simulation result changes', (tester) async {

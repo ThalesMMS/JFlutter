@@ -51,7 +51,10 @@ class RegexAnalyzer {
   ///
   /// Returns a [Result] containing [RegexAnalysis] on success, or an error
   /// message on failure if the regex is invalid.
-  static Result<RegexAnalysis> analyze(String regex) {
+  static Result<RegexAnalysis> analyze(
+    String regex, {
+    Set<String>? contextAlphabet,
+  }) {
     try {
       final stopwatch = Stopwatch()..start();
 
@@ -66,7 +69,7 @@ class RegexAnalyzer {
       final starHeight = _computeStarHeight(node);
       final nestingDepth = _computeNestingDepth(regex);
       final operatorCounts = _countOperatorsFromAst(node);
-      final alphabet = _extractAlphabet(node);
+      final alphabet = _extractAlphabet(node, contextAlphabet);
 
       // Build complexity analysis
       final complexityAnalysis = RegexComplexityAnalysis.fromMetrics(
@@ -220,6 +223,8 @@ class RegexAnalyzer {
   /// - [regex]: The regular expression to generate samples for
   /// - [maxSamples]: Maximum number of samples to generate (default: 10)
   /// - [maxLength]: Maximum length for generated strings (default: 20)
+  /// - [contextAlphabet]: Universe used to expand wildcard and shortcut nodes
+  ///   while generating samples
   ///
   /// Returns a [Result] containing [RegexSampleStrings] on success.
   ///
@@ -236,6 +241,7 @@ class RegexAnalyzer {
     String regex, {
     int maxSamples = 10,
     int maxLength = 20,
+    Set<String>? contextAlphabet,
   }) {
     try {
       final parseResult = _validateAndParse(regex);
@@ -253,7 +259,7 @@ class RegexAnalyzer {
       }
 
       // Find and add shortest string
-      final shortest = _findShortestString(node);
+      final shortest = _findShortestString(node, contextAlphabet);
       if (shortest != null && shortest.length <= maxLength) {
         samples.add(shortest);
       }
@@ -264,7 +270,11 @@ class RegexAnalyzer {
 
       while (samples.length < maxSamples && attempts < maxAttempts) {
         attempts++;
-        final sample = _generateSampleFromNode(node, maxLength);
+        final sample = _generateSampleFromNode(
+          node,
+          maxLength,
+          contextAlphabet,
+        );
         if (sample != null && sample.length <= maxLength) {
           samples.add(sample);
         }
@@ -300,8 +310,9 @@ class RegexAnalyzer {
     String regex, {
     int maxSamples = 10,
     int maxLength = 20,
+    Set<String>? contextAlphabet,
   }) {
-    final analysisResult = analyze(regex);
+    final analysisResult = analyze(regex, contextAlphabet: contextAlphabet);
     if (analysisResult.isFailure) {
       return analysisResult;
     }
@@ -310,6 +321,7 @@ class RegexAnalyzer {
       regex,
       maxSamples: maxSamples,
       maxLength: maxLength,
+      contextAlphabet: contextAlphabet,
     );
     if (samplesResult.isFailure) {
       return analysisResult; // Return analysis without samples if generation fails

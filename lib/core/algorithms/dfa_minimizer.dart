@@ -10,25 +10,19 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
+
 import 'package:vector_math/vector_math_64.dart';
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/dfa_minimization_step.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 import 'state_renamer.dart';
 
 /// Minimizes a Deterministic Finite Automaton (DFA) using the Hopcroft algorithm
 class DFAMinimizer {
-  /// Returns true if the provided symbol should be treated as epsilon.
-  static bool _isEpsilonSymbol(String s) {
-    final normalized = s.trim().toLowerCase();
-    return normalized.isEmpty ||
-        normalized == 'ε' ||
-        normalized == 'λ' ||
-        normalized == 'lambda';
-  }
-
   /// Minimizes a DFA to an equivalent minimal DFA
   static Result<FSA> minimize(FSA dfa) {
     try {
@@ -136,7 +130,7 @@ class DFAMinimizer {
   static FSA _minimizeWithHopcroft(FSA dfa) {
     // Filter alphabet to exclude epsilon-like symbols if present
     final workingAlphabet =
-        dfa.alphabet.where((s) => !_isEpsilonSymbol(s)).toSet();
+        dfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet();
 
     // Initialize partition with accepting and non-accepting states
     final partition = <Set<State>>[
@@ -148,7 +142,7 @@ class DFAMinimizer {
     partition.removeWhere((set) => set.isEmpty);
 
     // Worklist for processing
-    final worklist = <Set<State>>[];
+    final worklist = Queue<Set<State>>();
     for (final set in partition) {
       if (set.isNotEmpty) {
         worklist.add(set);
@@ -157,7 +151,7 @@ class DFAMinimizer {
 
     // Process worklist
     while (worklist.isNotEmpty) {
-      final currentSet = worklist.removeAt(0);
+      final currentSet = worklist.removeFirst();
 
       // For each symbol in the (filtered) alphabet
       for (final symbol in workingAlphabet) {
@@ -264,7 +258,7 @@ class DFAMinimizer {
       if (originalTransition is FSATransition) {
         // Skip epsilon-like transitions if any slipped through
         if (originalTransition.lambdaSymbol != null ||
-            originalTransition.inputSymbols.any(_isEpsilonSymbol)) {
+            originalTransition.inputSymbols.any(isEpsilonSymbol)) {
           continue;
         }
         final fromState = stateMap[originalTransition.fromState]!;
@@ -406,7 +400,7 @@ class DFAMinimizer {
 
     // Filter alphabet to exclude epsilon-like symbols if present
     final workingAlphabet =
-        dfa.alphabet.where((s) => !_isEpsilonSymbol(s)).toSet();
+        dfa.alphabet.where((s) => !isEpsilonSymbol(s)).toSet();
 
     // Initialize partition with accepting and non-accepting states
     final partition = <Set<State>>[
@@ -426,7 +420,7 @@ class DFAMinimizer {
     );
 
     // Worklist for processing
-    final worklist = <Set<State>>[];
+    final worklist = Queue<Set<State>>();
     for (final set in partition) {
       if (set.isNotEmpty) {
         worklist.add(set);
@@ -435,7 +429,7 @@ class DFAMinimizer {
 
     // Process worklist
     while (worklist.isNotEmpty) {
-      final currentSet = worklist.removeAt(0);
+      final currentSet = worklist.removeFirst();
 
       // Capture set selection step
       steps.add(

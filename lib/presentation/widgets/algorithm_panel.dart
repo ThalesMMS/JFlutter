@@ -15,7 +15,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/fsa.dart';
-import '../../data/services/file_operations_service.dart';
+import '../../core/services/file_operations_gateway.dart';
+import '../../injection/data_providers.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/algorithm_step_provider.dart';
 import 'algorithm_panel_scaffold.dart';
 import 'app_snackbar.dart';
@@ -49,10 +52,10 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
   final bool? equivalenceResult;
   final String? equivalenceDetails;
   final ValueChanged<bool>? onStepByStepModeChanged;
-  final FileOperationsService fileService;
+  final FileOperationsGateway? fileService;
   final AlgorithmStepRendererRegistry? rendererRegistry;
 
-  AlgorithmPanel({
+  const AlgorithmPanel({
     super.key,
     this.currentAutomaton,
     this.onNfaToDfa,
@@ -75,8 +78,8 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
     this.equivalenceDetails,
     this.onStepByStepModeChanged,
     this.rendererRegistry,
-    FileOperationsService? fileService,
-  }) : fileService = fileService ?? FileOperationsService();
+    this.fileService,
+  });
 
   @override
   ConsumerState<AlgorithmPanel> createState() => _AlgorithmPanelState();
@@ -84,7 +87,7 @@ class AlgorithmPanel extends ConsumerStatefulWidget {
 
 class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
   final TextEditingController _regexController = TextEditingController();
-  late final FileOperationsService _fileService;
+  late final FileOperationsGateway _fileService;
   bool _isExecuting = false;
   String? _currentAlgorithm;
   double _executionProgress = 0.0;
@@ -94,7 +97,7 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
   void _showSnack(String message, {bool isError = false}) {
     showAppSnackBar(
       context,
-      message: message,
+      message: appLocalizationsOf(context).localizeWorkflowText(message),
       tone: isError ? AppSnackBarTone.error : AppSnackBarTone.success,
     );
   }
@@ -108,7 +111,7 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
   @override
   void initState() {
     super.initState();
-    _fileService = widget.fileService;
+    _fileService = widget.fileService ?? ref.read(fileOperationsProvider);
   }
 
   @override
@@ -137,17 +140,15 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
         // NFA to DFA conversion
         AlgorithmButton(
           title: 'NFA to DFA',
-          description:
-              'Convert non-deterministic to deterministic automaton',
+          description: 'Convert non-deterministic to deterministic automaton',
           icon: Icons.transform,
           onPressed: widget.onNfaToDfa == null
               ? null
               : () => _executeAlgorithm('NFA to DFA', widget.onNfaToDfa),
           isExecuting: _isExecuting && _currentAlgorithm == 'NFA to DFA',
           isSelected: _currentAlgorithm == 'NFA to DFA',
-          executionProgress: _currentAlgorithm == 'NFA to DFA'
-              ? _executionProgress
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'NFA to DFA' ? _executionProgress : null,
           executionStatus:
               _currentAlgorithm == 'NFA to DFA' ? _executionStatus : null,
         ),
@@ -189,15 +190,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'Minimize DFA',
                     widget.onMinimizeDfa,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Minimize DFA',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Minimize DFA',
           isSelected: _currentAlgorithm == 'Minimize DFA',
-          executionProgress: _currentAlgorithm == 'Minimize DFA'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Minimize DFA'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Minimize DFA' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Minimize DFA' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -213,15 +211,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'Complete DFA',
                     widget.onCompleteDfa,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Complete DFA',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Complete DFA',
           isSelected: _currentAlgorithm == 'Complete DFA',
-          executionProgress: _currentAlgorithm == 'Complete DFA'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Complete DFA'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Complete DFA' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Complete DFA' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -237,15 +232,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'Complement DFA',
                     widget.onComplementDfa,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Complement DFA',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Complement DFA',
           isSelected: _currentAlgorithm == 'Complement DFA',
-          executionProgress: _currentAlgorithm == 'Complement DFA'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Complement DFA'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Complement DFA' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Complement DFA' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -253,8 +245,7 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
         // Union of DFAs
         AlgorithmButton(
           title: 'Union of DFAs',
-          description:
-              'Combine this DFA with another automaton from file',
+          description: 'Combine this DFA with another automaton from file',
           icon: Icons.merge_type,
           onPressed: () => _runBinaryOperation(
             algorithmName: 'Union of DFAs',
@@ -262,18 +253,14 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
             dialogTitle: 'Select DFA for union',
             executingStatus: 'Building union automaton...',
             successStatus: 'Union complete',
-            missingCallbackMessage:
-                'Load a DFA before computing the union.',
+            missingCallbackMessage: 'Load a DFA before computing the union.',
           ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Union of DFAs',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Union of DFAs',
           isSelected: _currentAlgorithm == 'Union of DFAs',
-          executionProgress: _currentAlgorithm == 'Union of DFAs'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Union of DFAs'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Union of DFAs' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Union of DFAs' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -281,8 +268,7 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
         // Intersection of DFAs
         AlgorithmButton(
           title: 'Intersection of DFAs',
-          description:
-              'Intersect this DFA with another automaton from file',
+          description: 'Intersect this DFA with another automaton from file',
           icon: Icons.call_merge,
           onPressed: () => _runBinaryOperation(
             algorithmName: 'Intersection of DFAs',
@@ -345,15 +331,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'Prefix Closure',
                     widget.onPrefixClosure,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Prefix Closure',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Prefix Closure',
           isSelected: _currentAlgorithm == 'Prefix Closure',
-          executionProgress: _currentAlgorithm == 'Prefix Closure'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Prefix Closure'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Prefix Closure' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Prefix Closure' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -369,15 +352,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'Suffix Closure',
                     widget.onSuffixClosure,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'Suffix Closure',
+          isExecuting: _isExecuting && _currentAlgorithm == 'Suffix Closure',
           isSelected: _currentAlgorithm == 'Suffix Closure',
-          executionProgress: _currentAlgorithm == 'Suffix Closure'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'Suffix Closure'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'Suffix Closure' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'Suffix Closure' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -389,16 +369,13 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
           icon: Icons.text_fields,
           onPressed: widget.onFaToRegex == null
               ? null
-              : () =>
-                  _executeAlgorithm('FA to Regex', widget.onFaToRegex),
+              : () => _executeAlgorithm('FA to Regex', widget.onFaToRegex),
           isExecuting: _isExecuting && _currentAlgorithm == 'FA to Regex',
           isSelected: _currentAlgorithm == 'FA to Regex',
-          executionProgress: _currentAlgorithm == 'FA to Regex'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'FA to Regex'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'FA to Regex' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'FA to Regex' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),
@@ -414,15 +391,12 @@ class _AlgorithmPanelState extends ConsumerState<AlgorithmPanel> {
                     'FSA to Grammar',
                     widget.onFsaToGrammar,
                   ),
-          isExecuting:
-              _isExecuting && _currentAlgorithm == 'FSA to Grammar',
+          isExecuting: _isExecuting && _currentAlgorithm == 'FSA to Grammar',
           isSelected: _currentAlgorithm == 'FSA to Grammar',
-          executionProgress: _currentAlgorithm == 'FSA to Grammar'
-              ? _executionProgress
-              : null,
-          executionStatus: _currentAlgorithm == 'FSA to Grammar'
-              ? _executionStatus
-              : null,
+          executionProgress:
+              _currentAlgorithm == 'FSA to Grammar' ? _executionProgress : null,
+          executionStatus:
+              _currentAlgorithm == 'FSA to Grammar' ? _executionStatus : null,
         ),
 
         const SizedBox(height: 12),

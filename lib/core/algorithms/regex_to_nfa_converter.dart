@@ -34,6 +34,11 @@ class RegexToNFAConverter {
   static String _newTransId(String prefix) =>
       '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idSeq++}';
 
+  /// Parses [regex] with the same syntax contract used by conversion.
+  static RegexValidationResult validate(String regex) {
+    return _validateRegexSyntax(regex);
+  }
+
   /// Converts a regular expression to an equivalent NFA
   static Result<FSA> convert(String regex, {Set<String>? contextAlphabet}) {
     try {
@@ -41,6 +46,13 @@ class RegexToNFAConverter {
       final validationResult = _validateRegex(regex);
       if (!validationResult.isSuccess) {
         return ResultFactory.failure(validationResult.error!);
+      }
+      final alphabetValidation = _validateContextAlphabet(
+        regex,
+        contextAlphabet,
+      );
+      if (!alphabetValidation.isSuccess) {
+        return ResultFactory.failure(alphabetValidation.error!);
       }
 
       // Parse the regular expression
@@ -78,6 +90,13 @@ class RegexToNFAConverter {
       final validationResult = _validateRegex(regex);
       if (!validationResult.isSuccess) {
         return ResultFactory.failure(validationResult.error!);
+      }
+      final alphabetValidation = _validateContextAlphabet(
+        regex,
+        contextAlphabet,
+      );
+      if (!alphabetValidation.isSuccess) {
+        return ResultFactory.failure(alphabetValidation.error!);
       }
 
       // Parse the regular expression

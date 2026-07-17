@@ -12,6 +12,8 @@
 
 import 'package:flutter/material.dart';
 import '../../../core/models/simulation_result.dart';
+import '../../../l10n/app_localizations_resolver.dart';
+import '../../../l10n/app_localizations_workflows.dart';
 
 /// Card widget for displaying simulation results with path visualization.
 ///
@@ -103,6 +105,7 @@ class SimulationResultCard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, Color color, bool isAccepted) {
+    final l10n = appLocalizationsOf(context);
     return Row(
       children: [
         Icon(
@@ -112,17 +115,17 @@ class SimulationResultCard extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          isAccepted ? 'Accepted' : 'Rejected',
+          isAccepted ? l10n.accepted : l10n.rejected,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const Spacer(),
         if (result.isTimeout)
           Chip(
             label: Text(
-              'Timeout',
+              l10n.timeout,
               style: Theme.of(context).textTheme.labelSmall,
             ),
             backgroundColor: color.withValues(alpha: 0.2),
@@ -133,7 +136,7 @@ class SimulationResultCard extends StatelessWidget {
         if (result.isInfiniteLoop)
           Chip(
             label: Text(
-              'Infinite Loop',
+              l10n.infiniteLoop,
               style: Theme.of(context).textTheme.labelSmall,
             ),
             backgroundColor: color.withValues(alpha: 0.2),
@@ -146,6 +149,7 @@ class SimulationResultCard extends StatelessWidget {
   }
 
   Widget _buildMetrics(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -156,7 +160,7 @@ class SimulationResultCard extends StatelessWidget {
         _buildMetricChip(
           context,
           icon: Icons.route,
-          label: 'Steps',
+          label: l10n.steps,
           value: '${result.stepCount}',
           textTheme: textTheme,
           colorScheme: colorScheme,
@@ -164,7 +168,7 @@ class SimulationResultCard extends StatelessWidget {
         _buildMetricChip(
           context,
           icon: Icons.timer,
-          label: 'Time',
+          label: l10n.time,
           value: _formatExecutionTime(result.executionTime),
           textTheme: textTheme,
           colorScheme: colorScheme,
@@ -173,7 +177,7 @@ class SimulationResultCard extends StatelessWidget {
           _buildMetricChip(
             context,
             icon: Icons.account_tree,
-            label: 'States',
+            label: l10n.states,
             value: '${result.visitedStates.length}',
             textTheme: textTheme,
             colorScheme: colorScheme,
@@ -229,7 +233,8 @@ class SimulationResultCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              result.errorMessage,
+              appLocalizationsOf(context)
+                  .localizeWorkflowText(result.errorMessage),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
@@ -256,11 +261,11 @@ class SimulationResultCard extends StatelessWidget {
             Icon(Icons.timeline, size: 16, color: colorScheme.primary),
             const SizedBox(width: 6),
             Text(
-              'Execution Path',
+              appLocalizationsOf(context).executionPath,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.primary,
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                  ),
             ),
           ],
         ),
@@ -308,8 +313,8 @@ class SimulationResultCard extends StatelessWidget {
     final color = isFirst
         ? colorScheme.primary
         : (isLast
-              ? (isAccepted ? colorScheme.tertiary : colorScheme.error)
-              : colorScheme.secondary);
+            ? (isAccepted ? colorScheme.tertiary : colorScheme.error)
+            : colorScheme.secondary);
 
     final formattedState = state.isEmpty ? '∅' : state;
 
@@ -340,10 +345,10 @@ class SimulationResultCard extends StatelessWidget {
             Text(
               formattedState,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-              ),
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'monospace',
+                  ),
             ),
           ],
         ),
@@ -374,11 +379,11 @@ class SimulationResultCard extends StatelessWidget {
             Icon(Icons.swap_horiz, size: 16, color: colorScheme.secondary),
             const SizedBox(width: 6),
             Text(
-              'Transitions',
+              appLocalizationsOf(context).transitions,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.secondary,
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.secondary,
+                  ),
             ),
           ],
         ),
@@ -410,10 +415,10 @@ class SimulationResultCard extends StatelessWidget {
                 child: Text(
                   displayTransition,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontFamily: 'monospace',
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSecondaryContainer,
-                  ),
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
                 ),
               );
             }).toList(),

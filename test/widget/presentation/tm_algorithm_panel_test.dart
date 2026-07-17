@@ -100,7 +100,7 @@ AssetExample<TM> _buildTmExample() {
     description: 'Fake TM example for widget tests',
     category: ExampleCategory.tm,
     difficultyLevel: DifficultyLevel.easy,
-    complexityLevel: ComplexityLevel.low,
+    complexityLevel: ExampleComplexityLevel.low,
     tags: const ['test'],
     payload: tm,
   );

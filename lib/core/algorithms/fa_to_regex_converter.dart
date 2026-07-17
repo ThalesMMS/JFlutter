@@ -204,8 +204,17 @@ class FAToRegexConverter {
 
   /// Ensures the FA has a single initial state and a single final state
   static FSA _ensureSingleInitialAndFinalStates(FSA fa) {
+    return _buildSingleInitialAndFinalStates(fa);
+  }
+
+  static FSA _buildSingleInitialAndFinalStates(
+    FSA fa, {
+    List<FAToRegexStep>? steps,
+  }) {
     final now = DateTime.now();
 
+    // JFLAP-style state elimination always normalizes through fresh synthetic
+    // endpoints so self-loops and accepting initial states behave uniformly.
     final newInitialState = State(
       id: _uniqueStateId(fa.states, 'q_initial'),
       label: 'q_initial',
@@ -227,6 +236,17 @@ class FAToRegexConverter {
       ..add(newFinalState);
     final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
 
+    if (steps != null) {
+      steps.add(
+        FAToRegexStep.addInitialState(
+          id: 'step_${steps.length + 1}',
+          stepNumber: steps.length + 1,
+          oldInitialState: fa.initialState!,
+          newInitialState: newInitialState,
+        ),
+      );
+    }
+
     newTransitions.add(
       FSATransition.epsilon(
         id: 't_eps_${newInitialState.id}_${fa.initialState!.id}',
@@ -235,6 +255,17 @@ class FAToRegexConverter {
         label: _epsilonRegex,
       ),
     );
+
+    if (steps != null) {
+      steps.add(
+        FAToRegexStep.addFinalState(
+          id: 'step_${steps.length + 1}',
+          stepNumber: steps.length + 1,
+          oldAcceptingStates: fa.acceptingStates,
+          newFinalState: newFinalState,
+        ),
+      );
+    }
 
     for (final acceptingState in fa.acceptingStates) {
       newTransitions.add(
@@ -396,81 +427,7 @@ class FAToRegexConverter {
     FSA fa,
     List<FAToRegexStep> steps,
   ) {
-    final now = DateTime.now();
-
-    final newInitialState = State(
-      id: _uniqueStateId(fa.states, 'q_initial'),
-      label: 'q_initial',
-      position: Vector2(50, 100),
-      isInitial: true,
-      isAccepting: false,
-    );
-    final statesWithInitial = {...fa.states, newInitialState};
-    final newFinalState = State(
-      id: _uniqueStateId(statesWithInitial, 'q_final'),
-      label: 'q_final',
-      position: Vector2(350, 100),
-      isInitial: false,
-      isAccepting: true,
-    );
-
-    final newStates = Set<State>.from(fa.states)
-      ..add(newInitialState)
-      ..add(newFinalState);
-    final newTransitions = Set<FSATransition>.from(fa.fsaTransitions);
-
-    steps.add(
-      FAToRegexStep.addInitialState(
-        id: 'step_${steps.length + 1}',
-        stepNumber: steps.length + 1,
-        oldInitialState: fa.initialState!,
-        newInitialState: newInitialState,
-      ),
-    );
-
-    newTransitions.add(
-      FSATransition.epsilon(
-        id: 't_eps_${newInitialState.id}_${fa.initialState!.id}',
-        fromState: newInitialState,
-        toState: fa.initialState!,
-        label: _epsilonRegex,
-      ),
-    );
-
-    steps.add(
-      FAToRegexStep.addFinalState(
-        id: 'step_${steps.length + 1}',
-        stepNumber: steps.length + 1,
-        oldAcceptingStates: fa.acceptingStates,
-        newFinalState: newFinalState,
-      ),
-    );
-
-    for (final acceptingState in fa.acceptingStates) {
-      newTransitions.add(
-        FSATransition.epsilon(
-          id: 't_eps_${acceptingState.id}_${newFinalState.id}',
-          fromState: acceptingState,
-          toState: newFinalState,
-          label: _epsilonRegex,
-        ),
-      );
-    }
-
-    return FSA(
-      id: '${fa.id}_single_states',
-      name: '${fa.name} (Single States)',
-      states: newStates,
-      transitions: newTransitions,
-      alphabet: fa.alphabet,
-      initialState: newInitialState,
-      acceptingStates: {newFinalState},
-      created: fa.created,
-      modified: now,
-      bounds: fa.bounds,
-      zoomLevel: fa.zoomLevel,
-      panOffset: fa.panOffset,
-    );
+    return _buildSingleInitialAndFinalStates(fa, steps: steps);
   }
 
   /// Applies state elimination algorithm with detailed step capture

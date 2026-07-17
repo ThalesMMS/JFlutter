@@ -21,6 +21,8 @@ import '../../core/models/grammar_diagnostic_severity.dart';
 import '../../core/models/grammar_transformation_step.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import 'algorithm_panel_scaffold.dart';
 import 'base_simulation_panel.dart';
 import 'common/algorithm_button.dart';
@@ -169,7 +171,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Conversions',
+          appLocalizationsOf(context).localizeWorkflowText('Conversions'),
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -268,14 +270,16 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
       showAppSnackBar(
         context,
-        message: 'Grammar converted to automaton. Switched to FSA workspace.',
+        message: appLocalizationsOf(context).localizeWorkflowText(
+          'Grammar converted to automaton. Switched to FSA workspace.',
+        ),
         tone: AppSnackBarTone.success,
       );
     } else {
       final message = result.error ?? 'Failed to convert grammar to automaton.';
       showAppSnackBar(
         context,
-        message: message,
+        message: appLocalizationsOf(context).localizeWorkflowText(message),
         tone: AppSnackBarTone.error,
       );
     }
@@ -320,14 +324,15 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
 
       showAppSnackBar(
         context,
-        message: successMessage,
+        message:
+            appLocalizationsOf(context).localizeWorkflowText(successMessage),
         tone: AppSnackBarTone.success,
       );
     } else {
       final message = result.error ?? 'Failed to convert grammar to PDA.';
       showAppSnackBar(
         context,
-        message: message,
+        message: appLocalizationsOf(context).localizeWorkflowText(message),
         tone: AppSnackBarTone.error,
       );
     }
@@ -336,8 +341,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
   Widget _buildResultsSection(BuildContext context) {
     return AlgorithmResultsSection(
       hasResults: _transformationSteps.isNotEmpty || _analysisResult != null,
-      empty: _buildEmptyResults(context),
-      results: Column(
+      emptyBuilder: _buildEmptyResults,
+      resultsBuilder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_transformationSteps.isNotEmpty) ...[
@@ -347,7 +352,8 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
                 ref.read(grammarProvider.notifier).applyGrammar(grammar);
                 showAppSnackBar(
                   context,
-                  message: 'Grammar applied to editor.',
+                  message: appLocalizationsOf(context)
+                      .localizeWorkflowText('Grammar applied to editor.'),
                   tone: AppSnackBarTone.success,
                 );
               },
@@ -375,7 +381,7 @@ class _GrammarAlgorithmPanelState extends ConsumerState<GrammarAlgorithmPanel> {
     return AlgorithmResultsCard(
       child: SingleChildScrollView(
         child: Text(
-          _analysisResult!,
+          appLocalizationsOf(context).localizeWorkflowText(_analysisResult!),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),

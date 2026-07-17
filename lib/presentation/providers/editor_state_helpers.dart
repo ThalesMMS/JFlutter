@@ -9,8 +9,15 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:vector_math/vector_math_64.dart';
+import 'package:collection/collection.dart';
 
 import '../../core/models/state.dart';
+
+const DeepCollectionEquality _stateValueEquality = DeepCollectionEquality();
+
+bool _hasStateValueChanged(State previous, State next) {
+  return !_stateValueEquality.equals(previous.toJson(), next.toJson());
+}
 
 class EditorStateMutation {
   const EditorStateMutation({
@@ -94,7 +101,7 @@ EditorStateMutation updateEditorStateById({
         () {
           targetFound = true;
           final updated = update(state);
-          if (updated != state) {
+          if (_hasStateValueChanged(state, updated)) {
             changedStateIds.add(updated.id);
           }
           return updated;
@@ -148,7 +155,7 @@ EditorStateMutation updateEditorStateFlags({
       isInitial: newInitial,
       isAccepting: newAccepting,
     );
-    if (updated != state) {
+    if (_hasStateValueChanged(state, updated)) {
       changedStateIds.add(updated.id);
     }
     nextStates.add(updated);

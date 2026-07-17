@@ -2,93 +2,240 @@ part of 'regex_to_nfa_converter.dart';
 
 /// Validates the regular expression
 Result<void> _validateRegex(String regex) {
-  if (regex.isEmpty) {
-    return ResultFactory.failure('Regular expression cannot be empty');
-  }
+  final validation = _validateRegexSyntax(regex);
+  return validation.isValid
+      ? ResultFactory.success(null)
+      : ResultFactory.failure(validation.diagnostic!.displayMessage);
+}
 
-  // Check for balanced parentheses
-  int parenCount = 0;
-  var escaped = false;
-  var inCharClass = false;
-  for (int i = 0; i < regex.length; i++) {
-    final char = regex[i];
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-    if (char == '\\') {
-      escaped = true;
-      continue;
-    }
-    if (char == '[') {
-      inCharClass = true;
-      continue;
-    }
-    if (char == ']') {
-      inCharClass = false;
-      continue;
-    }
-    if (inCharClass) {
-      continue;
-    }
-    if (char == '(') {
-      parenCount++;
-    } else if (char == ')') {
-      parenCount--;
-      if (parenCount < 0) {
-        return ResultFactory.failure(
-          'Unbalanced parentheses in regular expression',
-        );
-      }
-    }
-  }
-
-  if (parenCount != 0) {
+Result<void> _validateContextAlphabet(
+  String regex,
+  Set<String>? contextAlphabet,
+) {
+  final requiresAlphabet = _tokenize(regex).any(
+    (token) =>
+        token.type == TokenType.dot ||
+        (token.type == TokenType.charShortcut &&
+            const {'D', 'W', 'S'}.contains(token.value)),
+  );
+  if (requiresAlphabet &&
+      (contextAlphabet == null || contextAlphabet.isEmpty)) {
     return ResultFactory.failure(
-      'Unbalanced parentheses in regular expression',
+      'This expression uses . or a complemented shortcut and requires a '
+      'non-empty alphabet universe.',
+    );
+  }
+  return ResultFactory.success(null);
+}
+
+RegexValidationResult _validateRegexSyntax(String regex) {
+  if (regex.isEmpty) {
+    return const RegexValidationResult.invalid(
+      RegexValidationDiagnostic(
+        message: 'Regular expression cannot be empty',
+        position: 0,
+        length: 0,
+        category: RegexValidationCategory.emptyExpression,
+      ),
     );
   }
 
-  // Check operator placement (reject repeated quantifiers and leading quantifiers)
-  // Disallow patterns like '**', '++', '??', '*+', '+*', '?*', etc., and starting with quantifier
-  const quantifiers = {'*', '+', '?'};
-  if (regex.isNotEmpty && quantifiers.contains(regex[0])) {
-    return ResultFactory.failure('Regex cannot start with a quantifier');
-  }
-  inCharClass = false;
-  for (int i = 1; i < regex.length; i++) {
-    final curr = regex[i];
-    if (curr == '[') {
-      inCharClass = true;
-      continue;
-    }
-    if (curr == ']') {
-      inCharClass = false;
-      continue;
-    }
-    if (inCharClass || regex[i - 1] == '\\') {
-      continue;
-    }
-    final prev = regex[i - 1];
-    if (quantifiers.contains(prev) && quantifiers.contains(curr)) {
-      return ResultFactory.failure('Consecutive quantifiers are not allowed');
-    }
-    if (curr == '|' && (i == 0 || i == regex.length - 1)) {
-      return ResultFactory.failure('Union operator cannot be at ends');
-    }
-    if (curr == ')' && (i == 0 || regex[i - 1] == '(')) {
-      return ResultFactory.failure('Empty parentheses are not allowed');
-    }
+  RegexValidationResult invalid(
+    String message,
+    int position,
+    RegexValidationCategory category, {
+    int length = 1,
+  }) {
+    return RegexValidationResult.invalid(
+      RegexValidationDiagnostic(
+        message: message,
+        position: position,
+        length: length,
+        category: category,
+      ),
+    );
   }
 
-  return ResultFactory.success(null);
+  final openParentheses = <int>[];
+  var expectsOperand = true;
+  var previousWasQuantifier = false;
+  for (int i = 0; i < regex.length; i++) {
+    final char = regex[i];
+
+    if (char == '\\') {
+      if (i + 1 >= regex.length) {
+        return invalid(
+          'Escape character must be followed by a symbol',
+          i,
+          RegexValidationCategory.escape,
+        );
+      }
+      i++;
+      expectsOperand = false;
+      previousWasQuantifier = false;
+      continue;
+    }
+
+    if (char == '[') {
+      final classStart = i;
+      final contentStart = i + 1;
+      var escapedInClass = false;
+      i++;
+      while (i < regex.length) {
+        if (escapedInClass) {
+          escapedInClass = false;
+        } else if (regex[i] == '\\') {
+          escapedInClass = true;
+        } else if (regex[i] == ']') {
+          break;
+        }
+        i++;
+      }
+      if (i >= regex.length || regex[i] != ']') {
+        return invalid(
+          'Character class is not closed',
+          classStart,
+          RegexValidationCategory.characterClass,
+          length: regex.length - classStart,
+        );
+      }
+      if (escapedInClass) {
+        return invalid(
+          'Escape character in class must be followed by a symbol',
+          i - 1,
+          RegexValidationCategory.escape,
+        );
+      }
+      final content = regex.substring(contentStart, i);
+      if (content.isEmpty) {
+        return invalid(
+          'Character class cannot be empty',
+          classStart,
+          RegexValidationCategory.characterClass,
+          length: 2,
+        );
+      }
+      for (var offset = 1; offset + 1 < content.length; offset++) {
+        if (content[offset] == '-' &&
+            content[offset - 1].codeUnitAt(0) >
+                content[offset + 1].codeUnitAt(0)) {
+          return invalid(
+            'Character class range must be in ascending order',
+            contentStart + offset - 1,
+            RegexValidationCategory.characterClass,
+            length: 3,
+          );
+        }
+      }
+      expectsOperand = false;
+      previousWasQuantifier = false;
+      continue;
+    }
+
+    if (char == ']') {
+      return invalid(
+        'Closing bracket has no matching opening bracket',
+        i,
+        RegexValidationCategory.delimiter,
+      );
+    }
+
+    if (char == '(') {
+      openParentheses.add(i);
+      expectsOperand = true;
+      previousWasQuantifier = false;
+      continue;
+    }
+    if (char == ')') {
+      if (openParentheses.isEmpty) {
+        return invalid(
+          'Unbalanced parentheses: closing parenthesis has no matching opening parenthesis',
+          i,
+          RegexValidationCategory.delimiter,
+        );
+      }
+      if (expectsOperand) {
+        return invalid(
+          'Parenthesized expression is missing an operand',
+          i,
+          RegexValidationCategory.operatorPlacement,
+        );
+      }
+      openParentheses.removeLast();
+      expectsOperand = false;
+      previousWasQuantifier = false;
+      continue;
+    }
+
+    if (char == '|') {
+      if (expectsOperand) {
+        return invalid(
+          'Union operator is missing a left operand',
+          i,
+          RegexValidationCategory.operatorPlacement,
+        );
+      }
+      expectsOperand = true;
+      previousWasQuantifier = false;
+      continue;
+    }
+
+    if (char == '*' || char == '+' || char == '?') {
+      if (expectsOperand) {
+        return invalid(
+          'A quantifier must follow an expression',
+          i,
+          RegexValidationCategory.operatorPlacement,
+        );
+      }
+      if (previousWasQuantifier) {
+        return invalid(
+          'Consecutive quantifiers are not allowed',
+          i,
+          RegexValidationCategory.operatorPlacement,
+        );
+      }
+      previousWasQuantifier = true;
+      continue;
+    }
+
+    expectsOperand = false;
+    previousWasQuantifier = false;
+  }
+
+  if (openParentheses.isNotEmpty) {
+    return invalid(
+      'Unbalanced parentheses: opening parenthesis is not closed',
+      openParentheses.last,
+      RegexValidationCategory.delimiter,
+    );
+  }
+
+  if (expectsOperand) {
+    return invalid(
+      'Union operator is missing a right operand',
+      regex.length - 1,
+      RegexValidationCategory.operatorPlacement,
+    );
+  }
+
+  if (_parseRegex(regex) == null) {
+    return invalid(
+      'Invalid regular expression syntax',
+      regex.length - 1,
+      RegexValidationCategory.syntax,
+    );
+  }
+
+  return const RegexValidationResult.valid();
 }
 
 /// Parses the regular expression into an abstract syntax tree
 RegexNode? _parseRegex(String regex) {
   try {
     final tokens = _tokenize(regex);
-    return _parseExpression(tokens);
+    final parsed = _parseExpression(tokens);
+    return tokens.isEmpty ? parsed : null;
   } catch (e) {
     return null;
   }

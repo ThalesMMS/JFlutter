@@ -249,7 +249,7 @@ class JflapXmlCodec {
     final states = <Map<String, dynamic>>[];
     final transitions = <String, List<String>>{};
     final alphabet = <String>{};
-    final idLookup = <String, String>{};
+    final knownStateIds = <String>{};
     String? initialState;
     var hasEpsilonTransition = false;
     var hasNondeterministicTransition = false;
@@ -275,7 +275,7 @@ class JflapXmlCodec {
         'isInitial': isInitial,
         'isFinal': isFinal,
       });
-      idLookup[id] = id;
+      knownStateIds.add(id);
 
       if (isInitial) {
         initialState = id;
@@ -293,22 +293,20 @@ class JflapXmlCodec {
 
       final rawFrom = fromElements.first.innerText.trim();
       final rawTo = toElements.first.innerText.trim();
-      if (!idLookup.containsKey(rawFrom) || !idLookup.containsKey(rawTo)) {
+      if (!knownStateIds.contains(rawFrom) || !knownStateIds.contains(rawTo)) {
         return Failure(
           'Failed to deserialize JFLAP automaton: Transition references unknown state $rawFrom -> $rawTo',
         );
       }
 
-      final from = idLookup[rawFrom]!;
-      final to = idLookup[rawTo]!;
       final rawSymbol =
           transitionElement.findElements('read').firstOrNull?.innerText;
       final symbol = normalizeToEpsilon(rawSymbol);
-      final key = '$from|$symbol';
+      final key = '$rawFrom|$symbol';
 
       transitions.putIfAbsent(key, () => <String>[]);
-      if (!transitions[key]!.contains(to)) {
-        transitions[key]!.add(to);
+      if (!transitions[key]!.contains(rawTo)) {
+        transitions[key]!.add(rawTo);
       }
 
       if (isEpsilonSymbol(symbol)) {

@@ -10,12 +10,14 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
 import 'transition.dart';
 import 'fsa_transition.dart';
 import 'automaton.dart';
+import '../utils/epsilon_utils.dart';
 
 const Object _unset = Object();
 
@@ -266,13 +268,13 @@ class FSA extends Automaton {
 
     // Compute states reachable from initial.
     final reachable = <State>{};
-    final queue = <State>[];
+    final queue = Queue<State>();
     if (initialState != null) {
       reachable.add(initialState!);
       queue.add(initialState!);
     }
     while (queue.isNotEmpty) {
-      final u = queue.removeAt(0);
+      final u = queue.removeFirst();
       for (final v in adjacency[u]!) {
         if (reachable.add(v)) queue.add(v);
       }
@@ -353,33 +355,17 @@ class FSA extends Automaton {
 
   /// Gets the epsilon closure of a state
   Set<State> getEpsilonClosure(State state) {
-    final closure = <State>{state};
-    final queue = <State>[state];
-
-    while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
-      final epsilonTransitions = getEpsilonTransitionsFromState(current);
-
-      for (final transition in epsilonTransitions) {
-        if (!closure.contains(transition.toState)) {
-          closure.add(transition.toState);
-          queue.add(transition.toState);
-        }
-      }
-    }
-
-    return closure;
+    return getEpsilonClosureOfSet({state});
   }
 
   /// Gets the epsilon closure of a set of states
   Set<State> getEpsilonClosureOfSet(Set<State> states) {
-    final closure = <State>{};
-
-    for (final state in states) {
-      closure.addAll(getEpsilonClosure(state));
-    }
-
-    return closure;
+    return computeEpsilonClosure(
+      states,
+      (state) => getEpsilonTransitionsFromState(
+        state,
+      ).map((transition) => transition.toState),
+    );
   }
 
   /// Gets all states reachable from a state on a specific symbol

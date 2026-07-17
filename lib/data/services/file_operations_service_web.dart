@@ -20,17 +20,22 @@ import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/result.dart';
+import '../../core/services/file_operations_gateway.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
 import 'file_operations_payload_mixin.dart';
 
 /// Service for file operations tailored for web environments.
-class FileOperationsService with FileOperationsPayloadMixin {
+class FileOperationsService
+    with FileOperationsPayloadMixin
+    implements FileOperationsGateway {
   /// PNG rendering is not available in the web service implementation.
+  @override
   Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
     return const Failure<Uint8List>('PNG export is not supported on web.');
   }
 
   /// Starts a PNG download from previously rendered bytes.
+  @override
   Future<StringResult> writePngBytesToPath(
     Uint8List bytes,
     String filePath,
@@ -38,6 +43,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     return _downloadBytes(filePath, 'image/png', bytes);
   }
 
+  @override
   Future<StringResult> saveAutomatonToJFLAP(
     FSA automaton,
     String filePath,
@@ -50,12 +56,14 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
     return const Failure(
       'Loading JFLAP files from a path is not supported on web.',
     );
   }
 
+  @override
   Future<StringResult> saveAutomatonToJson(
     FSA automaton,
     String filePath,
@@ -68,12 +76,14 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<Result<FSA>> loadAutomatonFromJson(String filePath) async {
     return const Failure(
       'Loading automaton JSON files from a path is not supported on web.',
     );
   }
 
+  @override
   Future<StringResult> saveGrammarToJFLAP(
     Grammar grammar,
     String filePath,
@@ -86,6 +96,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
     return const Failure(
       'Loading grammars from a path is not supported on web.',
@@ -99,6 +110,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     return const Failure('PNG export is not supported on web.');
   }
 
+  @override
   Future<StringResult> exportFsaToSVG(
     FSA automaton,
     String filePath, {
@@ -125,6 +137,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<StringResult> exportGrammarModelToSVG(
     Grammar grammar,
     String filePath, {
@@ -138,6 +151,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<StringResult> exportPdaToSVG(
     PDA pda,
     String filePath, {
@@ -151,6 +165,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
     }
   }
 
+  @override
   Future<StringResult> exportTuringMachineToSVG(
     TuringMachineEntity machine,
     String filePath, {

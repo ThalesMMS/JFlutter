@@ -19,6 +19,7 @@ import '../models/fsa_transition.dart';
 import '../models/grammar.dart';
 import '../models/state.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 
 /// Converter that builds a finite automaton from a right-linear grammar.
 class GrammarToFSAConverter {
@@ -59,9 +60,8 @@ class GrammarToFSAConverter {
     final requiresFinalState = _needsFinalState(grammar);
     State? finalState;
     if (requiresFinalState) {
-      final finalPosition = statePositions.isEmpty
-          ? Vector2.zero()
-          : statePositions.last;
+      final finalPosition =
+          statePositions.isEmpty ? Vector2.zero() : statePositions.last;
       finalState = State(
         id: '${grammar.id}_ACCEPT',
         label: 'F',
@@ -93,7 +93,7 @@ class GrammarToFSAConverter {
 
       final rightSide = production.rightSide;
       final inputSymbol = rightSide.first;
-      if (_isLambdaSymbol(inputSymbol)) {
+      if (isEpsilonSymbol(inputSymbol)) {
         final acceptingState = originalFromState.copyWith(isAccepting: true);
         states
           ..remove(originalFromState)
@@ -139,9 +139,8 @@ class GrammarToFSAConverter {
     }
 
     final acceptingStates = states.where((s) => s.isAccepting).toSet();
-    final alphabet = grammar.terminals
-        .where((symbol) => !_isLambdaSymbol(symbol))
-        .toSet();
+    final alphabet =
+        grammar.terminals.where((symbol) => !isEpsilonSymbol(symbol)).toSet();
     final canonicalTransitions = transitions
         .map(
           (transition) => transition.copyWith(
@@ -193,7 +192,7 @@ class GrammarToFSAConverter {
       }
 
       final firstSymbol = production.rightSide.first;
-      if (_isLambdaSymbol(firstSymbol)) {
+      if (isEpsilonSymbol(firstSymbol)) {
         continue;
       }
 
@@ -221,19 +220,15 @@ class GrammarToFSAConverter {
       }
       if (production.rightSide.length == 1) {
         final symbol = production.rightSide.first;
-        return !_isLambdaSymbol(symbol) &&
+        return !isEpsilonSymbol(symbol) &&
             !grammar.nonterminals.contains(symbol);
       }
       return false;
     });
   }
 
-  static bool _isLambdaSymbol(String symbol) {
-    return symbol == 'ε' || symbol == 'λ' || symbol.toLowerCase() == 'lambda';
-  }
-
   static bool _isTerminalSymbol(String symbol, Grammar grammar) {
-    if (_isLambdaSymbol(symbol)) {
+    if (isEpsilonSymbol(symbol)) {
       return false;
     }
     if (grammar.terminals.contains(symbol)) {

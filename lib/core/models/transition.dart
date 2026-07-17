@@ -62,16 +62,19 @@ abstract class Transition {
   Map<String, dynamic> toJson();
 
   /// Creates a transition from a JSON representation
-  static Transition fromJson(Map<String, dynamic> json) {
+  static Transition fromJson(
+    Map<String, dynamic> json, {
+    Map<String, State>? statesById,
+  }) {
     final type = json['transitionType'] as String? ?? 'fsa';
 
     switch (type) {
       case 'fsa':
-        return FSATransition.fromJson(json);
+        return FSATransition.fromJson(json, statesById: statesById);
       case 'pda':
-        return PDATransition.fromJson(json);
+        return PDATransition.fromJson(json, statesById: statesById);
       case 'tm':
-        return TMTransition.fromJson(json);
+        return TMTransition.fromJson(json, statesById: statesById);
       default:
         throw ArgumentError('Unknown transition type: $type');
     }

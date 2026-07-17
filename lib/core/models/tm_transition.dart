@@ -10,6 +10,7 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:vector_math/vector_math_64.dart';
+import 'serialized_state_resolver.dart';
 import 'state.dart';
 import 'transition.dart';
 
@@ -76,8 +77,8 @@ class TMTransition extends Transition {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'fromState': fromState.toJson(),
-      'toState': toState.toJson(),
+      'fromState': fromState.id,
+      'toState': toState.id,
       'label': label,
       'controlPoint': {'x': controlPoint.x, 'y': controlPoint.y},
       'type': type.name,
@@ -90,16 +91,29 @@ class TMTransition extends Transition {
   }
 
   /// Creates a TM transition from a JSON representation
-  factory TMTransition.fromJson(Map<String, dynamic> json) {
-    final controlPointData = (json['controlPoint'] as Map?)
-        ?.cast<String, dynamic>();
+  factory TMTransition.fromJson(
+    Map<String, dynamic> json, {
+    Map<String, State>? statesById,
+  }) {
+    final controlPointData =
+        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 
     return TMTransition(
       id: json['id'] as String,
-      fromState: State.fromJson(json['fromState'] as Map<String, dynamic>),
-      toState: State.fromJson(json['toState'] as Map<String, dynamic>),
+      fromState: resolveSerializedState(
+        json['fromState'],
+        statesById,
+        'fromState',
+        'TM',
+      ),
+      toState: resolveSerializedState(
+        json['toState'],
+        statesById,
+        'toState',
+        'TM',
+      ),
       label: json['label'] as String,
       controlPoint: Vector2(controlPointX, controlPointY),
       type: TransitionType.values.firstWhere(

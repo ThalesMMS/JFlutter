@@ -23,9 +23,8 @@ Future<bool> _accepts(FSA nfa, String input) async {
 }
 
 void _expectStateFlagsMatchRoles(FSA nfa) {
-  final initialIds = nfa.initialState == null
-      ? <String>{}
-      : <String>{nfa.initialState!.id};
+  final initialIds =
+      nfa.initialState == null ? <String>{} : <String>{nfa.initialState!.id};
   final acceptingIds = nfa.acceptingStates.map((state) => state.id).toSet();
 
   expect(
@@ -153,14 +152,21 @@ void main() {
       expect(await _accepts(nonDigit.data!, '4'), false);
     });
 
-    test('Dot any symbol with default alphabet', () async {
-      final res = RegexToNFAConverter.convert('.');
+    test('Dot requires and uses an explicit alphabet', () async {
+      final missingAlphabet = RegexToNFAConverter.convert('.');
+      expect(missingAlphabet.isFailure, true);
+      expect(missingAlphabet.error, contains('requires a non-empty alphabet'));
+
+      final res = RegexToNFAConverter.convert(
+        '.',
+        contextAlphabet: const {'a', 'b', 'c', 'd'},
+      );
       expect(res.isSuccess, true);
       final nfa = res.data!;
       expect(await _accepts(nfa, 'a'), true);
       expect(await _accepts(nfa, 'b'), true);
       expect(await _accepts(nfa, 'c'), true);
-      expect(await _accepts(nfa, 'd'), false);
+      expect(await _accepts(nfa, 'd'), true);
     });
 
     test('Complex expression (a|bc)*d', () async {
@@ -182,6 +188,10 @@ void main() {
       expect(await _accepts(nfa, 'ab'), true);
       expect(await _accepts(nfa, 'accc'), true);
       expect(await _accepts(nfa, ''), false);
+
+      final recognition = await AutomatonSimulator.simulateNFA(nfa, 'accc');
+      expect(recognition.data!.computationTree, isNull);
+      expect(recognition.data!.steps, isEmpty);
     });
   });
 }

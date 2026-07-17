@@ -13,6 +13,7 @@ import '../models/grammar.dart';
 import '../models/pda.dart';
 import '../models/production.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 
 /// Structured result for PDA → CFG conversions containing both the
 /// generated grammar and a textual description.
@@ -67,9 +68,7 @@ class PDAtoCFGConverter {
     final now = DateTime.now();
     final nonTerminals = <String>{'S'};
     final terminals = <String>{
-      ...pda.alphabet.where(
-        (symbol) => symbol.isNotEmpty && symbol != 'λ' && symbol != 'ε',
-      ),
+      ...pda.alphabet.where((symbol) => !isEpsilonSymbol(symbol)),
     };
     final productions = <Production>{};
 
@@ -101,30 +100,17 @@ class PDAtoCFGConverter {
 
     for (final transition in pda.pdaTransitions) {
       final isLambdaInput =
-          transition.isLambdaInput ||
-          transition.inputSymbol.isEmpty ||
-          transition.inputSymbol == 'λ' ||
-          transition.inputSymbol == 'ε';
+          transition.isLambdaInput || isEpsilonSymbol(transition.inputSymbol);
       final input = isLambdaInput ? null : transition.inputSymbol;
       if (input != null) {
         terminals.add(input);
       }
 
-      final isLambdaPop =
-          transition.isLambdaPop ||
-          transition.popSymbol.isEmpty ||
-          transition.popSymbol == 'λ' ||
-          transition.popSymbol == 'ε';
-      final pop = isLambdaPop ? 'λ' : transition.popSymbol;
+      final pop = transition.popSymbol;
 
       final isLambdaPush =
-          transition.isLambdaPush ||
-          transition.pushSymbol.isEmpty ||
-          transition.pushSymbol == 'λ' ||
-          transition.pushSymbol == 'ε';
-      final pushSymbols = isLambdaPush
-          ? <String>[]
-          : transition.pushSymbol.split('');
+          transition.isLambdaPush || isEpsilonSymbol(transition.pushSymbol);
+      final pushSymbols = isLambdaPush ? <String>[] : transition.pushSymbols;
 
       final from = transition.fromState.label;
       final to = transition.toState.label;
@@ -167,9 +153,8 @@ class PDAtoCFGConverter {
             var currentFrom = to;
             for (var index = 0; index < pushSymbols.length; index++) {
               final stackSymbol = pushSymbols[index];
-              final nextTo = index < pushSymbols.length - 1
-                  ? sequence[index]
-                  : target;
+              final nextTo =
+                  index < pushSymbols.length - 1 ? sequence[index] : target;
               final variableName = variable(currentFrom, stackSymbol, nextTo);
               nonTerminals.add(variableName);
               rightSide.add(variableName);
@@ -249,21 +234,13 @@ class PDAtoCFGConverter {
 
   static String? _validatePopNormalized(PDA pda) {
     for (final transition in pda.pdaTransitions) {
-      if (transition.isLambdaPop || _isLambdaSymbol(transition.popSymbol)) {
+      if (transition.isLambdaPop || isEpsilonSymbol(transition.popSymbol)) {
         return 'PDA to CFG conversion requires every transition to pop '
             'exactly one stack symbol. Transition ${transition.id} uses '
             'a lambda pop; normalize the PDA before conversion.';
       }
     }
     return null;
-  }
-
-  static bool _isLambdaSymbol(String symbol) {
-    final normalized = symbol.trim().toLowerCase();
-    return normalized.isEmpty ||
-        normalized == 'lambda' ||
-        normalized == '\u03bb' ||
-        normalized == '\u03b5';
   }
 
   static List<List<String>> _stateLabelSequences(

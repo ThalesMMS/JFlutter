@@ -99,12 +99,11 @@ class GraphViewTmMapper {
     );
 
     final blankSymbol = snapshot.metadata.blankSymbol ?? template.blankSymbol;
-    final tapeAlphabet = snapshot.metadata.tapeAlphabet.isNotEmpty
-        ? {
-            ...snapshot.metadata.tapeAlphabet,
-            if (blankSymbol.isNotEmpty) blankSymbol,
-          }
-        : template.tapeAlphabet;
+    final tapeAlphabet = GraphViewMapperHelpers.effectiveTapeAlphabet(
+      metadataTapeAlphabet: snapshot.metadata.tapeAlphabet,
+      fallbackTapeAlphabet: template.tapeAlphabet,
+      blankSymbol: blankSymbol,
+    );
     final alphabet = snapshot.metadata.alphabet.toSet();
 
     final initialState = GraphViewMapperHelpers.resolveInitialState(

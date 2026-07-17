@@ -124,19 +124,11 @@ class State {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is State &&
-        other.id == id &&
-        other.label == label &&
-        other.position == position &&
-        other.isInitial == isInitial &&
-        other.isAccepting == isAccepting &&
-        other.type == type;
+    return other is State && other.id == id;
   }
 
   @override
-  int get hashCode {
-    return Object.hash(id, label, position, isInitial, isAccepting, type);
-  }
+  int get hashCode => id.hashCode;
 
   @override
   String toString() {

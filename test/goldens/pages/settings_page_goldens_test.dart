@@ -25,7 +25,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 // without the Riverpod provider dependencies
 class _MockSettingsPageWidget extends StatelessWidget {
   final String emptyStringSymbol;
-  final String epsilonSymbol;
   final String themeMode;
   final bool showGrid;
   final bool showCoordinates;
@@ -37,7 +36,6 @@ class _MockSettingsPageWidget extends StatelessWidget {
 
   const _MockSettingsPageWidget({
     this.emptyStringSymbol = 'λ',
-    this.epsilonSymbol = 'ε',
     this.themeMode = 'system',
     this.showGrid = true,
     this.showCoordinates = false,
@@ -131,32 +129,6 @@ class _MockSettingsPageWidget extends StatelessWidget {
                 FilterChip(
                   label: const Text('ε (Epsilon)'),
                   selected: emptyStringSymbol == 'ε',
-                  onSelected: (_) {},
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Epsilon Symbol',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Symbol used to represent epsilon transitions',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                FilterChip(
-                  label: const Text('ε (Epsilon)'),
-                  selected: epsilonSymbol == 'ε',
-                  onSelected: (_) {},
-                ),
-                FilterChip(
-                  label: const Text('λ (Lambda)'),
-                  selected: epsilonSymbol == 'λ',
                   onSelected: (_) {},
                 ),
               ],
@@ -420,7 +392,6 @@ class _MockSettingsPageWidget extends StatelessWidget {
 Future<void> _pumpSettingsPage(
   WidgetTester tester, {
   String emptyStringSymbol = 'λ',
-  String epsilonSymbol = 'ε',
   String themeMode = 'system',
   bool showGrid = true,
   bool showCoordinates = false,
@@ -438,7 +409,6 @@ Future<void> _pumpSettingsPage(
     MaterialApp(
       home: _MockSettingsPageWidget(
         emptyStringSymbol: emptyStringSymbol,
-        epsilonSymbol: epsilonSymbol,
         themeMode: themeMode,
         showGrid: showGrid,
         showCoordinates: showCoordinates,
@@ -512,7 +482,6 @@ void main() {
       await _pumpSettingsPage(
         tester,
         emptyStringSymbol: 'ε',
-        epsilonSymbol: 'λ',
         size: const Size(1400, 900),
       );
 
@@ -603,7 +572,6 @@ void main() {
       await _pumpSettingsPage(
         tester,
         emptyStringSymbol: 'ε',
-        epsilonSymbol: 'λ',
         themeMode: 'dark',
         showGrid: false,
         showCoordinates: true,

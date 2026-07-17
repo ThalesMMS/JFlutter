@@ -325,8 +325,7 @@ int _findMatchingCloseParen(String regex, int openIndex) {
 /// Time complexity: O(n) where n is the length of s
 /// Space complexity: O(1)
 bool _isSingleSymbol(String s) {
-  if (s.isEmpty) return true;
-  if (s == 'ε' || s == 'λ') return true;
+  if (isEpsilonSymbol(s)) return true;
 
   if (s.length == 1) {
     return !const {'|', '*', '+', '?', '(', ')'}.contains(s);

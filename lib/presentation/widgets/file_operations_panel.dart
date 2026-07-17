@@ -23,7 +23,8 @@ import '../../core/models/pda.dart';
 import '../../core/models/tm.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/result.dart';
-import '../../data/services/file_operations_service.dart';
+import '../../core/services/file_operations_gateway.dart';
+import '../../injection/data_providers.dart';
 import 'utils/platform_file_loader.dart';
 import 'error_banner.dart';
 import 'import_error_dialog.dart';
@@ -106,7 +107,7 @@ class FileOperationsPanel extends StatefulWidget {
   final TM? turingMachine;
   final ValueChanged<FSA>? onAutomatonLoaded;
   final ValueChanged<Grammar>? onGrammarLoaded;
-  final FileOperationsService? fileService;
+  final FileOperationsGateway? fileService;
 
   const FileOperationsPanel({
     super.key,
@@ -136,7 +137,7 @@ class _PanelFeedback {
 }
 
 class _FileOperationsPanelState extends State<FileOperationsPanel> {
-  late final FileOperationsService _fileService;
+  late final FileOperationsGateway _fileService;
   bool _isLoading = false;
   _PanelFeedback? _feedback;
   Future<void> Function()? _pendingRetry;
@@ -144,7 +145,7 @@ class _FileOperationsPanelState extends State<FileOperationsPanel> {
   @override
   void initState() {
     super.initState();
-    _fileService = widget.fileService ?? FileOperationsService();
+    _fileService = widget.fileService ?? createFileOperationsGateway();
   }
 
   void _updatePanelState(VoidCallback callback) {

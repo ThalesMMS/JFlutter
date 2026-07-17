@@ -18,6 +18,8 @@ import 'package:jflutter/core/algorithms/language_comparator.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'dart:math' as math;
 
+import 'fsa_test_fixtures.dart';
+
 part 'language_comparator_fsa_fixtures_a.dart';
 part 'language_comparator_fsa_fixtures_b.dart';
 
@@ -278,7 +280,7 @@ void main() {
       });
 
       test('NFA determinization failure should fail comparison', () {
-        final invalidNfa = _createNFAWithInvalidAcceptingState();
+        final invalidNfa = createNFAWithInvalidAcceptingState();
         final dfa = _createDFAEndingInA();
 
         final result = LanguageComparator.compareLanguages(invalidNfa, dfa);
@@ -412,45 +414,4 @@ void main() {
       });
     });
   });
-}
-
-FSA _createNFAWithInvalidAcceptingState() {
-  final q0 = State(
-    id: 'q0',
-    label: 'q0',
-    position: Vector2(0, 0),
-    isInitial: true,
-  );
-  final q1 = State(
-    id: 'q1',
-    label: 'q1',
-    position: Vector2(100, 0),
-  );
-  final missingAccept = State(
-    id: 'missing',
-    label: 'missing',
-    position: Vector2(200, 0),
-    isAccepting: true,
-  );
-
-  return FSA(
-    id: 'invalid_nfa',
-    name: 'Invalid NFA',
-    states: {q0, q1},
-    transitions: {
-      FSATransition.epsilon(
-        id: 'eps_q0_q1',
-        fromState: q0,
-        toState: q1,
-      ),
-    },
-    alphabet: {'a'},
-    initialState: q0,
-    acceptingStates: {missingAccept},
-    created: DateTime.now(),
-    modified: DateTime.now(),
-    bounds: const math.Rectangle(0, 0, 200, 100),
-    zoomLevel: 1.0,
-    panOffset: Vector2.zero(),
-  );
 }

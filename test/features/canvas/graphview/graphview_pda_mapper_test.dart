@@ -180,5 +180,80 @@ void main() {
       expect(rebuilt.initialState?.id, equals('q0'));
       expect(rebuilt.acceptingStates.single.id, equals('q1'));
     });
+
+    test('preserves atomic push symbols through a canvas snapshot', () {
+      final multiSymbolTransition = transition.copyWith(
+        pushSymbol: 'S_0Z',
+        pushSymbols: ['S_0', 'Z'],
+      );
+      final pda = basePda.copyWith(
+        transitions: {multiSymbolTransition},
+        stackAlphabet: {'S_0', 'Z'},
+      );
+
+      final snapshot = GraphViewPdaMapper.toSnapshot(pda);
+      final rebuilt = GraphViewPdaMapper.mergeIntoTemplate(snapshot, pda);
+
+      expect(snapshot.edges.single.pushSymbols, ['S_0', 'Z']);
+      expect(rebuilt.pdaTransitions.single.pushSymbols, ['S_0', 'Z']);
+      expect(rebuilt.stackAlphabet, containsAll({'S_0', 'Z'}));
+    });
+
+    test('clears stale push symbols for an explicit lambda push', () {
+      final source = GraphViewPdaMapper.toSnapshot(basePda);
+      final snapshot = GraphViewAutomatonSnapshot(
+        nodes: source.nodes,
+        metadata: source.metadata,
+        edges: [
+          GraphViewCanvasEdge(
+            id: 'lambda-push',
+            fromStateId: initialState.id,
+            toStateId: acceptingState.id,
+            symbols: const [],
+            readSymbol: 'a',
+            popSymbol: 'Z',
+            pushSymbol: 'X',
+            pushSymbols: const ['X'],
+            isLambdaInput: false,
+            isLambdaPop: false,
+            isLambdaPush: true,
+          ),
+        ],
+      );
+
+      final rebuilt = GraphViewPdaMapper.mergeIntoTemplate(snapshot, basePda);
+      final rebuiltTransition = rebuilt.pdaTransitions.single;
+
+      expect(rebuiltTransition.pushSymbol, isEmpty);
+      expect(rebuiltTransition.pushSymbols, isEmpty);
+      expect(rebuiltTransition.validate(), isEmpty);
+    });
+
+    test('rebuilds stack alphabet from atomic symbols without legacy text', () {
+      final source = GraphViewPdaMapper.toSnapshot(basePda);
+      final snapshot = GraphViewAutomatonSnapshot(
+        nodes: source.nodes,
+        metadata: source.metadata,
+        edges: [
+          GraphViewCanvasEdge(
+            id: 'atomic-push',
+            fromStateId: initialState.id,
+            toStateId: acceptingState.id,
+            symbols: const [],
+            readSymbol: 'a',
+            popSymbol: 'Z',
+            pushSymbols: const ['S_0', 'Z'],
+            isLambdaInput: false,
+            isLambdaPop: false,
+            isLambdaPush: false,
+          ),
+        ],
+      );
+
+      final rebuilt = GraphViewPdaMapper.mergeIntoTemplate(snapshot, basePda);
+
+      expect(rebuilt.pdaTransitions.single.pushSymbols, ['S_0', 'Z']);
+      expect(rebuilt.stackAlphabet, containsAll({'S_0', 'Z'}));
+    });
   });
 }

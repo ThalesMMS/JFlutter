@@ -127,12 +127,12 @@ class _GraphViewCanvasToolbarState extends State<GraphViewCanvasToolbar> {
         id: _ToolbarGroup.history,
         actions: [
           _ToolbarButtonConfig(
-            action: _ToolbarAction.redo,
-            handler: controller.canRedo ? () => controller.redo() : null,
-          ),
-          _ToolbarButtonConfig(
             action: _ToolbarAction.undo,
             handler: controller.canUndo ? () => controller.undo() : null,
+          ),
+          _ToolbarButtonConfig(
+            action: _ToolbarAction.redo,
+            handler: controller.canRedo ? () => controller.redo() : null,
           ),
         ],
       ),

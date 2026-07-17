@@ -91,7 +91,6 @@ algorithms/
 ├── grammar_to_pda_converter.dart  # Convert grammars to PDAs
 ├── nfa_to_dfa_converter.dart      # Subset construction converter
 ├── pumping_lemma_game.dart        # Interactive pumping lemma simulation
-├── pumping_lemma_prover.dart      # Pumping lemma proof assistant
 ├── pda_simulator.dart             # PDA execution engine
 ├── pda_to_cfg_converter.dart      # PDA to CFG transformer
 ├── regex_to_nfa_converter.dart    # Thompson-style regex conversion

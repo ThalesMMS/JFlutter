@@ -155,6 +155,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
   ) async {
     final helpNotifier = ref.read(helpProvider.notifier);
     final l10n = jflapLocalizationsOf(context);
+    final categoryLabel = l10n.helpContentCategory(category);
 
     List<HelpContentModel> results = [];
     try {
@@ -166,7 +167,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
       if (context.mounted) {
         showAppSnackBar(
           context,
-          message: jflapLocalizationsOf(context).unableToLoadHelp(category),
+          message: l10n.unableToLoadHelp(categoryLabel),
           tone: AppSnackBarTone.error,
         );
       }
@@ -178,7 +179,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     if (results.isEmpty) {
       showAppSnackBar(
         context,
-        message: jflapLocalizationsOf(context).noHelpItemsFound(category),
+        message: l10n.noHelpItemsFound(categoryLabel),
         tone: AppSnackBarTone.info,
       );
       return;
@@ -187,7 +188,7 @@ class ContextAwareHelpPanel extends ConsumerWidget {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => HelpCategoryPage(
-          category: l10n.helpContentCategory(category),
+          category: categoryLabel,
           results: results,
         ),
       ),

@@ -13,6 +13,8 @@
 import 'package:flutter/material.dart';
 import '../../core/models/equivalence_comparison_result.dart';
 import '../../core/models/fsa.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import 'automaton_graphview_canvas.dart';
 
 /// Widget for visualizing language equivalence comparison results
@@ -621,7 +623,8 @@ class _LanguageComparisonViewerState extends State<LanguageComparisonViewer> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          step.title,
+                          appLocalizationsOf(context)
+                              .localizeWorkflowText(step.title),
                           style: textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -631,7 +634,11 @@ class _LanguageComparisonViewerState extends State<LanguageComparisonViewer> {
                   ),
                   if (step.description.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(step.description, style: textTheme.bodySmall),
+                    Text(
+                      appLocalizationsOf(context)
+                          .localizeWorkflowText(step.description),
+                      style: textTheme.bodySmall,
+                    ),
                   ],
                   if (step.details.isNotEmpty) ...[
                     const SizedBox(height: 10),

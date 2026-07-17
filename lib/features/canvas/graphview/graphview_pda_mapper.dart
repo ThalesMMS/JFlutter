@@ -20,6 +20,24 @@ import 'graphview_mapper_helpers.dart';
 class GraphViewPdaMapper {
   const GraphViewPdaMapper._();
 
+  static bool _isLambdaPush(GraphViewCanvasEdge edge) {
+    final hasAtomicSymbols =
+        edge.pushSymbols?.any((symbol) => symbol.isNotEmpty) ?? false;
+    return edge.isLambdaPush ??
+        (!hasAtomicSymbols && (edge.pushSymbol?.isEmpty ?? true));
+  }
+
+  static Iterable<String> _concretePushSymbols(GraphViewCanvasEdge edge) {
+    final atomicSymbols = edge.pushSymbols;
+    if (atomicSymbols != null) {
+      return atomicSymbols.where((symbol) => symbol.isNotEmpty);
+    }
+    final legacySymbol = edge.pushSymbol;
+    return legacySymbol == null || legacySymbol.isEmpty
+        ? const <String>[]
+        : legacySymbol.split('');
+  }
+
   /// Formats a PDA transition label in the format: input, pop/push
   /// Lambda transitions are represented as λ
   static String formatPdaTransitionLabel({
@@ -59,6 +77,7 @@ class GraphViewPdaMapper {
         readSymbol: transition.inputSymbol,
         popSymbol: transition.popSymbol,
         pushSymbol: transition.pushSymbol,
+        pushSymbols: transition.pushSymbols,
         isLambdaInput: transition.isLambdaInput,
         isLambdaPop: transition.isLambdaPop,
         isLambdaPush: transition.isLambdaPush,
@@ -96,12 +115,13 @@ class GraphViewPdaMapper {
       final isLambdaInput =
           edge.isLambdaInput ?? (edge.readSymbol?.isEmpty ?? true);
       final isLambdaPop = edge.isLambdaPop ?? (edge.popSymbol?.isEmpty ?? true);
-      final isLambdaPush =
-          edge.isLambdaPush ?? (edge.pushSymbol?.isEmpty ?? true);
+      final isLambdaPush = _isLambdaPush(edge);
 
       final inputSymbol = isLambdaInput ? '' : (edge.readSymbol ?? '');
       final popSymbol = isLambdaPop ? '' : (edge.popSymbol ?? '');
-      final pushSymbol = isLambdaPush ? '' : (edge.pushSymbol ?? '');
+      final pushSymbol = isLambdaPush
+          ? ''
+          : (edge.pushSymbol ?? edge.pushSymbols?.join() ?? '');
 
       final label = formatPdaTransitionLabel(
         inputSymbol: inputSymbol,
@@ -122,6 +142,7 @@ class GraphViewPdaMapper {
         inputSymbol: inputSymbol,
         popSymbol: popSymbol,
         pushSymbol: pushSymbol,
+        pushSymbols: isLambdaPush ? const <String>[] : edge.pushSymbols,
         isLambdaInput: isLambdaInput,
         isLambdaPop: isLambdaPop,
         isLambdaPush: isLambdaPush,
@@ -148,9 +169,7 @@ class GraphViewPdaMapper {
             (edge.popSymbol != null && edge.popSymbol!.isNotEmpty))
           edge.popSymbol!,
       for (final edge in snapshot.edges)
-        if (!(edge.isLambdaPush ?? false) &&
-            (edge.pushSymbol != null && edge.pushSymbol!.isNotEmpty))
-          edge.pushSymbol!,
+        if (!_isLambdaPush(edge)) ..._concretePushSymbols(edge),
     };
 
     final initialState = GraphViewMapperHelpers.resolveInitialState(

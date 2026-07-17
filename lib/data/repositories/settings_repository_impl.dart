@@ -19,7 +19,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       : _storage = storage ?? const SharedPreferencesSettingsStorage();
 
   static const String _emptyStringSymbolKey = 'settings_empty_string_symbol';
-  static const String _epsilonSymbolKey = 'settings_epsilon_symbol';
+  static const String _legacyEpsilonSymbolKey = 'settings_epsilon_symbol';
   static const String _themeModeKey = 'settings_theme_mode';
   static const String _showGridKey = 'settings_show_grid';
   static const String _showCoordinatesKey = 'settings_show_coordinates';
@@ -35,15 +35,12 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   @override
   Future<SettingsModel> loadSettings() async {
     const defaults = SettingsModel();
+    await _discardLegacyEpsilonSymbol();
 
     final settings = SettingsModel(
       emptyStringSymbol: await _readStringSetting(
         _emptyStringSymbolKey,
         defaults.emptyStringSymbol,
-      ),
-      epsilonSymbol: await _readStringSetting(
-        _epsilonSymbolKey,
-        defaults.epsilonSymbol,
       ),
       themeMode: await _readStringSetting(
         _themeModeKey,
@@ -69,6 +66,14 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       ),
     );
     return settings;
+  }
+
+  Future<void> _discardLegacyEpsilonSymbol() async {
+    try {
+      await _storage.remove(_legacyEpsilonSymbolKey);
+    } catch (_) {
+      // A stale, unused preference must not make settings loading fail.
+    }
   }
 
   @override
@@ -98,7 +103,6 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
             _emptyStringSymbolKey,
             settings.emptyStringSymbol,
           ),
-      () => _storage.writeString(_epsilonSymbolKey, settings.epsilonSymbol),
       () => _storage.writeString(_themeModeKey, settings.themeMode),
       () => _storage.writeBool(_showGridKey, settings.showGrid),
       () => _storage.writeBool(_showCoordinatesKey, settings.showCoordinates),
@@ -123,18 +127,41 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
   Future<Map<String, Object?>> _snapshotPersistedSettings() async {
     return <String, Object?>{
-      _emptyStringSymbolKey: await _storage.readString(_emptyStringSymbolKey),
-      _epsilonSymbolKey: await _storage.readString(_epsilonSymbolKey),
-      _themeModeKey: await _storage.readString(_themeModeKey),
-      _showGridKey: await _storage.readBool(_showGridKey),
-      _showCoordinatesKey: await _storage.readBool(_showCoordinatesKey),
-      _autoSaveKey: await _storage.readBool(_autoSaveKey),
-      _showTooltipsKey: await _storage.readBool(_showTooltipsKey),
-      _gridSizeKey: await _storage.readDouble(_gridSizeKey),
-      _nodeSizeKey: await _storage.readDouble(_nodeSizeKey),
-      _fontSizeKey: await _storage.readDouble(_fontSizeKey),
-      _animationSpeedKey: await _storage.readDouble(_animationSpeedKey),
+      _emptyStringSymbolKey: await _snapshotString(_emptyStringSymbolKey),
+      _themeModeKey: await _snapshotString(_themeModeKey),
+      _showGridKey: await _snapshotBool(_showGridKey),
+      _showCoordinatesKey: await _snapshotBool(_showCoordinatesKey),
+      _autoSaveKey: await _snapshotBool(_autoSaveKey),
+      _showTooltipsKey: await _snapshotBool(_showTooltipsKey),
+      _gridSizeKey: await _snapshotDouble(_gridSizeKey),
+      _nodeSizeKey: await _snapshotDouble(_nodeSizeKey),
+      _fontSizeKey: await _snapshotDouble(_fontSizeKey),
+      _animationSpeedKey: await _snapshotDouble(_animationSpeedKey),
     };
+  }
+
+  Future<String?> _snapshotString(String key) async {
+    try {
+      return await _storage.readString(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool?> _snapshotBool(String key) async {
+    try {
+      return await _storage.readBool(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<double?> _snapshotDouble(String key) async {
+    try {
+      return await _storage.readDouble(key);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _restorePersistedSettings(
@@ -142,7 +169,6 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   ) async {
     await Future.wait<bool>([
       _restoreString(_emptyStringSymbolKey, previousValues),
-      _restoreString(_epsilonSymbolKey, previousValues),
       _restoreString(_themeModeKey, previousValues),
       _restoreBool(_showGridKey, previousValues),
       _restoreBool(_showCoordinatesKey, previousValues),

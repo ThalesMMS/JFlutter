@@ -10,6 +10,8 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 
+import 'dart:collection';
+
 import '../models/fsa_transition.dart';
 import '../models/simulation_step.dart';
 import '../models/state.dart';
@@ -18,6 +20,10 @@ import '../models/tm.dart';
 import '../models/tm_analysis.dart';
 import '../models/tm_transition.dart';
 import '../result.dart';
+import '../simulation_cancelled_exception.dart';
+
+String _ntmConfigurationKey(State state, List<String> tape, int head) =>
+    '${state.id}\u0001$head\u0001${tape.join('\u0000')}';
 
 /// Simulates Turing Machines (TM) with input strings
 class TMSimulator {
@@ -146,7 +152,11 @@ class TMSimulator {
           ),
         ],
       );
-      final queue = <(State, List<String>, int, List<SimulationStep>)>[initial];
+      final queue = Queue<(State, List<String>, int, List<SimulationStep>)>()
+        ..add(initial);
+      final seenConfigurations = <String>{
+        _ntmConfigurationKey(tm.initialState!, initialTape, 0),
+      };
       // Track the longest branch for trace preservation on failure
       var longestBranch = <SimulationStep>[];
 
@@ -170,7 +180,7 @@ class TMSimulator {
           );
         }
 
-        final (state, tape, head, steps) = queue.removeAt(0);
+        final (state, tape, head, steps) = queue.removeFirst();
         // Track the longest branch explored for failure reporting
         if (steps.length > longestBranch.length) {
           longestBranch = steps;
@@ -245,7 +255,11 @@ class TMSimulator {
                 )
               : null;
           final nextSteps = nextStep == null ? steps : [...steps, nextStep];
-          queue.add((tr.toState, newTape, newHead, nextSteps));
+          final configurationKey =
+              _ntmConfigurationKey(tr.toState, newTape, newHead);
+          if (seenConfigurations.add(configurationKey)) {
+            queue.add((tr.toState, newTape, newHead, nextSteps));
+          }
         }
       }
 
@@ -306,6 +320,43 @@ class TMSimulator {
       final finalResult = result.copyWith(executionTime: stopwatch.elapsed);
 
       return Success(finalResult);
+    } catch (e) {
+      return Failure('Error simulating Turing machine: $e');
+    }
+  }
+
+  /// Simulates a TM in bounded batches so web builds can yield to the UI
+  /// between groups of configurations.
+  static Future<Result<TMSimulationResult>> simulateCooperative(
+    TM tm,
+    String inputString, {
+    bool stepByStep = true,
+    Duration timeout = const Duration(seconds: 5),
+    int operationsPerBatch = 250,
+    bool Function()? isCancelled,
+  }) async {
+    try {
+      final validationResult = _validateInput(tm, inputString);
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+      if (operationsPerBatch <= 0) {
+        return const Failure('Operations per batch must be greater than zero');
+      }
+
+      final search = tm.isNondeterministic
+          ? _NtmSearch(tm, inputString, stepByStep, timeout)
+          : _DtmSearch(tm, inputString, stepByStep, timeout);
+      while (true) {
+        if (isCancelled?.call() == true) {
+          throw const SimulationCancelledException();
+        }
+        final result = search.runBatch(operationsPerBatch);
+        if (result != null) return Success(result);
+        await Future<void>.delayed(Duration.zero);
+      }
+    } on SimulationCancelledException {
+      rethrow;
     } catch (e) {
       return Failure('Error simulating Turing machine: $e');
     }
@@ -806,6 +857,308 @@ class TMSimulator {
         _findReachableStates(tm, transition.toState, reachableStates);
       }
     }
+  }
+}
+
+abstract class _CooperativeTmSearch {
+  TMSimulationResult? runBatch(int batchSize);
+}
+
+class _DtmSearch implements _CooperativeTmSearch {
+  _DtmSearch(this.tm, this.inputString, this.stepByStep, this.timeout)
+      : currentState = tm.initialState!,
+        tape = inputString.split('').toList(),
+        startTime = DateTime.now() {
+    steps.add(
+      SimulationStep.tm(
+        currentState: currentState.id,
+        remainingInput: inputString,
+        tapeContents: tape.join(''),
+        stepNumber: 0,
+        headPosition: 0,
+      ),
+    );
+  }
+
+  final TM tm;
+  final String inputString;
+  final bool stepByStep;
+  final Duration timeout;
+  final DateTime startTime;
+  final List<String> tape;
+  final List<SimulationStep> steps = [];
+  State currentState;
+  var headPosition = 0;
+  var stepNumber = 0;
+
+  @override
+  TMSimulationResult? runBatch(int batchSize) {
+    for (var processed = 0; processed < batchSize; processed++) {
+      final result = _step();
+      if (result != null) return result;
+    }
+    return null;
+  }
+
+  TMSimulationResult? _step() {
+    if (tm.acceptingStates.contains(currentState)) return _halt();
+    stepNumber++;
+    final elapsed = DateTime.now().difference(startTime);
+    if (elapsed > timeout) {
+      return TMSimulationResult.timeout(
+        inputString: inputString,
+        steps: steps,
+        executionTime: elapsed,
+      );
+    }
+    if (stepNumber > 10000) {
+      return TMSimulationResult.infiniteLoop(
+        inputString: inputString,
+        steps: steps,
+        executionTime: elapsed,
+      );
+    }
+
+    final currentSymbol =
+        headPosition < tape.length ? tape[headPosition] : tm.blankSymbol;
+    final transitions = tm.getTransitionsFromStateOnSymbol(
+      currentState,
+      currentSymbol,
+    );
+    if (transitions.isEmpty) return _halt();
+    if (transitions.length > 1) {
+      return TMSimulationResult.failure(
+        inputString: inputString,
+        steps: steps,
+        errorMessage:
+            'Nondeterministic conflict: ${transitions.length} transitions '
+            'found for state ${currentState.id} on symbol "$currentSymbol"',
+        executionTime: elapsed,
+      );
+    }
+
+    final transition = transitions.first;
+    final previousStateId = currentState.id;
+    final headBefore = headPosition;
+    if (headPosition < tape.length) {
+      tape[headPosition] = transition.writeSymbol;
+    } else {
+      tape.add(transition.writeSymbol);
+    }
+    switch (transition.moveDirection) {
+      case TapeDirection.left:
+        headPosition--;
+        if (headPosition < 0) {
+          headPosition = 0;
+          tape.insert(0, tm.blankSymbol);
+        }
+      case TapeDirection.right:
+        headPosition++;
+        if (headPosition >= tape.length) tape.add(tm.blankSymbol);
+      case TapeDirection.stay:
+        break;
+    }
+    currentState = transition.toState;
+    if (stepByStep) {
+      steps.add(
+        SimulationStep.tm(
+          currentState: currentState.id,
+          remainingInput: '',
+          tapeContents: tape.join(''),
+          usedTransition: '$previousStateId,$currentSymbol → '
+              '${transition.toState.id},${transition.writeSymbol},'
+              '${transition.moveDirection.symbol}',
+          stepNumber: stepNumber,
+          headPosition: headPosition,
+          consumedInput: currentSymbol,
+          explanation: TMSimulator._buildTmStepExplanation(
+            fromStateId: previousStateId,
+            toStateId: currentState.id,
+            readSymbol: currentSymbol,
+            writeSymbol: transition.writeSymbol,
+            moveDirection: transition.moveDirection,
+            headBefore: headBefore,
+            headAfter: headPosition,
+          ),
+        ),
+      );
+    }
+    return null;
+  }
+
+  TMSimulationResult _halt() {
+    steps.add(
+      SimulationStep.finalStep(
+        finalState: currentState.id,
+        remainingInput: '',
+        stackContents: '',
+        tapeContents: tape.join(''),
+        stepNumber: stepNumber + 1,
+        headPosition: headPosition,
+      ),
+    );
+    final elapsed = DateTime.now().difference(startTime);
+    return tm.acceptingStates.contains(currentState)
+        ? TMSimulationResult.success(
+            inputString: inputString,
+            steps: steps,
+            executionTime: elapsed,
+          )
+        : TMSimulationResult.failure(
+            inputString: inputString,
+            steps: steps,
+            errorMessage: 'Input not accepted - final state is not accepting',
+            executionTime: elapsed,
+          );
+  }
+}
+
+typedef _NtmConfiguration = (State, List<String>, int, List<SimulationStep>);
+
+class _NtmSearch implements _CooperativeTmSearch {
+  _NtmSearch(this.tm, this.inputString, this.stepByStep, this.timeout)
+      : startTime = DateTime.now() {
+    final initialTape = inputString.split('').toList();
+    queue.add((
+      tm.initialState!,
+      initialTape,
+      0,
+      <SimulationStep>[
+        SimulationStep.tm(
+          currentState: tm.initialState!.id,
+          remainingInput: inputString,
+          tapeContents: inputString,
+          stepNumber: 0,
+          headPosition: 0,
+        ),
+      ],
+    ));
+    seenConfigurations.add(
+      _ntmConfigurationKey(tm.initialState!, initialTape, 0),
+    );
+  }
+
+  final TM tm;
+  final String inputString;
+  final bool stepByStep;
+  final Duration timeout;
+  final DateTime startTime;
+  final Queue<_NtmConfiguration> queue = Queue();
+  final Set<String> seenConfigurations = {};
+  var longestBranch = <SimulationStep>[];
+  var explored = 0;
+
+  @override
+  TMSimulationResult? runBatch(int batchSize) {
+    for (var processed = 0;
+        processed < batchSize && queue.isNotEmpty;
+        processed++) {
+      final terminal = _processNext();
+      if (terminal != null) return terminal;
+    }
+    if (queue.isNotEmpty) return null;
+    return TMSimulationResult.failure(
+      inputString: inputString,
+      steps: longestBranch,
+      errorMessage: 'Rejected: no accepting configuration found',
+      executionTime: DateTime.now().difference(startTime),
+    );
+  }
+
+  TMSimulationResult? _processNext() {
+    final elapsed = DateTime.now().difference(startTime);
+    if (elapsed > timeout) {
+      return TMSimulationResult.timeout(
+        inputString: inputString,
+        steps: longestBranch,
+        executionTime: elapsed,
+      );
+    }
+    if (explored++ > 100000) {
+      return TMSimulationResult.infiniteLoop(
+        inputString: inputString,
+        steps: longestBranch,
+        executionTime: elapsed,
+      );
+    }
+
+    final (state, tape, head, steps) = queue.removeFirst();
+    if (steps.length > longestBranch.length) longestBranch = steps;
+    if (tm.acceptingStates.contains(state)) {
+      final finalSteps = List<SimulationStep>.from(steps)
+        ..add(
+          SimulationStep.finalStep(
+            finalState: state.id,
+            remainingInput: '',
+            stackContents: '',
+            tapeContents: tape.join(''),
+            stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+            headPosition: head,
+          ),
+        );
+      return TMSimulationResult.success(
+        inputString: inputString,
+        steps: finalSteps,
+        executionTime: elapsed,
+      );
+    }
+
+    final read = head < tape.length ? tape[head] : tm.blankSymbol;
+    for (final transition in tm.getTransitionsFromStateOnSymbol(state, read)) {
+      final newTape = List<String>.from(tape);
+      if (head < newTape.length) {
+        newTape[head] = transition.writeSymbol;
+      } else {
+        newTape.add(transition.writeSymbol);
+      }
+      var newHead = head;
+      switch (transition.moveDirection) {
+        case TapeDirection.left:
+          newHead--;
+          if (newHead < 0) {
+            newHead = 0;
+            newTape.insert(0, tm.blankSymbol);
+          }
+        case TapeDirection.right:
+          newHead++;
+          if (newHead >= newTape.length) newTape.add(tm.blankSymbol);
+        case TapeDirection.stay:
+          break;
+      }
+      final nextStep = stepByStep
+          ? SimulationStep.tm(
+              currentState: transition.toState.id,
+              remainingInput: '',
+              tapeContents: newTape.join(''),
+              usedTransition: '${state.id},$read → '
+                  '${transition.toState.id},${transition.writeSymbol},'
+                  '${transition.moveDirection.symbol}',
+              stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
+              headPosition: newHead,
+              consumedInput: read,
+              explanation: TMSimulator._buildTmStepExplanation(
+                fromStateId: state.id,
+                toStateId: transition.toState.id,
+                readSymbol: read,
+                writeSymbol: transition.writeSymbol,
+                moveDirection: transition.moveDirection,
+                headBefore: head,
+                headAfter: newHead,
+              ),
+            )
+          : null;
+      final configurationKey =
+          _ntmConfigurationKey(transition.toState, newTape, newHead);
+      if (seenConfigurations.add(configurationKey)) {
+        queue.add((
+          transition.toState,
+          newTape,
+          newHead,
+          nextStep == null ? steps : [...steps, nextStep],
+        ));
+      }
+    }
+    return null;
   }
 }
 

@@ -291,24 +291,90 @@ void _registerFaToRegexStepTests() {
       expect(step.incomingTransitions, {t01});
     });
 
-    test('toJson and fromJson should work correctly', () {
-      // Use validation step which doesn't involve transitions
-      // (FSATransition serialization has a pre-existing bug with state serialization)
-      final original = FAToRegexStep.validation(
+    test('toJson and fromJson should work correctly with transitions', () {
+      final original = FAToRegexStep.findIncomingTransitions(
         id: 'step-json',
         stepNumber: 1,
-        stateCount: 5,
-        transitionCount: 7,
-        hasInitialState: true,
-        hasAcceptingStates: true,
+        eliminatedState: q1,
+        incomingStates: {q0},
+        incomingTransitions: {t01},
       );
 
       final json = original.toJson();
       final deserialized = FAToRegexStep.fromJson(json);
+      final transition = deserialized.incomingTransitions!.single;
 
       expect(deserialized.stepType, original.stepType);
       expect(deserialized.stepNumber, original.stepNumber);
-      expect(deserialized.currentStateCount, original.currentStateCount);
+      expect(deserialized.eliminatedState!.id, equals(q1.id));
+      expect(deserialized.incomingStates!.single.id, equals(q0.id));
+      expect(transition.fromState.id, equals(q0.id));
+      expect(transition.toState.id, equals(q1.id));
+    });
+
+    test('fromJson reuses cached states when state fields repeat ids', () {
+      final selfTransition = FSATransition(
+        id: 't11',
+        fromState: q1,
+        toState: q1,
+        inputSymbols: {'b'},
+      );
+      final original = FAToRegexStep.findIncomingTransitions(
+        id: 'step-repeated-state',
+        stepNumber: 2,
+        eliminatedState: q1,
+        incomingStates: {q1},
+        incomingTransitions: {selfTransition},
+      );
+
+      final deserialized = FAToRegexStep.fromJson(original.toJson());
+      final eliminatedState = deserialized.eliminatedState!;
+      final incomingState = deserialized.incomingStates!.single;
+      final transition = deserialized.incomingTransitions!.single;
+
+      expect(incomingState, same(eliminatedState));
+      expect(transition.fromState, same(eliminatedState));
+      expect(transition.toState, same(eliminatedState));
+    });
+
+    test('fromJson restores bypass transitions with endpoint metadata', () {
+      final bypassTransition = FSATransition(
+        id: 't-bypass',
+        fromState: q0,
+        toState: q2,
+        inputSymbols: {'ab'},
+      );
+      final original = FAToRegexStep.createBypassTransitions(
+        id: 'step-bypass-json',
+        stepNumber: 2,
+        eliminatedState: q1,
+        newTransitions: {bypassTransition},
+        pathRegexExample: 'ab',
+      );
+
+      final json = original.toJson()..['addedInitialState'] = q0.toJson();
+      final deserialized = FAToRegexStep.fromJson(json);
+      final transition = deserialized.newTransitions!.single;
+      final incomingState = deserialized.incomingStates!.single;
+
+      expect(transition.fromState.id, equals(q0.id));
+      expect(transition.toState.id, equals(q2.id));
+      expect(deserialized.addedInitialState, same(incomingState));
+      expect(transition.fromState, same(incomingState));
+      expect(transition.fromState.isInitial, isTrue);
+      expect(transition.toState.isAccepting, isTrue);
+      expect(transition.toState.position.x, equals(q2.position.x));
+    });
+
+    test('Transition.fromJson resolves FSA state ids from statesById', () {
+      final restored = Transition.fromJson(
+        t01.toJson(),
+        statesById: {q0.id: q0, q1.id: q1},
+      );
+
+      expect(restored, isA<FSATransition>());
+      expect(restored.fromState, same(q0));
+      expect(restored.toState, same(q1));
     });
 
     test('Helper properties should work correctly', () {

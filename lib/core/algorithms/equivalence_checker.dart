@@ -10,17 +10,25 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
+
 import '../models/fsa.dart';
 import '../models/state.dart';
 import '../result.dart';
 import 'dfa_completer.dart';
-import 'nfa_to_dfa_converter.dart';
+import 'fsa_determinizer.dart';
 
 class EquivalenceChecker {
+  /// Legacy boolean API.
+  ///
+  /// Returns false for both real non-equivalence and comparison failures to
+  /// preserve existing callers. Use [areEquivalentResult] when failure details
+  /// such as determinization errors must be distinguished from non-equivalence.
   static bool areEquivalent(FSA a, FSA b) {
     return areEquivalentResult(a, b).data ?? false;
   }
 
+  /// Compares two automata and preserves validation/conversion failures.
   static Result<bool> areEquivalentResult(FSA a, FSA b) {
     // If either has no initial state, not equivalent per tests
     if (a.initialState == null || b.initialState == null) {
@@ -36,11 +44,11 @@ class EquivalenceChecker {
     }
 
     // Convert NFAs to DFAs if necessary
-    final dfaAResult = _determinizeIfNeeded(a, 'A');
+    final dfaAResult = FSADeterminizer.determinizeIfNeeded(a, 'A');
     if (dfaAResult.isFailure) {
       return ResultFactory.failure(dfaAResult.error!);
     }
-    final dfaBResult = _determinizeIfNeeded(b, 'B');
+    final dfaBResult = FSADeterminizer.determinizeIfNeeded(b, 'B');
     if (dfaBResult.isFailure) {
       return ResultFactory.failure(dfaBResult.error!);
     }
@@ -61,12 +69,10 @@ class EquivalenceChecker {
 
     // BFS over product automaton; early-exit on differing acceptance
     final visited = <String>{'${initialA.id},${initialB.id}'};
-    final queue = <List<State>>[
-      [initialA, initialB],
-    ];
+    final queue = Queue<List<State>>()..add([initialA, initialB]);
 
     while (queue.isNotEmpty) {
-      final pair = queue.removeAt(0);
+      final pair = queue.removeFirst();
       final sA = pair[0];
       final sB = pair[1];
 
@@ -93,21 +99,5 @@ class EquivalenceChecker {
     }
 
     return ResultFactory.success(true);
-  }
-
-  static Result<FSA> _determinizeIfNeeded(FSA automaton, String label) {
-    if (automaton.isDeterministic) {
-      return ResultFactory.success(automaton);
-    }
-
-    final conversion = NFAToDFAConverter.convert(automaton);
-    if (conversion.isFailure || conversion.data == null) {
-      return ResultFactory.failure(
-        'Failed to determinize automaton $label: '
-        '${conversion.error ?? 'unknown conversion failure'}',
-      );
-    }
-
-    return ResultFactory.success(conversion.data!);
   }
 }

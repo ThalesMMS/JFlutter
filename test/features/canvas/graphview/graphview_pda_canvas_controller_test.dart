@@ -106,8 +106,8 @@ void main() {
       expect(pda, isNotNull);
       expect(pda!.states.length, equals(1));
       final state = pda.states.single;
-      expect(state.position.x, closeTo(24, 0.0001));
-      expect(state.position.y, closeTo(48, 0.0001));
+      expect(state.position.x, closeTo(-24, 0.0001));
+      expect(state.position.y, closeTo(0, 0.0001));
       expect(state.label, isNotEmpty);
     });
 
@@ -151,8 +151,8 @@ void main() {
         (state) => state.id == 'state_1',
       );
       expect(inserted.label, equals('q1'));
-      expect(inserted.position.x, closeTo(24, 0.0001));
-      expect(inserted.position.y, closeTo(48, 0.0001));
+      expect(inserted.position.x, closeTo(-24, 0.0001));
+      expect(inserted.position.y, closeTo(0, 0.0001));
     });
 
     test('addStateAtCenter maps viewport centre to PDA world coordinates', () {
@@ -168,8 +168,8 @@ void main() {
       expect(pda, isNotNull);
       var states = pda!.states.toList(growable: false);
       expect(states, hasLength(1));
-      expect(states.first.position.x, closeTo(350, 0.0001));
-      expect(states.first.position.y, closeTo(250, 0.0001));
+      expect(states.first.position.x, closeTo(302, 0.0001));
+      expect(states.first.position.y, closeTo(202, 0.0001));
 
       transformation.value = Matrix4.identity()
         ..translateByDouble(60.0, 140.0, 0.0, 1.0)
@@ -181,8 +181,8 @@ void main() {
       states = pda!.states.toList(growable: false);
       expect(states, hasLength(2));
       final newest = states.last;
-      expect(newest.position.x, closeTo((350 - 60) / 1.2, 0.0001));
-      expect(newest.position.y, closeTo((250 - 140) / 1.2, 0.0001));
+      expect(newest.position.x, closeTo((350 - 60) / 1.2 - 48, 0.0001));
+      expect(newest.position.y, closeTo((250 - 140) / 1.2 - 48, 0.0001));
     });
 
     test('addOrUpdateTransition writes transition metadata', () {

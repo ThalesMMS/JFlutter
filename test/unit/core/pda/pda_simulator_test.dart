@@ -247,13 +247,16 @@ void main() {
       final steps = result.data!.steps;
 
       // Find intermediate steps (not initial step 0, not final step)
-      final intermediateSteps =
-          steps.where((s) => s.stepNumber > 0 && s.stepNumber < steps.last.stepNumber).toList();
+      final intermediateSteps = steps
+          .where(
+              (s) => s.stepNumber > 0 && s.stepNumber < steps.last.stepNumber)
+          .toList();
       expect(intermediateSteps, isNotEmpty);
 
       // Intermediate steps should show destination states (q1 or qf), not
       // always the source (q0)
-      final hasDestination = intermediateSteps.any((s) => s.currentState != 'q0');
+      final hasDestination =
+          intermediateSteps.any((s) => s.currentState != 'q0');
       expect(hasDestination, true);
     });
 
@@ -286,6 +289,19 @@ void main() {
 
       // Steps should be non-empty even on rejection
       expect(result.data!.steps, isNotEmpty);
+    });
+  });
+
+  group('cooperative simulation batching', () {
+    test('rejects a non-positive configurations-per-batch value', () async {
+      final result = await PDASimulator.simulateCooperative(
+        _pdaAcceptsAByFinal(),
+        'a',
+        configurationsPerBatch: 0,
+      );
+
+      expect(result.isFailure, isTrue);
+      expect(result.error, contains('greater than zero'));
     });
   });
 }

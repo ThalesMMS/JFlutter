@@ -13,7 +13,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/pda.dart';
@@ -21,6 +20,7 @@ import '../../../presentation/providers/pda_editor_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_pda_mapper.dart';
+import 'graphview_state_notifier_adapter.dart';
 
 void _logPdaCanvas(String message) {
   if (kDebugMode) {
@@ -45,26 +45,33 @@ class GraphViewPdaCanvasController
   PDAEditorNotifier get _notifier => notifier;
 
   @override
-  PDA? get currentDomainData => _notifier.currentPda;
-
-  @override
-  Iterable<String> get domainStateIds {
-    final automaton = currentDomainData;
-    return automaton?.states.map((state) => state.id) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainStateLabels {
-    final automaton = currentDomainData;
-    return automaton?.states.map((state) => state.label) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainTransitionIds {
-    final automaton = currentDomainData;
-    return automaton?.pdaTransitions.map((transition) => transition.id) ??
-        const <String>[];
-  }
+  late final GraphViewStateNotifierAdapter<PDA> stateNotifierAdapter =
+      GraphViewStateNotifierAdapter<PDA>(
+    currentData: () => _notifier.currentPda,
+    stateIdsOf: (automaton) => automaton.states.map((state) => state.id),
+    stateLabelsOf: (automaton) => automaton.states.map((state) => state.label),
+    transitionIdsOf: (automaton) =>
+        automaton.pdaTransitions.map((transition) => transition.id),
+    addState: ({required id, required label, required position}) =>
+        _notifier.addOrUpdateState(
+      id: id,
+      label: label,
+      x: position.dx,
+      y: position.dy,
+    ),
+    moveState: ({required id, required position}) =>
+        _notifier.moveState(id: id, x: position.dx, y: position.dy),
+    updateStateLabel: ({required id, required label}) =>
+        _notifier.updateStateLabel(id: id, label: label),
+    updateStateFlags: ({required id, isInitial, isAccepting}) =>
+        _notifier.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    ),
+    removeState: (id) => _notifier.removeState(id: id),
+    logMutation: _logPdaCanvas,
+  );
 
   @override
   GraphViewAutomatonSnapshot toSnapshot(PDA? automaton) {
@@ -78,53 +85,6 @@ class GraphViewPdaCanvasController
       'Synchronizing PDA canvas (states=${automaton?.states.length ?? 0}, transitions=${automaton?.pdaTransitions.length ?? 0})',
     );
     synchronizeGraph(automaton);
-  }
-
-  @override
-  void addDomainState({
-    required String id,
-    required String label,
-    required Offset position,
-  }) {
-    _notifier.addOrUpdateState(
-      id: id,
-      label: label,
-      x: position.dx,
-      y: position.dy,
-    );
-  }
-
-  @override
-  void moveDomainState({required String id, required Offset position}) {
-    _notifier.moveState(id: id, x: position.dx, y: position.dy);
-  }
-
-  @override
-  void updateDomainStateLabel({required String id, required String label}) {
-    _notifier.updateStateLabel(id: id, label: label);
-  }
-
-  @override
-  void updateDomainStateFlags({
-    required String id,
-    bool? isInitial,
-    bool? isAccepting,
-  }) {
-    _notifier.updateStateFlags(
-      id: id,
-      isInitial: isInitial,
-      isAccepting: isAccepting,
-    );
-  }
-
-  @override
-  void removeDomainState(String id) {
-    _notifier.removeState(id: id);
-  }
-
-  @override
-  void logCanvasStateMutation(String message) {
-    _logPdaCanvas(message);
   }
 
   /// Adds or updates a transition between [fromStateId] and [toStateId].
@@ -182,6 +142,7 @@ class GraphViewPdaCanvasController
   }
 
   /// Removes the transition identified by [id] from the automaton.
+  @override
   void removeTransition(String id) {
     _logPdaCanvas('removeTransition -> id=$id');
     performMutation(() {

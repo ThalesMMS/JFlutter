@@ -239,13 +239,15 @@ class InputValidators {
           ),
         );
       }
-      if (!pda.stackAlphabet.contains(t.pushSymbol) && t.pushSymbol != 'ε') {
-        issues.add(
-          ValidationIssue(
-            'PDA_BAD_PUSH_SYMBOL',
-            'Transition pushes symbol "${t.pushSymbol}" not in stack alphabet',
-          ),
-        );
+      for (final pushSymbol in t.pushSymbols) {
+        if (!pda.stackAlphabet.contains(pushSymbol) && pushSymbol != 'ε') {
+          issues.add(
+            ValidationIssue(
+              'PDA_BAD_PUSH_SYMBOL',
+              'Transition pushes symbol "$pushSymbol" not in stack alphabet',
+            ),
+          );
+        }
       }
     }
 

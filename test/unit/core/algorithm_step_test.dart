@@ -16,6 +16,7 @@ import 'package:jflutter/core/models/dfa_minimization_step.dart';
 import 'package:jflutter/core/models/fa_to_regex_step.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/transition.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 part 'algorithm_step_fa_to_regex_cases.dart';

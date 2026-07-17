@@ -10,6 +10,7 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
@@ -42,8 +43,8 @@ class PDA extends Automaton {
     super.panOffset,
     required Set<String> stackAlphabet,
     this.initialStackSymbol = 'Z',
-  }) : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
-       super(type: AutomatonType.pda);
+  })  : stackAlphabet = Set<String>.unmodifiable(stackAlphabet),
+        super(type: AutomatonType.pda);
 
   /// Creates a copy of this PDA with updated properties
   @override
@@ -194,11 +195,14 @@ class PDA extends Automaton {
           );
         }
 
-        if (!pdaTransition.isLambdaPush &&
-            !stackAlphabet.contains(pdaTransition.pushSymbol)) {
-          errors.add(
-            'Transition ${pdaTransition.id} references invalid push symbol',
-          );
+        if (!pdaTransition.isLambdaPush) {
+          for (final pushSymbol in pdaTransition.pushSymbols) {
+            if (!stackAlphabet.contains(pushSymbol)) {
+              errors.add(
+                'Transition ${pdaTransition.id} references invalid push symbol',
+              );
+            }
+          }
         }
       }
     }
@@ -272,11 +276,11 @@ class PDA extends Automaton {
   /// Gets the epsilon closure of a state with a specific stack symbol
   Set<State> getEpsilonClosure(State state, String stackSymbol) {
     final closure = <State>{state};
-    final queue = <State>[state];
+    final queue = Queue<State>()..add(state);
     final stackSymbols = <String>{stackSymbol};
 
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
       final epsilonTransitions = getEpsilonTransitionsFromState(current);
 
       for (final transition in epsilonTransitions) {
@@ -288,7 +292,7 @@ class PDA extends Automaton {
 
           // Add new stack symbols from push operations
           if (!transition.isLambdaPush) {
-            stackSymbols.add(transition.pushSymbol);
+            stackSymbols.addAll(transition.pushSymbols);
           }
         }
       }

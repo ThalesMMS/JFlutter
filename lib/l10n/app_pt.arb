@@ -17,41 +17,149 @@
     "description": "Label for the algorithms section."
   },
   "homeHelpTooltip": "Ajuda",
+  "@homeHelpTooltip": {
+    "description": "Tooltip for opening the app help page from the home page."
+  },
   "homeSettingsTooltip": "Configurações",
+  "@homeSettingsTooltip": {
+    "description": "Tooltip for opening app settings from the home page."
+  },
   "homeNavigationFsaLabel": "AF",
+  "@homeNavigationFsaLabel": {
+    "description": "Navigation label for the finite state automata workspace."
+  },
   "homeNavigationFsaDescription": "Autômatos finitos",
+  "@homeNavigationFsaDescription": {
+    "description": "Short navigation description for the finite state automata workspace."
+  },
   "homeNavigationGrammarLabel": "Gramática",
+  "@homeNavigationGrammarLabel": {
+    "description": "Navigation label for the grammar workspace."
+  },
   "homeNavigationGrammarDescription": "Gramáticas livres de contexto",
+  "@homeNavigationGrammarDescription": {
+    "description": "Short navigation description for the grammar workspace."
+  },
   "homeNavigationPdaLabel": "AP",
+  "@homeNavigationPdaLabel": {
+    "description": "Navigation label for the pushdown automata workspace."
+  },
   "homeNavigationPdaDescription": "Autômatos com pilha",
+  "@homeNavigationPdaDescription": {
+    "description": "Short navigation description for the pushdown automata workspace."
+  },
   "homeNavigationTmLabel": "MT",
+  "@homeNavigationTmLabel": {
+    "description": "Navigation label for the Turing machine workspace."
+  },
   "homeNavigationTmDescription": "Máquinas de Turing",
+  "@homeNavigationTmDescription": {
+    "description": "Short navigation description for the Turing machine workspace."
+  },
   "homeNavigationRegexLabel": "Regex",
+  "@homeNavigationRegexLabel": {
+    "description": "Navigation label for the regular expression workspace."
+  },
   "homeNavigationRegexDescription": "Expressões regulares",
+  "@homeNavigationRegexDescription": {
+    "description": "Short navigation description for the regular expression workspace."
+  },
   "homeNavigationPumpingLabel": "Bombeamento",
+  "@homeNavigationPumpingLabel": {
+    "description": "Navigation label for the pumping lemma workspace."
+  },
   "homeNavigationPumpingDescription": "Lema do bombeamento",
+  "@homeNavigationPumpingDescription": {
+    "description": "Short navigation description for the pumping lemma workspace."
+  },
   "helpPageTitle": "Ajuda e documentação",
+  "@helpPageTitle": {
+    "description": "Title for the help and documentation page."
+  },
   "helpSearchTooltip": "Pesquisar ajuda",
+  "@helpSearchTooltip": {
+    "description": "Tooltip for opening help search."
+  },
   "helpQuickStartTitle": "Guia rápido",
+  "@helpQuickStartTitle": {
+    "description": "Title for the quick start help dialog."
+  },
   "helpQuickStartBody": "Bem-vindo ao JFlutter. Comece com este fluxo básico:\n\n1. Escolha um espaço de trabalho, como AF, Gramática, AP, MT ou Regex.\n2. Inicie em branco ou abra um exemplo ou arquivo compatível.\n3. Use o editor para criar sua máquina ou gramática. Toque duas vezes em um estado para ações rápidas.\n4. Execute simulações para testar seu trabalho.\n5. Use os algoritmos para transformar estruturas.\n\nDicas:\n• Use as abas de navegação ou chips de seção para trocar de espaço rapidamente.\n• Toque duas vezes em um estado para abrir o menu de ações rápidas.\n• Faça pinça para ampliar ou reduzir o canvas.\n• Toque no ícone de guia rápido quando precisar relembrar o fluxo.",
+  "@helpQuickStartBody": {
+    "description": "Body text for the quick start help dialog."
+  },
   "helpGotIt": "Entendi!",
+  "@helpGotIt": {
+    "description": "Confirmation button label for dismissing help dialogs."
+  },
   "helpSearchFieldLabel": "Pesquisar ajuda...",
+  "@helpSearchFieldLabel": {
+    "description": "Placeholder label for the help search field."
+  },
   "helpSearchClear": "Limpar pesquisa",
+  "@helpSearchClear": {
+    "description": "Tooltip for clearing the help search query."
+  },
   "helpSearchClose": "Fechar pesquisa",
+  "@helpSearchClose": {
+    "description": "Tooltip for closing help search."
+  },
   "helpSearchTitle": "Pesquisar ajuda",
+  "@helpSearchTitle": {
+    "description": "Title shown in the help search view."
+  },
   "helpSearchSubtitle": "Encontre tutoriais, atalhos e explicações de teoria",
+  "@helpSearchSubtitle": {
+    "description": "Subtitle shown in the help search view."
+  },
   "helpSearchNoResults": "Nenhum resultado encontrado",
+  "@helpSearchNoResults": {
+    "description": "Message title shown when help search has no matches."
+  },
   "helpSearchNoResultsDescription": "Tente outras palavras-chave ou confira a ortografia",
+  "@helpSearchNoResultsDescription": {
+    "description": "Suggestion shown when help search has no matches."
+  },
   "helpSectionGettingStarted": "Primeiros passos",
+  "@helpSectionGettingStarted": {
+    "description": "Help section label for getting started documentation."
+  },
   "helpSectionFsa": "AF",
+  "@helpSectionFsa": {
+    "description": "Help section label for finite state automata documentation."
+  },
   "helpSectionGrammar": "Gramática",
+  "@helpSectionGrammar": {
+    "description": "Help section label for grammar documentation."
+  },
   "helpSectionPda": "AP",
+  "@helpSectionPda": {
+    "description": "Help section label for pushdown automata documentation."
+  },
   "helpSectionTm": "Máquina de Turing",
+  "@helpSectionTm": {
+    "description": "Help section label for Turing machine documentation."
+  },
   "helpSectionRegex": "Expressão regular",
+  "@helpSectionRegex": {
+    "description": "Help section label for regular expression documentation."
+  },
   "helpSectionPumping": "Lema do bombeamento",
+  "@helpSectionPumping": {
+    "description": "Help section label for pumping lemma documentation."
+  },
   "helpSectionFileOperations": "Operações de arquivo",
+  "@helpSectionFileOperations": {
+    "description": "Help section label for file operation documentation."
+  },
   "helpSectionTroubleshooting": "Solução de problemas",
+  "@helpSectionTroubleshooting": {
+    "description": "Help section label for troubleshooting documentation."
+  },
   "helpSectionLicenses": "Licenças",
+  "@helpSectionLicenses": {
+    "description": "Help section label for license documentation."
+  },
   "regularExpressionTitle": "Expressão regular",
   "@regularExpressionTitle": {
     "description": "Title for the regular expression page."
@@ -303,5 +411,125 @@
   "operators": "Operadores",
   "@operators": {
     "description": "Metric label for the number of regex operators."
+  },
+  "conversionComparisonUnavailable": "Comparação de conversão indisponível. Os snapshots salvos não puderam ser lidos.",
+  "@conversionComparisonUnavailable": {
+    "description": "Warning shown when saved before/after conversion snapshots cannot be deserialized."
+  },
+  "conversionComparisonResult": "Resultado da conversão",
+  "@conversionComparisonResult": {
+    "description": "Label for the before-and-after automaton conversion comparison."
+  },
+  "simulation": "Simulação",
+  "inputString": "Cadeia de entrada",
+  "simulationInputHint": "Deixe em branco para ε; os espaços são preservados",
+  "simulationInputString": "Cadeia de entrada da simulação",
+  "simulate": "Simular",
+  "simulating": "Simulando...",
+  "cancelSimulation": "Cancelar simulação",
+  "runSimulation": "Executar simulação",
+  "runSimulationHint": "Executa a máquina usando a cadeia de entrada informada.",
+  "simulationInputSemantics": "Entrada da simulação: {label}",
+  "@simulationInputSemantics": {"placeholders": {"label": {"type": "String"}}},
+  "simulationEditHint": "{hint}. Toque duas vezes para editar.",
+  "@simulationEditHint": {"placeholders": {"hint": {"type": "String"}}},
+  "simulationResult": "Resultado da simulação",
+  "regexResult": "Resultado da expressão regular",
+  "regularExpression": "Expressão regular",
+  "stepByStepMode": "Modo passo a passo",
+  "stepByStepModeSemantics": "Modo passo a passo",
+  "stepByStepExecution": "Execução passo a passo",
+  "play": "Reproduzir",
+  "pause": "Pausar",
+  "reset": "Reiniciar",
+  "expand": "Expandir",
+  "collapse": "Recolher",
+  "noStepsRecorded": "Nenhum passo registrado",
+  "noStepsAvailable": "Nenhum passo disponível",
+  "noSteps": "Sem passos",
+  "timeline": "Linha do tempo",
+  "timelineScrubber": "Controle da linha do tempo",
+  "timelineNavigationHint": "Arraste para navegar pelos passos da simulação",
+  "stepOf": "Passo {current} de {total}",
+  "@stepOf": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "activeStepOf": "Passo ativo {current} de {total}",
+  "@activeStepOf": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "pdaTrace": "Traço do AP ({count} passos)",
+  "@pdaTrace": {"placeholders": {"count": {"type": "int"}}},
+  "tmTrace": "Traço da MT ({count} passos)",
+  "@tmTrace": {"placeholders": {"count": {"type": "int"}}},
+  "traceRemaining": "restante",
+  "traceStack": "pilha",
+  "traceTape": "fita",
+  "timeout": "Tempo limite excedido",
+  "infiniteLoop": "Laço infinito",
+  "steps": "Passos",
+  "states": "Estados",
+  "executionPath": "Caminho da execução",
+  "transitions": "Transições",
+  "animationSpeed": "Velocidade da animação",
+  "selectPlaybackSpeed": "Selecione a velocidade de reprodução",
+  "speed": "Velocidade:",
+  "slowSpeed": "Lenta {speed}",
+  "@slowSpeed": {"placeholders": {"speed": {"type": "String"}}},
+  "normalSpeed": "Velocidade normal",
+  "fastSpeed": "Rápida {speed}",
+  "@fastSpeed": {"placeholders": {"speed": {"type": "String"}}},
+  "on": "Ativado",
+  "off": "Desativado",
+  "stepByStepToggleHint": "Ativa ou desativa a revisão manual da simulação atual.",
+  "simulationStartDescription": "Comece em {state} com a entrada {input}.",
+  "@simulationStartDescription": {"placeholders": {"state": {"type": "String"}, "input": {"type": "String"}}},
+  "simulationFinalDescription": "Configuração final {state} – entrada {verdict}.",
+  "@simulationFinalDescription": {"placeholders": {"state": {"type": "String"}, "verdict": {"type": "String"}}},
+  "simulationReadDescription": "Leia \"{consumed}\" de {state} → {nextState} com {remaining}.",
+  "@simulationReadDescription": {"placeholders": {"consumed": {"type": "String"}, "state": {"type": "String"}, "nextState": {"type": "String"}, "remaining": {"type": "String"}}},
+  "noInputRemaining": "nenhuma entrada restante",
+  "remainingQuoted": "restante \"{input}\"",
+  "@remainingQuoted": {"placeholders": {"input": {"type": "String"}}},
+  "consumedValue": "Consumido: \"{value}\"",
+  "@consumedValue": {"placeholders": {"value": {"type": "String"}}},
+  "nextStateValue": "Próximo estado: {state}",
+  "@nextStateValue": {"placeholders": {"state": {"type": "String"}}},
+  "remainingInputValue": "Entrada restante: {input}",
+  "@remainingInputValue": {"placeholders": {"input": {"type": "String"}}},
+  "previousSimulationStep": "Passo anterior da simulação",
+  "previousSimulationStepHint": "Move para o passo anterior registrado.",
+  "nextSimulationStep": "Próximo passo da simulação",
+  "nextSimulationStepHint": "Avança para o próximo passo registrado.",
+  "playSimulationSteps": "Reproduzir passos da simulação",
+  "pauseSimulationPlayback": "Pausar reprodução da simulação",
+  "playSimulationHint": "Avança automaticamente pelos passos registrados.",
+  "pauseSimulationHint": "Pausa a reprodução automática dos passos.",
+  "resetSimulationSteps": "Reiniciar passos da simulação",
+  "resetSimulationStepsHint": "Retorna a visualização ao primeiro passo registrado.",
+  "resetToFirst": "Reiniciar no primeiro",
+  "jumpToLast": "Ir para o último",
+  "previousStepLower": "Passo anterior",
+  "nextStepLower": "Próximo passo",
+  "hiddenStepsSummary": "{before} anteriores e {after} posteriores ocultos",
+  "@hiddenStepsSummary": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "noSimulationResults": "Nenhum resultado de simulação",
+  "simulationEmptyHint": "Informe uma cadeia e ative Simular para ver os resultados",
+  "accepted": "Aceita",
+  "rejected": "Rejeitada",
+  "acceptedLower": "aceita",
+  "rejectedLower": "rejeitada",
+  "regexAlphabetLabel": "Alfabeto / universo",
+  "regexAlphabetHelper": "Caracteres usados por ., \\D, \\W e \\S (espaços contam).",
+  "regexAlphabetEmptyError": "O alfabeto não pode ficar vazio.",
+  "suggestedFixes": "Correções sugeridas",
+  "algorithmAction": "Ação de algoritmo: {title}",
+  "@algorithmAction": {"placeholders": {"title": {"type": "String"}}},
+  "algorithmUnavailableHint": "Indisponível. {description}",
+  "@algorithmUnavailableHint": {"placeholders": {"description": {"type": "String"}}},
+  "algorithmStartHint": "Toque duas vezes para iniciar. {description}",
+  "@algorithmStartHint": {"placeholders": {"description": {"type": "String"}}},
+  "executing": "Executando",
+  "selected": "Selecionado",
+  "workflowLegacyText": "{text}",
+  "@workflowLegacyText": {
+    "description": "Adaptador transitório para localizar textos legados de algoritmos na apresentação.",
+    "placeholders": {"text": {"type": "String"}}
   }
 }

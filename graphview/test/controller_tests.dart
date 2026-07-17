@@ -230,6 +230,59 @@ void main() {
         throwsFlutterError,
       );
     });
+
+    testWidgets('reattaches when the GraphView controller changes',
+        (WidgetTester tester) async {
+      final graph = Graph();
+      final node = Node.Id('target');
+      graph.addNode(node);
+
+      final firstTransformationController = TransformationController(
+        Matrix4.identity()..translateByDouble(12.0, 18.0, 0.0, 1.0),
+      );
+      final secondTransformationController = TransformationController();
+      final firstController = GraphViewController(
+        transformationController: firstTransformationController,
+      );
+      final secondController = GraphViewController(
+        transformationController: secondTransformationController,
+      );
+
+      Widget build(GraphViewController controller) {
+        return MaterialApp(
+          home: GraphView.builder(
+            graph: graph,
+            algorithm: buildTestAlgorithm(),
+            controller: controller,
+            builder: (node) => const SizedBox(width: 20, height: 20),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(build(firstController));
+      await tester.pumpAndSettle();
+
+      expect(firstController.hasAttachedView, isTrue);
+      expect(secondController.hasAttachedView, isFalse);
+
+      await tester.pumpWidget(build(secondController));
+      await tester.pumpAndSettle();
+
+      expect(firstController.hasAttachedView, isFalse);
+      expect(secondController.hasAttachedView, isTrue);
+      expect(
+        secondTransformationController.value.getTranslation().x,
+        equals(12.0),
+      );
+      expect(
+        secondTransformationController.value.getTranslation().y,
+        equals(18.0),
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      firstTransformationController.dispose();
+      secondTransformationController.dispose();
+    });
   });
 
   group('Collapse Tests', () {

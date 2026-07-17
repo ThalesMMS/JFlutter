@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jflutter/core/result.dart';
+import 'package:jflutter/data/models/asset_example.dart';
 import 'package:jflutter/presentation/widgets/algorithm_panel_scaffold.dart';
 import 'package:jflutter/presentation/widgets/common/algorithm_button_config.dart';
 
@@ -86,12 +88,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: AlgorithmResultsSection(
             hasResults: false,
-            empty: Text('No results'),
-            results: Text('Results'),
+            emptyBuilder: (_) => Text('No results'),
+            resultsBuilder: (_) => throw StateError('results should be lazy'),
           ),
         ),
       ),
@@ -99,15 +101,14 @@ void main() {
 
     expect(find.text('Analysis Results'), findsOneWidget);
     expect(find.text('No results'), findsOneWidget);
-    expect(find.text('Results'), findsNothing);
 
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: AlgorithmResultsSection(
             hasResults: true,
-            empty: Text('No results'),
-            results: Text('Results'),
+            emptyBuilder: (_) => throw StateError('empty should be lazy'),
+            resultsBuilder: (_) => Text('Results'),
           ),
         ),
       ),
@@ -115,5 +116,122 @@ void main() {
 
     expect(find.text('No results'), findsNothing);
     expect(find.text('Results'), findsOneWidget);
+  });
+
+  testWidgets('AlgorithmResultsCard renders child in result container', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AlgorithmResultsCard(child: Text('Rendered result')),
+        ),
+      ),
+    );
+
+    expect(find.text('Rendered result'), findsOneWidget);
+  });
+
+  testWidgets('AlgorithmExamplesSection shows loading state', (tester) async {
+    final examplesFuture = Future<ListResult<AssetExample<String>>>.value(
+      Success(<AssetExample<String>>[]),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AlgorithmExamplesSection<String>(
+            examplesFuture: examplesFuture,
+            loadingExampleName: null,
+            onExampleSelected: (_) {},
+            failureMessage: 'Could not load examples',
+            emptyMessage: 'No examples',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    await tester.pump();
+  });
+
+  testWidgets('AlgorithmExamplesSection shows failure state', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AlgorithmExamplesSection<String>(
+            examplesFuture: Future.value(
+              Failure<List<AssetExample<String>>>('Example failure'),
+            ),
+            loadingExampleName: null,
+            onExampleSelected: (_) {},
+            failureMessage: 'Could not load examples',
+            emptyMessage: 'No examples',
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Example failure'), findsOneWidget);
+  });
+
+  testWidgets('AlgorithmExamplesSection shows empty state', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AlgorithmExamplesSection<String>(
+            examplesFuture: Future.value(Success(<AssetExample<String>>[])),
+            loadingExampleName: null,
+            onExampleSelected: (_) {},
+            failureMessage: 'Could not load examples',
+            emptyMessage: 'No examples',
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('No examples'), findsOneWidget);
+  });
+
+  testWidgets('AlgorithmExamplesSection shows examples and handles selection', (
+    tester,
+  ) async {
+    String? selected;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AlgorithmExamplesSection<String>(
+            examplesFuture: Future.value(
+              Success([
+                AssetExample<String>(
+                  name: 'Example A',
+                  description: 'Example description',
+                  category: ExampleCategory.dfa,
+                  difficultyLevel: DifficultyLevel.easy,
+                  complexityLevel: ExampleComplexityLevel.low,
+                  tags: const ['test'],
+                  payload: 'payload',
+                ),
+              ]),
+            ),
+            loadingExampleName: null,
+            onExampleSelected: (name) => selected = name,
+            failureMessage: 'Could not load examples',
+            emptyMessage: 'No examples',
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Example A'), findsOneWidget);
+
+    await tester.tap(find.text('Example A'));
+    await tester.pumpAndSettle();
+
+    expect(selected, 'Example A');
   });
 }

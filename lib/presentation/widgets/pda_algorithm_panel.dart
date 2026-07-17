@@ -15,8 +15,12 @@ import '../../core/algorithms/pda_simulator.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/state.dart' as automaton_models;
+import '../../core/models/asset_example.dart';
+import '../../core/repositories/examples_repository.dart';
 import '../../core/result.dart';
-import '../../data/data_sources/examples_asset_data_source.dart';
+import '../../injection/data_providers.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/pda_editor_provider.dart';
 import 'algorithm_panel_scaffold.dart';
 import 'app_snackbar.dart';
@@ -33,7 +37,7 @@ class PDAAlgorithmPanel extends ConsumerStatefulWidget {
   });
 
   final bool useExpanded;
-  final ExamplesAssetDataSource? examplesDataSource;
+  final ExamplesRepository? examplesDataSource;
 
   @override
   ConsumerState<PDAAlgorithmPanel> createState() => _PDAAlgorithmPanelState();
@@ -44,14 +48,14 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   String? _loadingExampleName;
   String? _analysisResult;
   Grammar? _latestConvertedGrammar;
-  late final ExamplesAssetDataSource _examplesDataSource;
+  late final ExamplesRepository _examplesDataSource;
   late final Future<ListResult<AssetExample<PDA>>> _pdaExamplesFuture;
 
   @override
   void initState() {
     super.initState();
     _examplesDataSource =
-        widget.examplesDataSource ?? ExamplesAssetDataSource();
+        widget.examplesDataSource ?? ref.read(examplesRepositoryProvider);
     _pdaExamplesFuture = _examplesDataSource.loadAllTypedPdaExamples();
   }
 
@@ -140,10 +144,11 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
   }
 
   Widget _buildResultsSection(BuildContext context) {
+    final hasResults = _analysisResult != null;
     return AlgorithmResultsSection(
-      hasResults: _analysisResult != null,
-      empty: _buildEmptyResults(context),
-      results: _buildResults(context),
+      hasResults: hasResults,
+      emptyBuilder: _buildEmptyResults,
+      resultsBuilder: _buildResults,
     );
   }
 
@@ -165,7 +170,8 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SelectableText(
-              _analysisResult!,
+              appLocalizationsOf(context)
+                  .localizeWorkflowText(_analysisResult!),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: 'monospace',
               ),
@@ -666,7 +672,11 @@ class _PDAAlgorithmPanelState extends ConsumerState<PDAAlgorithmPanel> {
     String message, {
     AppSnackBarTone tone = AppSnackBarTone.success,
   }) {
-    showAppSnackBar(context, message: message, tone: tone);
+    showAppSnackBar(
+      context,
+      message: appLocalizationsOf(context).localizeWorkflowText(message),
+      tone: tone,
+    );
   }
 
   String _formatStateList(Iterable<automaton_models.State> states) {

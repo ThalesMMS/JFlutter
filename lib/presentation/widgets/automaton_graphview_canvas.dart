@@ -40,7 +40,6 @@ import '../../features/canvas/graphview/graphview_label_field_editor.dart';
 import '../../features/canvas/graphview/grouped_fsa_geometry.dart';
 import '../../features/canvas/graphview/graphview_link_overlay_utils.dart';
 import '../../features/canvas/graphview/graphview_pda_canvas_controller.dart';
-import '../../features/canvas/graphview/graphview_tm_canvas_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../providers/automaton_state_provider.dart';
 import 'automaton_canvas_tool.dart';
@@ -100,8 +99,8 @@ Object? _canonicalSignatureValue(Object? value) {
     final entries = value.entries.toList()
       ..sort(
         (left, right) => left.key.toString().compareTo(
-          right.key.toString(),
-        ),
+              right.key.toString(),
+            ),
       );
     return {
       for (final entry in entries)
@@ -140,13 +139,12 @@ String _canonicalSignatureSortKey(Object? value) {
     final entries = value.entries.toList()
       ..sort(
         (left, right) => left.key.toString().compareTo(
-          right.key.toString(),
-        ),
+              right.key.toString(),
+            ),
       );
     return entries
         .map(
-          (entry) =>
-              '${entry.key}:${_canonicalSignatureSortKey(entry.value)}',
+          (entry) => '${entry.key}:${_canonicalSignatureSortKey(entry.value)}',
         )
         .join('|');
   }
@@ -230,7 +228,8 @@ class _AutomatonGraphViewCanvasState
   bool _syncScheduled = false;
   String? _draggingNodeId;
   Offset? _dragStartWorldPosition;
-  Offset? _dragStartNodeCenter;
+  Offset? _dragStartNodePosition;
+  Offset? _dragCurrentNodePosition;
   final GestureArenaTeam _gestureArenaTeam = GestureArenaTeam();
   bool _suppressCanvasPan = false;
   String? _lastTapNodeId;
@@ -740,14 +739,7 @@ class _AutomatonGraphViewCanvasState
   }
 
   void _removeTransitionById(String transitionId) {
-    final controller = _controller;
-    if (controller is GraphViewCanvasController) {
-      controller.removeTransition(transitionId);
-    } else if (controller is GraphViewPdaCanvasController) {
-      controller.removeTransition(transitionId);
-    } else if (controller is GraphViewTmCanvasController) {
-      controller.removeTransition(transitionId);
-    }
+    _controller.removeTransition(transitionId);
   }
 
   void _redoCanvasFromKeyboard() {
@@ -779,9 +771,8 @@ class _AutomatonGraphViewCanvasState
   }
 
   String _nodeSemanticsLabel(GraphViewCanvasNode node) {
-    final outgoingCount = _controller.edges
-        .where((edge) => edge.fromStateId == node.id)
-        .length;
+    final outgoingCount =
+        _controller.edges.where((edge) => edge.fromStateId == node.id).length;
     final incomingCount =
         _controller.edges.where((edge) => edge.toStateId == node.id).length;
     final parts = <String>[
@@ -805,12 +796,12 @@ class _AutomatonGraphViewCanvasState
   String _edgeSemanticsLabel(GraphViewCanvasEdge edge) {
     final fromLabel = _controller.nodeById(edge.fromStateId)?.label;
     final toLabel = _controller.nodeById(edge.toStateId)?.label;
-    final from = (fromLabel?.isNotEmpty == true) ? fromLabel! : edge.fromStateId;
+    final from =
+        (fromLabel?.isNotEmpty == true) ? fromLabel! : edge.fromStateId;
     final to = (toLabel?.isNotEmpty == true) ? toLabel! : edge.toStateId;
     final label = edge.label.isEmpty ? 'unlabeled' : edge.label;
-    final selected = _selectedTransitions.contains(edge.id)
-        ? ' Selected transition.'
-        : '';
+    final selected =
+        _selectedTransitions.contains(edge.id) ? ' Selected transition.' : '';
     return 'Transition ${edge.id} from $from to $to labeled $label.$selected';
   }
 
@@ -933,12 +924,11 @@ class _AutomatonGraphViewCanvasState
                                           'Use keyboard shortcuts or toolbar controls to edit the canvas.',
                                       child: GraphView.builder(
                                         graph: _controller.graph,
-                                        controller:
-                                            _controller.graphController,
+                                        controller: _controller.graphController,
                                         algorithm: _algorithm,
-                                        animated:
-                                            motionPreset.graphAnimationEnabled &&
-                                                !_isDraggingNode,
+                                        animated: motionPreset
+                                                .graphAnimationEnabled &&
+                                            !_isDraggingNode,
                                         panAnimationDuration:
                                             motionPreset.viewportDuration,
                                         toggleAnimationDuration:
@@ -976,8 +966,8 @@ class _AutomatonGraphViewCanvasState
                                                 .enableToolSelection,
                                             onTap: _customization
                                                     .enableToolSelection
-                                                ? () =>
-                                                    _handleNodeTap(canvasNode.id)
+                                                ? () => _handleNodeTap(
+                                                    canvasNode.id)
                                                 : null,
                                             selected: canvasNode.id ==
                                                 _transitionSourceId,
@@ -988,8 +978,7 @@ class _AutomatonGraphViewCanvasState
                                             child: RepaintBoundary(
                                               child: _AutomatonGraphNode(
                                                 label: canvasNode.label,
-                                                isInitial:
-                                                    canvasNode.isInitial,
+                                                isInitial: canvasNode.isInitial,
                                                 isAccepting:
                                                     canvasNode.isAccepting,
                                                 isHighlighted: isHighlighted,

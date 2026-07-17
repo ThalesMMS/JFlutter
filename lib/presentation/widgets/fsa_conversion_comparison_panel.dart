@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/conversion_step_history.dart';
 import '../../core/models/fsa.dart';
+import '../../l10n/app_localizations_help.dart';
 import 'before_after_comparison.dart';
 import 'error_banner.dart';
 
@@ -26,6 +27,7 @@ class FSAConversionComparisonPanel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final l10n = jflapLocalizationsOf(context);
     late final FSA beforeAutomaton;
     late final FSA afterAutomaton;
     try {
@@ -33,14 +35,13 @@ class FSAConversionComparisonPanel extends StatelessWidget {
       afterAutomaton = FSA.fromJson(conversionHistory.finalSnapshot!);
     } catch (error, stackTrace) {
       _logConversionHistoryError(conversionHistory, error, stackTrace);
-      return const Padding(
-        padding: EdgeInsets.only(top: 8),
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
         child: SizedBox(
           height: 112,
           child: ErrorBanner(
-            key: Key('fsa-conversion-comparison-error'),
-            message:
-                'Conversion comparison unavailable. Saved snapshots could not be read.',
+            key: const Key('fsa-conversion-comparison-error'),
+            message: l10n.conversionComparisonUnavailable,
             severity: ErrorSeverity.warning,
             showRetryButton: false,
             showDismissButton: false,
@@ -56,7 +57,7 @@ class FSAConversionComparisonPanel extends StatelessWidget {
         child: BeforeAfterComparison(
           beforeAutomaton: beforeAutomaton,
           afterAutomaton: afterAutomaton,
-          transformationDescription: 'Conversion result',
+          transformationDescription: l10n.conversionComparisonResult,
           showStatistics: true,
         ),
       ),

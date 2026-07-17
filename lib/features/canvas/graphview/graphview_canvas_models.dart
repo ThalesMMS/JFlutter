@@ -15,6 +15,8 @@ import '../../../core/models/tm_transition.dart';
 
 /// Metadata describing the current automaton rendered in the GraphView canvas.
 class GraphViewAutomatonMetadata {
+  static const Object _unset = Object();
+
   const GraphViewAutomatonMetadata({
     required this.id,
     required this.name,
@@ -25,12 +27,12 @@ class GraphViewAutomatonMetadata {
   });
 
   const GraphViewAutomatonMetadata.empty()
-    : id = null,
-      name = null,
-      alphabet = const <String>[],
-      tapeAlphabet = const <String>[],
-      blankSymbol = null,
-      tapeCount = null;
+      : id = null,
+        name = null,
+        alphabet = const <String>[],
+        tapeAlphabet = const <String>[],
+        blankSymbol = null,
+        tapeCount = null;
 
   final String? id;
   final String? name;
@@ -44,16 +46,17 @@ class GraphViewAutomatonMetadata {
     String? name,
     List<String>? alphabet,
     List<String>? tapeAlphabet,
-    String? blankSymbol,
-    int? tapeCount,
+    Object? blankSymbol = _unset,
+    Object? tapeCount = _unset,
   }) {
     return GraphViewAutomatonMetadata(
       id: id ?? this.id,
       name: name ?? this.name,
       alphabet: alphabet ?? this.alphabet,
       tapeAlphabet: tapeAlphabet ?? this.tapeAlphabet,
-      blankSymbol: blankSymbol ?? this.blankSymbol,
-      tapeCount: tapeCount ?? this.tapeCount,
+      blankSymbol:
+          blankSymbol == _unset ? this.blankSymbol : blankSymbol as String?,
+      tapeCount: tapeCount == _unset ? this.tapeCount : tapeCount as int?,
     );
   }
 
@@ -73,9 +76,8 @@ class GraphViewAutomatonMetadata {
       return const GraphViewAutomatonMetadata.empty();
     }
     final rawAlphabet = json['alphabet'];
-    final alphabet = rawAlphabet is List
-        ? rawAlphabet.cast<String>()
-        : const <String>[];
+    final alphabet =
+        rawAlphabet is List ? rawAlphabet.cast<String>() : const <String>[];
     final rawTapeAlphabet = json['tapeAlphabet'];
     final tapeAlphabet = rawTapeAlphabet is List
         ? rawTapeAlphabet.cast<String>()
@@ -182,6 +184,7 @@ class GraphViewCanvasEdge {
     this.tapeNumber,
     this.popSymbol,
     this.pushSymbol,
+    this.pushSymbols,
     this.isLambdaInput,
     this.isLambdaPop,
     this.isLambdaPush,
@@ -200,6 +203,7 @@ class GraphViewCanvasEdge {
   final int? tapeNumber;
   final String? popSymbol;
   final String? pushSymbol;
+  final List<String>? pushSymbols;
   final bool? isLambdaInput;
   final bool? isLambdaPop;
   final bool? isLambdaPush;
@@ -210,8 +214,7 @@ class GraphViewCanvasEdge {
   }
 
   String get label {
-    final hasPdaMetadata =
-        popSymbol != null ||
+    final hasPdaMetadata = popSymbol != null ||
         pushSymbol != null ||
         isLambdaInput != null ||
         isLambdaPop != null ||
@@ -262,6 +265,7 @@ class GraphViewCanvasEdge {
     int? tapeNumber,
     String? popSymbol,
     String? pushSymbol,
+    List<String>? pushSymbols,
     bool? isLambdaInput,
     bool? isLambdaPop,
     bool? isLambdaPush,
@@ -284,6 +288,8 @@ class GraphViewCanvasEdge {
       tapeNumber: tapeNumber ?? this.tapeNumber,
       popSymbol: popSymbol ?? this.popSymbol,
       pushSymbol: pushSymbol ?? this.pushSymbol,
+      pushSymbols:
+          pushSymbols ?? (pushSymbol == null ? this.pushSymbols : null),
       isLambdaInput: isLambdaInput ?? this.isLambdaInput,
       isLambdaPop: isLambdaPop ?? this.isLambdaPop,
       isLambdaPush: isLambdaPush ?? this.isLambdaPush,
@@ -305,6 +311,7 @@ class GraphViewCanvasEdge {
       'tapeNumber': tapeNumber,
       'popSymbol': popSymbol,
       'pushSymbol': pushSymbol,
+      'pushSymbols': pushSymbols,
       'isLambdaInput': isLambdaInput,
       'isLambdaPop': isLambdaPop,
       'isLambdaPush': isLambdaPush,
@@ -335,6 +342,7 @@ class GraphViewCanvasEdge {
       tapeNumber: json['tapeNumber'] as int?,
       popSymbol: json['popSymbol'] as String?,
       pushSymbol: json['pushSymbol'] as String?,
+      pushSymbols: (json['pushSymbols'] as List?)?.cast<String>(),
       isLambdaInput: json['isLambdaInput'] as bool?,
       isLambdaPop: json['isLambdaPop'] as bool?,
       isLambdaPush: json['isLambdaPush'] as bool?,
@@ -357,6 +365,7 @@ class GraphViewCanvasEdge {
         other.tapeNumber == tapeNumber &&
         other.popSymbol == popSymbol &&
         other.pushSymbol == pushSymbol &&
+        const ListEquality<String>().equals(other.pushSymbols, pushSymbols) &&
         other.isLambdaInput == isLambdaInput &&
         other.isLambdaPop == isLambdaPop &&
         other.isLambdaPush == isLambdaPush;
@@ -364,23 +373,24 @@ class GraphViewCanvasEdge {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    fromStateId,
-    toStateId,
-    const ListEquality<String>().hash(symbols),
-    lambdaSymbol,
-    controlPointX,
-    controlPointY,
-    readSymbol,
-    writeSymbol,
-    direction,
-    tapeNumber,
-    popSymbol,
-    pushSymbol,
-    isLambdaInput,
-    isLambdaPop,
-    isLambdaPush,
-  );
+        id,
+        fromStateId,
+        toStateId,
+        const ListEquality<String>().hash(symbols),
+        lambdaSymbol,
+        controlPointX,
+        controlPointY,
+        readSymbol,
+        writeSymbol,
+        direction,
+        tapeNumber,
+        popSymbol,
+        pushSymbol,
+        const ListEquality<String>().hash(pushSymbols),
+        isLambdaInput,
+        isLambdaPop,
+        isLambdaPush,
+      );
 }
 
 /// Snapshot of nodes, edges and metadata rendered in the GraphView canvas.
@@ -392,9 +402,9 @@ class GraphViewAutomatonSnapshot {
   });
 
   const GraphViewAutomatonSnapshot.empty()
-    : nodes = const <GraphViewCanvasNode>[],
-      edges = const <GraphViewCanvasEdge>[],
-      metadata = const GraphViewAutomatonMetadata.empty();
+      : nodes = const <GraphViewCanvasNode>[],
+        edges = const <GraphViewCanvasEdge>[],
+        metadata = const GraphViewAutomatonMetadata.empty();
 
   final List<GraphViewCanvasNode> nodes;
   final List<GraphViewCanvasEdge> edges;
@@ -463,13 +473,13 @@ class GraphViewAutomatonSnapshot {
 
   @override
   int get hashCode => Object.hash(
-    const ListEquality<GraphViewCanvasNode>().hash(nodes),
-    const ListEquality<GraphViewCanvasEdge>().hash(edges),
-    metadata.id,
-    metadata.name,
-    const ListEquality<String>().hash(metadata.alphabet),
-    const ListEquality<String>().hash(metadata.tapeAlphabet),
-    metadata.blankSymbol,
-    metadata.tapeCount,
-  );
+        const ListEquality<GraphViewCanvasNode>().hash(nodes),
+        const ListEquality<GraphViewCanvasEdge>().hash(edges),
+        metadata.id,
+        metadata.name,
+        const ListEquality<String>().hash(metadata.alphabet),
+        const ListEquality<String>().hash(metadata.tapeAlphabet),
+        metadata.blankSymbol,
+        metadata.tapeCount,
+      );
 }

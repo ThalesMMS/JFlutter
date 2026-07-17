@@ -82,8 +82,8 @@ List<String>? _applyTransitionStack(
     newStack.removeLast();
   }
   if (!lambdaPush && t.pushSymbol.isNotEmpty) {
-    for (final ch in t.pushSymbol.split('').reversed) {
-      newStack.add(ch);
+    for (final symbol in t.pushSymbols.reversed) {
+      newStack.add(symbol);
     }
   }
   return newStack;
@@ -118,41 +118,97 @@ PDASimulationResult _simulateSearch(
   int maxDepth,
   int maxConfigurations,
 ) {
-  final startTime = DateTime.now();
-  int explored = 0;
-
-  // Configuration: (state, remainingInput, stack as list, steps)
-  final initialStack = <String>[pda.initialStackSymbol];
-  final initialSteps = stepByStep
-      ? <SimulationStep>[
-          SimulationStep.pda(
-            currentState: pda.initialState!.id,
-            remainingInput: inputString,
-            stackContents: pda.initialStackSymbol,
-            stepNumber: 0,
-          ),
-        ]
-      : <SimulationStep>[];
-  final initialConfig = (
-    pda.initialState!,
+  final search = _PdaSearch(
+    pda,
     inputString,
-    initialStack,
-    initialSteps,
-    0,
+    stepByStep,
+    timeout,
+    mode,
+    maxDepth,
+    maxConfigurations,
   );
+  PDASimulationResult? result;
+  while (result == null) {
+    result = search.runBatch(maxConfigurations + 1);
+  }
+  return result;
+}
 
-  final queue =
-      Queue<(State, String, List<String>, List<SimulationStep>, int)>();
-  final seenConfigs = <String>{
-    _configurationKey(pda.initialState!, inputString, initialStack),
-  };
-  queue.add(initialConfig);
+typedef _PdaConfiguration = (
+  State,
+  String,
+  List<String>,
+  List<SimulationStep>,
+  int,
+);
 
-  // Track longest explored branch for trace preservation on failure
+class _PdaSearch {
+  _PdaSearch(
+    this.pda,
+    this.inputString,
+    this.stepByStep,
+    this.timeout,
+    this.mode,
+    this.maxDepth,
+    this.maxConfigurations,
+  ) : startTime = DateTime.now() {
+    final initialStack = <String>[pda.initialStackSymbol];
+    final initialSteps = stepByStep
+        ? <SimulationStep>[
+            SimulationStep.pda(
+              currentState: pda.initialState!.id,
+              remainingInput: inputString,
+              stackContents: pda.initialStackSymbol,
+              stepNumber: 0,
+            ),
+          ]
+        : <SimulationStep>[];
+    queue.add(
+      (pda.initialState!, inputString, initialStack, initialSteps, 0),
+    );
+    seenConfigs.add(
+      _configurationKey(pda.initialState!, inputString, initialStack),
+    );
+  }
+
+  final PDA pda;
+  final String inputString;
+  final bool stepByStep;
+  final Duration timeout;
+  final PDAAcceptanceMode mode;
+  final int maxDepth;
+  final int maxConfigurations;
+  final DateTime startTime;
+  final Queue<_PdaConfiguration> queue = Queue();
+  final Set<String> seenConfigs = <String>{};
+  var explored = 0;
   var longestBranch = <SimulationStep>[];
   var depthLimitReached = false;
 
-  while (queue.isNotEmpty) {
+  PDASimulationResult? runBatch(int batchSize) {
+    for (var processed = 0;
+        processed < batchSize && queue.isNotEmpty;
+        processed++) {
+      final terminal = _processNext();
+      if (terminal != null) return terminal;
+    }
+    if (queue.isNotEmpty) return null;
+    if (depthLimitReached) {
+      return PDASimulationResult.limitReached(
+        inputString: inputString,
+        steps: longestBranch,
+        executionTime: DateTime.now().difference(startTime),
+      );
+    }
+    return PDASimulationResult.failure(
+      inputString: inputString,
+      steps: longestBranch,
+      errorMessage: 'Rejected: no accepting configuration found',
+      executionTime: DateTime.now().difference(startTime),
+    );
+  }
+
+  PDASimulationResult? _processNext() {
     if (DateTime.now().difference(startTime) > timeout) {
       return PDASimulationResult.timeout(
         inputString: inputString,
@@ -169,24 +225,20 @@ PDASimulationResult _simulateSearch(
     }
 
     final (state, remaining, stack, steps, depth) = queue.removeFirst();
-
-    // Track longest branch for trace preservation
     if (stepByStep && steps.length > longestBranch.length) {
       longestBranch = steps;
     }
 
-    // Acceptance checks
-    final isFinalOk = pda.acceptingStates.contains(state);
-    final isEmptyStackOk =
-        stack.isEmpty || (stack.length == 1 && stack.last.isEmpty);
     final inputConsumed = remaining.isEmpty;
-
     final accepted = switch (mode) {
-      PDAAcceptanceMode.finalState => inputConsumed && isFinalOk,
-      PDAAcceptanceMode.emptyStack => inputConsumed && isEmptyStackOk,
-      PDAAcceptanceMode.both => inputConsumed && isFinalOk && isEmptyStackOk,
+      PDAAcceptanceMode.finalState =>
+        inputConsumed && pda.acceptingStates.contains(state),
+      PDAAcceptanceMode.emptyStack => inputConsumed &&
+          (stack.isEmpty || (stack.length == 1 && stack.last.isEmpty)),
+      PDAAcceptanceMode.both => inputConsumed &&
+          pda.acceptingStates.contains(state) &&
+          (stack.isEmpty || (stack.length == 1 && stack.last.isEmpty)),
     };
-
     if (accepted) {
       final finalStep = SimulationStep.finalStep(
         finalState: state.id,
@@ -195,21 +247,18 @@ PDASimulationResult _simulateSearch(
         tapeContents: '',
         stepNumber: (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1,
       );
-      final finalSteps = stepByStep
-          ? (List<SimulationStep>.from(steps)..add(finalStep))
-          : <SimulationStep>[finalStep];
       return PDASimulationResult.success(
         inputString: inputString,
-        steps: finalSteps,
+        steps: stepByStep
+            ? (List<SimulationStep>.from(steps)..add(finalStep))
+            : <SimulationStep>[finalStep],
         executionTime: DateTime.now().difference(startTime),
       );
     }
 
     if (depth >= maxDepth) {
-      // Depth bound reached; continue exploring siblings. If no accepting
-      // branch is found, this makes the result inconclusive instead of reject.
       depthLimitReached = true;
-      continue;
+      return null;
     }
 
     void enqueue(
@@ -219,9 +268,7 @@ PDASimulationResult _simulateSearch(
       SimulationStep step,
     ) {
       final key = _configurationKey(nextState, nextRemaining, nextStack);
-      if (!seenConfigs.add(key)) {
-        return;
-      }
+      if (!seenConfigs.add(key)) return;
       queue.add(
         (
           nextState,
@@ -234,73 +281,67 @@ PDASimulationResult _simulateSearch(
     }
 
     final nextStepNumber = (steps.isNotEmpty ? steps.last.stepNumber : 0) + 1;
-
-    // Generate ε-moves first (no input consumption). Consider either
-    // explicit lambda flags or empty strings in the transition fields.
-    for (final t in pda.pdaTransitions.where(
-      (t) => t.fromState == state && (t.isLambdaInput || t.inputSymbol.isEmpty),
+    for (final transition in pda.pdaTransitions.where(
+      (transition) =>
+          transition.fromState == state &&
+          (transition.isLambdaInput || transition.inputSymbol.isEmpty),
     )) {
-      final newStack = _applyTransitionStack(t, stack);
-      if (newStack == null) continue;
-
-      final step = SimulationStep.pda(
-        currentState: t.toState.id,
-        remainingInput: remaining,
-        stackContents: newStack.join(''),
-        usedTransition: _transitionLabel(t, 'ε'),
-        stepNumber: nextStepNumber,
-        consumedInput: '',
-        explanation: _buildPdaStepExplanation(
-          transition: t,
+      final nextStack = _applyTransitionStack(transition, stack);
+      if (nextStack == null) continue;
+      enqueue(
+        transition.toState,
+        remaining,
+        nextStack,
+        SimulationStep.pda(
+          currentState: transition.toState.id,
+          remainingInput: remaining,
+          stackContents: nextStack.join(''),
+          usedTransition: _transitionLabel(transition, 'ε'),
+          stepNumber: nextStepNumber,
           consumedInput: '',
-          priorStack: stack,
-          nextStack: newStack,
+          explanation: _buildPdaStepExplanation(
+            transition: transition,
+            consumedInput: '',
+            priorStack: stack,
+            nextStack: nextStack,
+          ),
         ),
       );
-      enqueue(t.toState, remaining, newStack, step);
     }
 
-    // Generate input-consuming moves if input remains
     if (remaining.isNotEmpty) {
-      final a = remaining[0];
-      final newRemaining = remaining.substring(1);
-      for (final t in pda.pdaTransitions.where(
-        (t) => t.fromState == state && !t.isLambdaInput && t.inputSymbol == a,
+      for (final transition in pda.pdaTransitions.where(
+        (transition) =>
+            transition.fromState == state &&
+            !transition.isLambdaInput &&
+            transition.inputSymbol.isNotEmpty &&
+            remaining.startsWith(transition.inputSymbol),
       )) {
-        final newStack = _applyTransitionStack(t, stack);
-        if (newStack == null) continue;
-
-        final step = SimulationStep.pda(
-          currentState: t.toState.id,
-          remainingInput: newRemaining,
-          stackContents: newStack.join(''),
-          usedTransition: _transitionLabel(t, a),
-          stepNumber: nextStepNumber,
-          consumedInput: a,
-          explanation: _buildPdaStepExplanation(
-            transition: t,
-            consumedInput: a,
-            priorStack: stack,
-            nextStack: newStack,
+        final symbol = transition.inputSymbol;
+        final nextRemaining = remaining.substring(symbol.length);
+        final nextStack = _applyTransitionStack(transition, stack);
+        if (nextStack == null) continue;
+        enqueue(
+          transition.toState,
+          nextRemaining,
+          nextStack,
+          SimulationStep.pda(
+            currentState: transition.toState.id,
+            remainingInput: nextRemaining,
+            stackContents: nextStack.join(''),
+            usedTransition: _transitionLabel(transition, symbol),
+            stepNumber: nextStepNumber,
+            consumedInput: symbol,
+            explanation: _buildPdaStepExplanation(
+              transition: transition,
+              consumedInput: symbol,
+              priorStack: stack,
+              nextStack: nextStack,
+            ),
           ),
         );
-        enqueue(t.toState, newRemaining, newStack, step);
       }
     }
+    return null;
   }
-
-  if (depthLimitReached) {
-    return PDASimulationResult.limitReached(
-      inputString: inputString,
-      steps: longestBranch,
-      executionTime: DateTime.now().difference(startTime),
-    );
-  }
-
-  return PDASimulationResult.failure(
-    inputString: inputString,
-    steps: longestBranch,
-    errorMessage: 'Rejected: no accepting configuration found',
-    executionTime: DateTime.now().difference(startTime),
-  );
 }

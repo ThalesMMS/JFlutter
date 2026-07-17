@@ -13,23 +13,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:jflutter/core/models/settings_model.dart';
 import 'package:jflutter/core/repositories/settings_repository.dart';
-import 'package:jflutter/data/repositories/settings_repository_impl.dart';
-import 'package:jflutter/data/storage/settings_storage.dart';
+import 'package:jflutter/injection/data_providers.dart';
 import 'package:jflutter/presentation/providers/settings_provider.dart';
 import 'package:jflutter/presentation/widgets/app_snackbar.dart';
 import 'package:jflutter/presentation/widgets/switch_setting_tile.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
-  SettingsPage({
+  const SettingsPage({
     super.key,
-    SettingsRepository? repository,
-    SettingsStorage? storage,
-  }) : repository = repository ??
-            SharedPreferencesSettingsRepository(
-              storage: storage ?? const SharedPreferencesSettingsStorage(),
-            );
+    this.repository,
+  });
 
-  final SettingsRepository repository;
+  final SettingsRepository? repository;
 
   @override
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
@@ -38,6 +33,9 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isLoading = false;
   SettingsModel _settings = const SettingsModel();
+
+  SettingsRepository get _repository =>
+      widget.repository ?? ref.read(settingsRepositoryProvider);
 
   TextStyle? _settingTitleStyle(BuildContext context) {
     return Theme.of(
@@ -72,7 +70,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     });
 
     try {
-      final settings = await widget.repository.loadSettings();
+      final settings = await _repository.loadSettings();
       if (!mounted) return;
       setState(() {
         _settings = settings;
@@ -94,7 +92,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final currentSettings = _settings;
 
     try {
-      await widget.repository.saveSettings(currentSettings);
+      await _repository.saveSettings(currentSettings);
       await ref
           .read(settingsProvider.notifier)
           .refreshFromModel(currentSettings);
@@ -120,7 +118,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     });
 
     try {
-      await widget.repository.saveSettings(defaults);
+      await _repository.saveSettings(defaults);
       await ref.read(settingsProvider.notifier).refreshFromModel(defaults);
       if (!mounted) return;
       showAppSnackBar(
@@ -141,8 +139,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       context,
       message: message,
       tone: AppSnackBarTone.error,
-      actionLabel: 'Dismiss',
-      onAction: () {},
     );
   }
 
@@ -229,23 +225,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               },
               chipKeyBuilder: (option) => ValueKey(
                 'settings_empty_string_${option.contains('Lambda') ? 'lambda' : 'epsilon'}',
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildSimpleSetting(
-              'Epsilon Symbol',
-              'Symbol used to represent epsilon transitions',
-              _settings.epsilonSymbol,
-              const ['ε (Epsilon)', 'λ (Lambda)'],
-              (value) {
-                setState(() {
-                  _settings = _settings.copyWith(
-                    epsilonSymbol: value == 'ε (Epsilon)' ? 'ε' : 'λ',
-                  );
-                });
-              },
-              chipKeyBuilder: (option) => ValueKey(
-                'settings_epsilon_${option.contains('Epsilon') ? 'epsilon' : 'lambda'}',
               ),
             ),
           ],

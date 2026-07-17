@@ -160,7 +160,79 @@ FSA _epsilonNFAWithInitialAndMidClosure() {
   );
 }
 
+FSA _branchingNFA() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2.zero(),
+    isInitial: true,
+  );
+  final q1 = State(
+    id: 'q1',
+    label: 'q1',
+    position: Vector2(100, 0),
+    isAccepting: true,
+  );
+  final transitions = <FSATransition>{};
+  for (final from in [q0, q1]) {
+    for (final to in [q0, q1]) {
+      transitions.add(
+        FSATransition(
+          id: '${from.id}-${to.id}',
+          fromState: from,
+          toState: to,
+          inputSymbols: {'a'},
+          label: 'a',
+        ),
+      );
+    }
+  }
+  return FSA(
+    id: 'branching-nfa',
+    name: 'Branching NFA',
+    states: {q0, q1},
+    transitions: transitions,
+    alphabet: {'a'},
+    initialState: q0,
+    acceptingStates: {q1},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 200, 100),
+  );
+}
+
 void main() {
+  group('NFA recognition fast path', () {
+    test('does not construct path nodes when trace mode is disabled', () async {
+      final stopwatch = Stopwatch()..start();
+      final result = await AutomatonSimulator.simulateNFA(
+        _branchingNFA(),
+        List.filled(1000, 'a').join(),
+      );
+      stopwatch.stop();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.accepted, isTrue);
+      expect(result.data!.steps, isEmpty);
+      expect(result.data!.computationTree, isNull);
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 2)));
+    });
+
+    test('trace mode stops at the configured node limit', () async {
+      final result = await AutomatonSimulator.simulateNFA(
+        _branchingNFA(),
+        'aa',
+        stepByStep: true,
+        maxTraceNodes: 3,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.accepted, isFalse);
+      expect(result.data!.errorMessage, contains('NFA trace truncated'));
+      expect(result.data!.computationTree, isNotNull);
+    });
+  });
+
   group('DFA simulator step recording', () {
     test('Step records destination state, not source', () async {
       final dfa = _simpleDFA();
@@ -182,6 +254,20 @@ void main() {
       // After consuming 'b', current state should be q2 (destination)
       final stepAfterB = steps[2];
       expect(stepAfterB.currentState, 'q2');
+    });
+
+    test('preserves each remaining input suffix exactly', () async {
+      final result = await AutomatonSimulator.simulateDFA(
+        _simpleDFA(),
+        'ab',
+        stepByStep: true,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(
+        result.data!.steps.map((step) => step.remainingInput),
+        ['ab', 'b', ''],
+      );
     });
   });
 

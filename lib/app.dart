@@ -12,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/pages/home_page.dart';
-import 'presentation/providers/active_session_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/theme/app_theme.dart';
+import 'presentation/widgets/active_session_lifecycle.dart';
 
 /// Main application widget with clean architecture
 class JFlutterApp extends ConsumerWidget {
@@ -23,17 +23,18 @@ class JFlutterApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
-    ref.watch(activeSessionPersistenceProvider);
 
-    return MaterialApp(
-      title: 'JFlutter',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: _resolveThemeMode(settings.themeMode),
-      home: const HomePage(),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      debugShowCheckedModeBanner: false,
+    return ActiveSessionLifecycle(
+      child: MaterialApp(
+        title: 'JFlutter',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: _resolveThemeMode(settings.themeMode),
+        home: const HomePage(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 

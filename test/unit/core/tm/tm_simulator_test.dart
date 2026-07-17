@@ -271,6 +271,43 @@ TM _ntmSimple() {
   );
 }
 
+TM _ntmDuplicateLoop() {
+  final q0 = State(
+    id: 'q0',
+    label: 'q0',
+    position: Vector2.zero(),
+    isInitial: true,
+  );
+
+  return TM(
+    id: 'tm_duplicate_loop',
+    name: 'Duplicate Loop NTM',
+    states: {q0},
+    transitions: {
+      for (var i = 0; i < 2; i++)
+        TMTransition(
+          id: 't$i',
+          fromState: q0,
+          toState: q0,
+          label: '1/1,S',
+          readSymbol: '1',
+          writeSymbol: '1',
+          direction: TapeDirection.stay,
+          tapeNumber: 0,
+        ),
+    },
+    alphabet: const {'1'},
+    initialState: q0,
+    acceptingStates: const {},
+    created: DateTime.now(),
+    modified: DateTime.now(),
+    bounds: const math.Rectangle(0, 0, 400, 300),
+    tapeAlphabet: const {'1', 'B'},
+    blankSymbol: 'B',
+    tapeCount: 1,
+  );
+}
+
 void main() {
   group('TM simulator (single-tape, deterministic and nondeterministic)', () {
     test('DTM appends one and accepts', () {
@@ -337,8 +374,7 @@ void main() {
       expect(res.data!.accepted, true);
     });
 
-    test(
-        'DTM returns error on nondeterministic conflict (Bug 5 fix)', () {
+    test('DTM returns error on nondeterministic conflict (Bug 5 fix)', () {
       final tm = _dtmNondeterministicConflict();
       final res = TMSimulator.simulateDTM(tm, '1');
       expect(res.isSuccess, true);
@@ -373,7 +409,10 @@ void main() {
       );
 
       final json = original.toJson();
-      final restored = TMTransition.fromJson(json);
+      final restored = TMTransition.fromJson(
+        json,
+        statesById: {q0.id: q0, q1.id: q1},
+      );
 
       expect(restored.id, original.id);
       expect(restored.fromState.id, original.fromState.id);
@@ -398,7 +437,9 @@ void main() {
       expect(restored.acceptingStates.length, tm.acceptingStates.length);
     });
 
-    test('currentTapeSymbol returns symbol at headPosition, not index 0 (Bug A fix)', () {
+    test(
+        'currentTapeSymbol returns symbol at headPosition, not index 0 (Bug A fix)',
+        () {
       // Create a simulation step with tape 'ABC' and head at position 2
       final step = SimulationStep.tm(
         currentState: 'q0',
@@ -436,7 +477,9 @@ void main() {
           reason: 'Initial step should have head at position 0');
     });
 
-    test('DTM with >1000 steps does not falsely report infinite loop (Bug F fix)', () {
+    test(
+        'DTM with >1000 steps does not falsely report infinite loop (Bug F fix)',
+        () {
       // Create a TM that loops through many steps before accepting.
       // q0 reads '1', writes '1', moves right — loops until it hits blank.
       // With input of 1500 '1's, it needs >1500 steps.
@@ -503,6 +546,29 @@ void main() {
           reason: 'Should have more than 1000 steps');
     });
 
+    test('cooperative DTM detects a loop without recording every step',
+        () async {
+      final loopingNtm = _ntmDuplicateLoop();
+      final tm = loopingNtm.copyWith(
+        transitions: {loopingNtm.tmTransitions.first},
+      );
+
+      final result = await TMSimulator.simulateCooperative(
+        tm,
+        '1',
+        stepByStep: false,
+        timeout: const Duration(seconds: 30),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.errorMessage, 'Infinite loop detected');
+      expect(
+        result.data!.steps,
+        hasLength(1),
+        reason: 'Cooperative mode should retain only the initial snapshot',
+      );
+    });
+
     test('Final step has headPosition (Bug G fix)', () {
       final tm = _dtmAppendOne();
       final res = TMSimulator.simulateDTM(tm, '11');
@@ -520,9 +586,8 @@ void main() {
       expect(res.data!.accepted, true);
 
       // Skip initial step; intermediate steps should show the destination state
-      final intermediateSteps = res.data!.steps
-          .where((s) => s.usedTransition != null)
-          .toList();
+      final intermediateSteps =
+          res.data!.steps.where((s) => s.usedTransition != null).toList();
       expect(intermediateSteps, isNotEmpty);
 
       for (final step in intermediateSteps) {
@@ -592,6 +657,37 @@ void main() {
       expect(res.data!.accepted, false);
       expect(res.data!.steps, isNotEmpty,
           reason: 'Rejected NTM should preserve trace steps, not discard them');
+    });
+
+    test('NTM rejects after deduplicating repeated configurations', () {
+      final result = TMSimulator.simulateNTM(
+        _ntmDuplicateLoop(),
+        '1',
+        maxConfigurations: 2,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.accepted, isFalse);
+      expect(
+        result.data!.errorMessage,
+        'Rejected: no accepting configuration found',
+      );
+    });
+
+    test('cooperative NTM also deduplicates repeated configurations', () async {
+      final result = await TMSimulator.simulateCooperative(
+        _ntmDuplicateLoop(),
+        '1',
+        operationsPerBatch: 1,
+        timeout: const Duration(milliseconds: 100),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.accepted, isFalse);
+      expect(
+        result.data!.errorMessage,
+        'Rejected: no accepting configuration found',
+      );
     });
   });
 }

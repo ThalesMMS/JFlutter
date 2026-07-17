@@ -30,15 +30,11 @@ class HelpPage extends ConsumerStatefulWidget {
 }
 
 class _HelpPageState extends ConsumerState<HelpPage> {
-  static const int _helpSectionCount = 10;
-
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
   final ScrollController _chipScrollController = ScrollController();
-  late final List<GlobalKey> _chipKeys = List.generate(
-    _helpSectionCount,
-    (_) => GlobalKey(),
-  );
+  late final List<GlobalKey> _chipKeys;
+  bool _chipKeysInitialized = false;
 
   List<HelpSection> _helpSections(AppLocalizations l10n) => [
         HelpSection(
@@ -92,6 +88,18 @@ class _HelpPageState extends ConsumerState<HelpPage> {
           content: const _LicensesHelpContent(),
         ),
       ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_chipKeysInitialized) {
+      _chipKeys = List.generate(
+        _helpSections(jflapLocalizationsOf(context)).length,
+        (_) => GlobalKey(),
+      );
+      _chipKeysInitialized = true;
+    }
+  }
 
   @override
   void dispose() {

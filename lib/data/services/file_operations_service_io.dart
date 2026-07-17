@@ -21,11 +21,14 @@ import '../../core/models/pda.dart';
 import '../../core/parsers/grammar_xml_codec.dart';
 import '../../core/parsers/jflap_xml_codec.dart';
 import '../../core/result.dart';
+import '../../core/services/file_operations_gateway.dart';
 import '../../presentation/widgets/export/svg_exporter.dart';
 import 'file_operations_payload_mixin.dart';
 
 /// Service for file operations including JFLAP format support
-class FileOperationsService with FileOperationsPayloadMixin {
+class FileOperationsService
+    with FileOperationsPayloadMixin
+    implements FileOperationsGateway {
   static const _writeAccessRetryMessage =
       'JFlutter could not write to the selected location. The file may be outside the app sandbox or no longer writable. Choose a destination again from the system save dialog and try again.';
   static const _readAccessRetryMessage =
@@ -36,6 +39,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
       'The selected file is no longer available. Pick the file again and try again.';
 
   /// Renders the PNG payload without writing it to disk.
+  @override
   Future<Result<Uint8List>> exportAutomatonToPngBytes(FSA automaton) async {
     ui.Picture? picture;
     ui.Image? image;
@@ -119,6 +123,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Saves automaton to JFLAP XML format (.jff)
+  @override
   Future<StringResult> saveAutomatonToJFLAP(
     FSA automaton,
     String filePath,
@@ -137,6 +142,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Loads automaton from JFLAP XML format (.jff)
+  @override
   Future<Result<FSA>> loadAutomatonFromJFLAP(String filePath) async {
     try {
       final file = File(filePath);
@@ -152,6 +158,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Saves automaton to JSON format.
+  @override
   Future<StringResult> saveAutomatonToJson(
     FSA automaton,
     String filePath,
@@ -170,6 +177,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Loads automaton from JSON format.
+  @override
   Future<Result<FSA>> loadAutomatonFromJson(String filePath) async {
     try {
       final file = File(filePath);
@@ -189,6 +197,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Saves grammar to JFLAP XML format (.cfg)
+  @override
   Future<StringResult> saveGrammarToJFLAP(
     Grammar grammar,
     String filePath,
@@ -207,6 +216,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Loads grammar from JFLAP XML format (.cfg)
+  @override
   Future<Result<Grammar>> loadGrammarFromJFLAP(String filePath) async {
     try {
       final file = File(filePath);
@@ -244,6 +254,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Writes previously rendered PNG bytes to disk.
+  @override
   Future<StringResult> writePngBytesToPath(
     Uint8List bytes,
     String filePath,
@@ -262,6 +273,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Exports the current FSA model to SVG format.
+  @override
   Future<StringResult> exportFsaToSVG(
     FSA automaton,
     String filePath, {
@@ -304,6 +316,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Exports the current grammar model to SVG format.
+  @override
   Future<StringResult> exportGrammarModelToSVG(
     Grammar grammar,
     String filePath, {
@@ -325,6 +338,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Exports the current PDA model to SVG format.
+  @override
   Future<StringResult> exportPdaToSVG(
     PDA pda,
     String filePath, {
@@ -346,6 +360,7 @@ class FileOperationsService with FileOperationsPayloadMixin {
   }
 
   /// Exports Turing machine to SVG format
+  @override
   Future<StringResult> exportTuringMachineToSVG(
     TuringMachineEntity tm,
     String filePath, {
@@ -403,11 +418,12 @@ class FileOperationsService with FileOperationsPayloadMixin {
       if (!dirResult.isSuccess) return Failure(dirResult.error!);
 
       final directory = Directory(dirResult.data!);
-      final files = directory
-          .listSync()
-          .where((file) => file.path.endsWith('.$extension'))
-          .map((file) => file.path)
-          .toList();
+      final files = <String>[];
+      await for (final entity in directory.list()) {
+        if (entity.path.endsWith('.$extension')) {
+          files.add(entity.path);
+        }
+      }
 
       return Success(files);
     } catch (e) {

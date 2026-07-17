@@ -11,6 +11,8 @@
 //  Thales Matheus Mendonça Santos - January 2026
 //
 
+import 'dart:collection';
+
 /// Single node in an NFA computation tree representing a branch point
 class NFAPathNode {
   /// Current state ID at this node
@@ -105,8 +107,7 @@ class NFAPathNode {
       inputSymbol: json['inputSymbol'] as String?,
       transitionUsed: json['transitionUsed'] as String?,
       stepNumber: json['stepNumber'] as int,
-      children:
-          (json['children'] as List?)
+      children: (json['children'] as List?)
               ?.map((c) => NFAPathNode.fromJson(c as Map<String, dynamic>))
               .toList() ??
           const [],
@@ -275,9 +276,9 @@ class NFAPathNode {
   /// Traverses the tree in breadth-first order
   List<NFAPathNode> breadthFirstTraversal() {
     final result = <NFAPathNode>[];
-    final queue = <NFAPathNode>[this];
+    final queue = Queue<NFAPathNode>()..add(this);
     while (queue.isNotEmpty) {
-      final node = queue.removeAt(0);
+      final node = queue.removeFirst();
       result.add(node);
       queue.addAll(node.children);
     }

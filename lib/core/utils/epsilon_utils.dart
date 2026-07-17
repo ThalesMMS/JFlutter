@@ -7,6 +7,8 @@
 //  recognised aliases so persistence, services and UI components stay in sync.
 //
 
+import 'dart:collection';
+
 const String kEpsilonSymbol = 'ε';
 
 /// Normalised aliases that should be treated as epsilon/empty-string symbols.
@@ -40,6 +42,29 @@ String normalizeToEpsilon(String? symbol) {
     return kEpsilonSymbol;
   }
   return symbol?.trim() ?? '';
+}
+
+/// Computes the transitive epsilon closure of [seeds].
+///
+/// Callers provide epsilon-only destinations so the traversal stays shared
+/// while adjacency storage remains specific to each algorithm.
+Set<T> computeEpsilonClosure<T>(
+  Iterable<T> seeds,
+  Iterable<T> Function(T state) epsilonDestinations,
+) {
+  final closure = <T>{...seeds};
+  final queue = Queue<T>.of(closure);
+
+  while (queue.isNotEmpty) {
+    final state = queue.removeFirst();
+    for (final destination in epsilonDestinations(state)) {
+      if (closure.add(destination)) {
+        queue.add(destination);
+      }
+    }
+  }
+
+  return closure;
 }
 
 /// Extracts the state identifier portion from a transition key formatted as

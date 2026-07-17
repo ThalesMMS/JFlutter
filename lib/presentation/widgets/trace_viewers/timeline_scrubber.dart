@@ -13,6 +13,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/app_localizations_resolver.dart';
+
 /// Timeline scrubber widget for navigating simulation steps.
 ///
 /// This widget provides an interactive slider interface for jumping to any
@@ -46,12 +49,12 @@ class TimelineScrubber extends StatelessWidget {
     required this.totalSteps,
     required this.onStepChanged,
     this.enabled = true,
-  }) : assert(currentStep >= 0, 'currentStep must be non-negative'),
-       assert(totalSteps >= 0, 'totalSteps must be non-negative'),
-       assert(
-         currentStep < totalSteps || totalSteps == 0,
-         'currentStep must be less than totalSteps',
-       );
+  })  : assert(currentStep >= 0, 'currentStep must be non-negative'),
+        assert(totalSteps >= 0, 'totalSteps must be non-negative'),
+        assert(
+          currentStep < totalSteps || totalSteps == 0,
+          'currentStep must be less than totalSteps',
+        );
 
   /// Current step index (0-based).
   ///
@@ -76,20 +79,21 @@ class TimelineScrubber extends StatelessWidget {
   final bool enabled;
 
   /// Get semantic label for the current position.
-  String _getPositionLabel() {
-    if (totalSteps == 0) return 'No steps available';
-    return 'Step ${currentStep + 1} of $totalSteps';
+  String _getPositionLabel(AppLocalizations l10n) {
+    if (totalSteps == 0) return l10n.noStepsAvailable;
+    return l10n.stepOf(currentStep + 1, totalSteps);
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = appLocalizationsOf(context);
     final isInteractive = enabled && totalSteps > 1;
 
     return Semantics(
-      label: 'Timeline scrubber',
-      value: _getPositionLabel(),
-      hint: isInteractive ? 'Drag to navigate through simulation steps' : null,
+      label: l10n.timelineScrubber,
+      value: _getPositionLabel(l10n),
+      hint: isInteractive ? l10n.timelineNavigationHint : null,
       enabled: isInteractive,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -99,19 +103,19 @@ class TimelineScrubber extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Timeline',
+                l10n.timeline,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
               ),
               Text(
-                _getPositionLabel(),
+                _getPositionLabel(l10n),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: isInteractive
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: isInteractive
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
@@ -125,11 +129,15 @@ class TimelineScrubber extends StatelessWidget {
               inactiveTrackColor: colorScheme.surfaceContainerHighest,
               thumbColor: colorScheme.primary,
               overlayColor: colorScheme.primary.withValues(alpha: 0.12),
-              disabledActiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.12),
-              disabledInactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.12),
+              disabledActiveTrackColor:
+                  colorScheme.onSurface.withValues(alpha: 0.12),
+              disabledInactiveTrackColor:
+                  colorScheme.onSurface.withValues(alpha: 0.12),
               disabledThumbColor: colorScheme.onSurface.withValues(alpha: 0.38),
               valueIndicatorColor: colorScheme.primaryContainer,
-              valueIndicatorTextStyle: Theme.of(context).textTheme.labelSmall
+              valueIndicatorTextStyle: Theme.of(context)
+                  .textTheme
+                  .labelSmall
                   ?.copyWith(color: colorScheme.onPrimaryContainer),
             ),
             child: Slider(
@@ -137,7 +145,9 @@ class TimelineScrubber extends StatelessWidget {
               min: 0,
               max: totalSteps > 1 ? (totalSteps - 1).toDouble() : 1,
               divisions: totalSteps > 1 ? totalSteps - 1 : 1,
-              label: totalSteps > 0 ? 'Step ${currentStep + 1}' : 'No steps',
+              label: totalSteps > 0
+                  ? '${l10n.stepLabel} ${currentStep + 1}'
+                  : l10n.noSteps,
               onChanged: isInteractive
                   ? (value) => onStepChanged(value.round())
                   : null,

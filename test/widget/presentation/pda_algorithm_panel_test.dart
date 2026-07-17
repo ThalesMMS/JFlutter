@@ -100,7 +100,7 @@ AssetExample<PDA> _buildPdaExample() {
     description: 'Fake PDA example for widget tests',
     category: ExampleCategory.pda,
     difficultyLevel: DifficultyLevel.easy,
-    complexityLevel: ComplexityLevel.low,
+    complexityLevel: ExampleComplexityLevel.low,
     tags: const ['test'],
     payload: pda,
   );
@@ -136,6 +136,16 @@ Future<void> _pumpUntilPdaLoaded(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('shows empty results before running an analysis', (tester) async {
+    await _pumpPdaAlgorithmPanel(tester);
+
+    expect(find.text('No analysis results yet'), findsOneWidget);
+    expect(
+      find.text('Select an algorithm above to analyze your PDA'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('renders PDA actions through AlgorithmButton', (tester) async {
     await _pumpPdaAlgorithmPanel(tester);

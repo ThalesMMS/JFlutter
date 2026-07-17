@@ -16,6 +16,7 @@ import '../models/grammar_diagnostic_severity.dart';
 import '../models/grammar_diagnostics_report.dart';
 import '../models/production.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 
 class GrammarAnalysisReport<T> {
   final T value;
@@ -130,7 +131,7 @@ class GrammarAnalyzer {
       }
 
       for (final symbol in production.rightSide) {
-        if (_isEpsilon(symbol)) {
+        if (isEpsilonSymbol(symbol)) {
           continue;
         }
 
@@ -234,7 +235,7 @@ class GrammarAnalyzer {
 
       for (final rhs in alternatives) {
         for (final symbol in rhs) {
-          if (_isEpsilon(symbol)) continue;
+          if (isEpsilonSymbol(symbol)) continue;
 
           if (grammar.nonterminals.contains(symbol)) {
             if (!visited.contains(symbol)) {
@@ -318,7 +319,7 @@ class GrammarAnalyzer {
           var rhsIsProductive = true;
 
           for (final symbol in rhs) {
-            if (_isEpsilon(symbol)) {
+            if (isEpsilonSymbol(symbol)) {
               continue;
             }
 
@@ -668,7 +669,7 @@ class GrammarAnalyzer {
 
           for (var i = 0; i < right.length; i++) {
             final symbol = right[i];
-            if (_isEpsilon(symbol)) {
+            if (isEpsilonSymbol(symbol)) {
               if (first[left]!.add('ε')) {
                 changed = true;
                 derivations.add(
@@ -1022,8 +1023,6 @@ class GrammarAnalyzer {
     return candidate;
   }
 
-  static bool _isEpsilon(String symbol) => symbol == 'ε' || symbol == 'λ';
-
   static String _formatSymbols(List<String> symbols) {
     if (symbols.isEmpty) {
       return 'ε';
@@ -1042,7 +1041,7 @@ class GrammarAnalyzer {
     final result = <String>{};
     for (var i = 0; i < sequence.length; i++) {
       final symbol = sequence[i];
-      if (_isEpsilon(symbol)) {
+      if (isEpsilonSymbol(symbol)) {
         result.add('ε');
         break;
       }

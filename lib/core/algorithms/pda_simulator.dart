@@ -21,6 +21,7 @@ import '../models/simulation_step.dart';
 import '../models/step_explanation.dart';
 import '../models/transition.dart';
 import '../result.dart';
+import '../simulation_cancelled_exception.dart';
 
 part 'pda_simulator_validation.dart';
 part 'pda_simulator_search.dart';
@@ -83,7 +84,6 @@ class PDASimulator {
       if (pda.initialState == null) {
         return const Failure('PDA must have an initial state');
       }
-
       final result = _simulateSearch(
         pda,
         inputString,
@@ -97,6 +97,55 @@ class PDASimulator {
       return Success(result.copyWith(executionTime: stopwatch.elapsed));
     } catch (e) {
       return Failure('Error simulating NPDA: $e');
+    }
+  }
+
+  static Future<Result<PDASimulationResult>> simulateCooperative(
+    PDA pda,
+    String inputString, {
+    bool stepByStep = false,
+    Duration timeout = const Duration(seconds: 5),
+    PDAAcceptanceMode mode = PDAAcceptanceMode.finalState,
+    int maxDepth = defaultMaxBranchingDepth,
+    int maxConfigurations = defaultMaxConfigurations,
+    int configurationsPerBatch = 250,
+    bool Function()? isCancelled,
+  }) async {
+    try {
+      final validationResult = _validateInput(pda, inputString);
+      if (!validationResult.isSuccess) {
+        return Failure(validationResult.error!);
+      }
+      if (pda.initialState == null) {
+        return const Failure('PDA must have an initial state');
+      }
+      if (configurationsPerBatch <= 0) {
+        return const Failure(
+          'Configurations per batch must be greater than zero',
+        );
+      }
+
+      final search = _PdaSearch(
+        pda,
+        inputString,
+        stepByStep,
+        timeout,
+        mode,
+        maxDepth,
+        maxConfigurations,
+      );
+      while (true) {
+        if (isCancelled?.call() == true) {
+          throw const SimulationCancelledException();
+        }
+        final result = search.runBatch(configurationsPerBatch);
+        if (result != null) return Success(result);
+        await Future<void>.delayed(Duration.zero);
+      }
+    } on SimulationCancelledException {
+      rethrow;
+    } catch (e) {
+      return Failure('Error simulating PDA: $e');
     }
   }
 
@@ -279,8 +328,10 @@ class PDASimulator {
         if (!transition.isLambdaPop && transition.popSymbol.isNotEmpty) {
           recomputedStackAlphabet.add(transition.popSymbol);
         }
-        if (!transition.isLambdaPush && transition.pushSymbol.isNotEmpty) {
-          recomputedStackAlphabet.add(transition.pushSymbol);
+        if (!transition.isLambdaPush) {
+          recomputedStackAlphabet.addAll(
+            transition.pushSymbols.where((symbol) => symbol.isNotEmpty),
+          );
         }
       } else if (transition is FSATransition) {
         recomputedAlphabet.addAll(

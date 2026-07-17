@@ -11,6 +11,8 @@
 //
 import 'package:flutter/material.dart';
 import '../../core/models/algorithm_step.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import 'algorithm_step_renderer_registry.dart';
 
 /// Widget for displaying algorithm step details and explanations
@@ -84,6 +86,7 @@ class AlgorithmStepViewer extends StatelessWidget {
     ColorScheme colorScheme,
     TextTheme textTheme,
   ) {
+    final l10n = appLocalizationsOf(context);
     return Row(
       children: [
         // Step number badge
@@ -94,7 +97,7 @@ class AlgorithmStepViewer extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            'Step ${step.displayNumber}',
+            '${l10n.stepLabel} ${step.displayNumber}',
             style: textTheme.labelMedium?.copyWith(
               color: colorScheme.onPrimary,
               fontWeight: FontWeight.bold,
@@ -106,7 +109,7 @@ class AlgorithmStepViewer extends StatelessWidget {
         // Step title
         Expanded(
           child: Text(
-            step.title,
+            l10n.localizeWorkflowText(step.title),
             style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
@@ -125,7 +128,7 @@ class AlgorithmStepViewer extends StatelessWidget {
             ),
           ),
           child: Text(
-            _getAlgorithmTypeLabel(step.type),
+            l10n.localizeWorkflowText(_getAlgorithmTypeLabel(step.type)),
             style: textTheme.labelSmall?.copyWith(
               color: colorScheme.onSecondaryContainer,
               fontWeight: FontWeight.w600,
@@ -138,6 +141,7 @@ class AlgorithmStepViewer extends StatelessWidget {
 
   /// Builds the explanation section
   Widget _buildExplanationSection(BuildContext context, TextTheme textTheme) {
+    final l10n = appLocalizationsOf(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -161,7 +165,7 @@ class AlgorithmStepViewer extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Explanation',
+                l10n.localizeWorkflowText('Explanation'),
                 style: textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -171,7 +175,7 @@ class AlgorithmStepViewer extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            step.explanation,
+            l10n.localizeWorkflowText(step.explanation),
             style: textTheme.bodyMedium?.copyWith(
               height: 1.5,
               color: Theme.of(context).colorScheme.onSurface,

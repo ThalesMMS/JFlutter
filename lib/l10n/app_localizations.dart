@@ -122,76 +122,220 @@ abstract class AppLocalizations {
   /// **'Algorithms'**
   String get algorithms;
 
+  /// Tooltip for opening the app help page from the home page.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
   String get homeHelpTooltip;
 
+  /// Tooltip for opening app settings from the home page.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
   String get homeSettingsTooltip;
 
+  /// Navigation label for the finite state automata workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'FSA'**
   String get homeNavigationFsaLabel;
 
+  /// Short navigation description for the finite state automata workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Finite State Automata'**
   String get homeNavigationFsaDescription;
 
+  /// Navigation label for the grammar workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Grammar'**
   String get homeNavigationGrammarLabel;
 
+  /// Short navigation description for the grammar workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Context-Free Grammars'**
   String get homeNavigationGrammarDescription;
 
+  /// Navigation label for the pushdown automata workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'PDA'**
   String get homeNavigationPdaLabel;
 
+  /// Short navigation description for the pushdown automata workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pushdown Automata'**
   String get homeNavigationPdaDescription;
 
+  /// Navigation label for the Turing machine workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'TM'**
   String get homeNavigationTmLabel;
 
+  /// Short navigation description for the Turing machine workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Turing Machines'**
   String get homeNavigationTmDescription;
 
+  /// Navigation label for the regular expression workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Regex'**
   String get homeNavigationRegexLabel;
 
+  /// Short navigation description for the regular expression workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular Expressions'**
   String get homeNavigationRegexDescription;
 
+  /// Navigation label for the pumping lemma workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pumping'**
   String get homeNavigationPumpingLabel;
 
+  /// Short navigation description for the pumping lemma workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pumping Lemma'**
   String get homeNavigationPumpingDescription;
 
+  /// Title for the help and documentation page.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Documentation'**
   String get helpPageTitle;
 
+  /// Tooltip for opening help search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Help'**
   String get helpSearchTooltip;
 
+  /// Title for the quick start help dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Start Guide'**
   String get helpQuickStartTitle;
 
+  /// Body text for the quick start help dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to JFlutter. Here is a quick way to get started:\n\n1. Choose a workspace such as FSA, Grammar, PDA, TM, or Regex.\n2. Start with a blank workspace or open a supported example or file.\n3. Use the editor to build your machine or grammar. Double-tap a state for quick actions.\n4. Run simulations to test your work.\n5. Use algorithms to transform structures.\n\nTips:\n• Use navigation tabs or section chips to switch workspaces quickly.\n• Double-tap a state to open its quick action menu.\n• Pinch to zoom on the canvas.\n• Tap the Quick Start icon whenever you need a refresher.'**
   String get helpQuickStartBody;
 
+  /// Confirmation button label for dismissing help dialogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it!'**
   String get helpGotIt;
 
+  /// Placeholder label for the help search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search help...'**
   String get helpSearchFieldLabel;
 
+  /// Tooltip for clearing the help search query.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
   String get helpSearchClear;
 
+  /// Tooltip for closing help search.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
   String get helpSearchClose;
 
+  /// Title shown in the help search view.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Help'**
   String get helpSearchTitle;
 
+  /// Subtitle shown in the help search view.
+  ///
+  /// In en, this message translates to:
+  /// **'Find tutorials, shortcuts, and theory explanations'**
   String get helpSearchSubtitle;
 
+  /// Message title shown when help search has no matches.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
   String get helpSearchNoResults;
 
+  /// Suggestion shown when help search has no matches.
+  ///
+  /// In en, this message translates to:
+  /// **'Try different keywords or check your spelling'**
   String get helpSearchNoResultsDescription;
 
+  /// Help section label for getting started documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Started'**
   String get helpSectionGettingStarted;
 
+  /// Help section label for finite state automata documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'FSA'**
   String get helpSectionFsa;
 
+  /// Help section label for grammar documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Grammar'**
   String get helpSectionGrammar;
 
+  /// Help section label for pushdown automata documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'PDA'**
   String get helpSectionPda;
 
+  /// Help section label for Turing machine documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Turing Machine'**
   String get helpSectionTm;
 
+  /// Help section label for regular expression documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular Expression'**
   String get helpSectionRegex;
 
+  /// Help section label for pumping lemma documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pumping Lemma'**
   String get helpSectionPumping;
 
+  /// Help section label for file operation documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'File Operations'**
   String get helpSectionFileOperations;
 
+  /// Help section label for troubleshooting documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Troubleshooting'**
   String get helpSectionTroubleshooting;
 
+  /// Help section label for license documentation.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
   String get helpSectionLicenses;
 
   /// Title for the regular expression page.
@@ -515,13 +659,13 @@ abstract class AppLocalizations {
   /// Tooltip or button label for moving to the previous simplification step.
   ///
   /// In en, this message translates to:
-  /// **'Previous step'**
+  /// **'Previous Step'**
   String get previousStep;
 
   /// Tooltip or button label for moving to the next simplification step.
   ///
   /// In en, this message translates to:
-  /// **'Next step'**
+  /// **'Next Step'**
   String get nextStep;
 
   /// Header for the list of all simplification steps.
@@ -571,6 +715,553 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operators'**
   String get operators;
+
+  /// Warning shown when saved before/after conversion snapshots cannot be deserialized.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion comparison unavailable. Saved snapshots could not be read.'**
+  String get conversionComparisonUnavailable;
+
+  /// Label for the before-and-after automaton conversion comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion result'**
+  String get conversionComparisonResult;
+
+  /// No description provided for @simulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation'**
+  String get simulation;
+
+  /// No description provided for @inputString.
+  ///
+  /// In en, this message translates to:
+  /// **'Input String'**
+  String get inputString;
+
+  /// No description provided for @simulationInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank for ε; whitespace is preserved'**
+  String get simulationInputHint;
+
+  /// No description provided for @simulationInputString.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation input string'**
+  String get simulationInputString;
+
+  /// No description provided for @simulate.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate'**
+  String get simulate;
+
+  /// No description provided for @simulating.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulating...'**
+  String get simulating;
+
+  /// No description provided for @cancelSimulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel simulation'**
+  String get cancelSimulation;
+
+  /// No description provided for @runSimulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Run simulation'**
+  String get runSimulation;
+
+  /// No description provided for @runSimulationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs the machine using the currently entered input string.'**
+  String get runSimulationHint;
+
+  /// No description provided for @simulationInputSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation input: {label}'**
+  String simulationInputSemantics(String label);
+
+  /// No description provided for @simulationEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{hint}. Double tap to edit.'**
+  String simulationEditHint(String hint);
+
+  /// No description provided for @simulationResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation Result'**
+  String get simulationResult;
+
+  /// No description provided for @regexResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Regex Result'**
+  String get regexResult;
+
+  /// No description provided for @regularExpression.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular Expression'**
+  String get regularExpression;
+
+  /// No description provided for @stepByStepMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-Step Mode'**
+  String get stepByStepMode;
+
+  /// No description provided for @stepByStepModeSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step mode'**
+  String get stepByStepModeSemantics;
+
+  /// No description provided for @stepByStepExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-Step Execution'**
+  String get stepByStepExecution;
+
+  /// No description provided for @play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @expand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// No description provided for @noStepsRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps recorded'**
+  String get noStepsRecorded;
+
+  /// No description provided for @noStepsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps available'**
+  String get noStepsAvailable;
+
+  /// No description provided for @noSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps'**
+  String get noSteps;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @timelineScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline scrubber'**
+  String get timelineScrubber;
+
+  /// No description provided for @timelineNavigationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to navigate through simulation steps'**
+  String get timelineNavigationHint;
+
+  /// No description provided for @stepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String stepOf(int current, int total);
+
+  /// No description provided for @activeStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Active step {current} of {total}'**
+  String activeStepOf(int current, int total);
+
+  /// No description provided for @pdaTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'PDA Trace ({count} steps)'**
+  String pdaTrace(int count);
+
+  /// No description provided for @tmTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'TM Trace ({count} steps)'**
+  String tmTrace(int count);
+
+  /// No description provided for @traceRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'rem'**
+  String get traceRemaining;
+
+  /// No description provided for @traceStack.
+  ///
+  /// In en, this message translates to:
+  /// **'stack'**
+  String get traceStack;
+
+  /// No description provided for @traceTape.
+  ///
+  /// In en, this message translates to:
+  /// **'tape'**
+  String get traceTape;
+
+  /// No description provided for @timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeout'**
+  String get timeout;
+
+  /// No description provided for @infiniteLoop.
+  ///
+  /// In en, this message translates to:
+  /// **'Infinite Loop'**
+  String get infiniteLoop;
+
+  /// No description provided for @steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get steps;
+
+  /// No description provided for @states.
+  ///
+  /// In en, this message translates to:
+  /// **'States'**
+  String get states;
+
+  /// No description provided for @executionPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution Path'**
+  String get executionPath;
+
+  /// No description provided for @transitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transitions'**
+  String get transitions;
+
+  /// No description provided for @animationSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Animation speed'**
+  String get animationSpeed;
+
+  /// No description provided for @selectPlaybackSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Select playback speed'**
+  String get selectPlaybackSpeed;
+
+  /// No description provided for @speed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed:'**
+  String get speed;
+
+  /// No description provided for @slowSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow {speed}'**
+  String slowSpeed(String speed);
+
+  /// No description provided for @normalSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal speed'**
+  String get normalSpeed;
+
+  /// No description provided for @fastSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast {speed}'**
+  String fastSpeed(String speed);
+
+  /// No description provided for @on.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get on;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// No description provided for @stepByStepToggleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns manual simulation review on or off for the current result.'**
+  String get stepByStepToggleHint;
+
+  /// No description provided for @simulationStartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Start at {state} with input {input}.'**
+  String simulationStartDescription(String state, String input);
+
+  /// No description provided for @simulationFinalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Final configuration {state} – input {verdict}.'**
+  String simulationFinalDescription(String state, String verdict);
+
+  /// No description provided for @simulationReadDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Read \"{consumed}\" from {state} → {nextState} with {remaining}.'**
+  String simulationReadDescription(
+      String consumed, String state, String nextState, String remaining);
+
+  /// No description provided for @noInputRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'no input remaining'**
+  String get noInputRemaining;
+
+  /// No description provided for @remainingQuoted.
+  ///
+  /// In en, this message translates to:
+  /// **'remaining \"{input}\"'**
+  String remainingQuoted(String input);
+
+  /// No description provided for @consumedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed: \"{value}\"'**
+  String consumedValue(String value);
+
+  /// No description provided for @nextStateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Next state: {state}'**
+  String nextStateValue(String state);
+
+  /// No description provided for @remainingInputValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining input: {input}'**
+  String remainingInputValue(String input);
+
+  /// No description provided for @previousSimulationStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous simulation step'**
+  String get previousSimulationStep;
+
+  /// No description provided for @previousSimulationStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves to the prior recorded simulation step.'**
+  String get previousSimulationStepHint;
+
+  /// No description provided for @nextSimulationStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Next simulation step'**
+  String get nextSimulationStep;
+
+  /// No description provided for @nextSimulationStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Advances to the next recorded simulation step.'**
+  String get nextSimulationStepHint;
+
+  /// No description provided for @playSimulationSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Play simulation steps'**
+  String get playSimulationSteps;
+
+  /// No description provided for @pauseSimulationPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause simulation playback'**
+  String get pauseSimulationPlayback;
+
+  /// No description provided for @playSimulationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically advances through the recorded simulation steps.'**
+  String get playSimulationHint;
+
+  /// No description provided for @pauseSimulationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pauses automatic playback of simulation steps.'**
+  String get pauseSimulationHint;
+
+  /// No description provided for @resetSimulationSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset simulation steps'**
+  String get resetSimulationSteps;
+
+  /// No description provided for @resetSimulationStepsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns the step-by-step view to the first recorded step.'**
+  String get resetSimulationStepsHint;
+
+  /// No description provided for @resetToFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to First'**
+  String get resetToFirst;
+
+  /// No description provided for @jumpToLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to Last'**
+  String get jumpToLast;
+
+  /// No description provided for @previousStepLower.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous step'**
+  String get previousStepLower;
+
+  /// No description provided for @nextStepLower.
+  ///
+  /// In en, this message translates to:
+  /// **'Next step'**
+  String get nextStepLower;
+
+  /// No description provided for @hiddenStepsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{before} before, {after} after hidden'**
+  String hiddenStepsSummary(int before, int after);
+
+  /// No description provided for @noSimulationResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No simulation results yet'**
+  String get noSimulationResults;
+
+  /// No description provided for @simulationEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an input string and activate Simulate to see results'**
+  String get simulationEmptyHint;
+
+  /// No description provided for @accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get accepted;
+
+  /// No description provided for @rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get rejected;
+
+  /// No description provided for @acceptedLower.
+  ///
+  /// In en, this message translates to:
+  /// **'accepted'**
+  String get acceptedLower;
+
+  /// No description provided for @rejectedLower.
+  ///
+  /// In en, this message translates to:
+  /// **'rejected'**
+  String get rejectedLower;
+
+  /// No description provided for @regexAlphabetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabet / universe'**
+  String get regexAlphabetLabel;
+
+  /// No description provided for @regexAlphabetHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Characters used by ., \\D, \\W, and \\S (spaces count).'**
+  String get regexAlphabetHelper;
+
+  /// No description provided for @regexAlphabetEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabet cannot be empty.'**
+  String get regexAlphabetEmptyError;
+
+  /// No description provided for @suggestedFixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested fixes'**
+  String get suggestedFixes;
+
+  /// No description provided for @algorithmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Algorithm action: {title}'**
+  String algorithmAction(String title);
+
+  /// No description provided for @algorithmUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable. {description}'**
+  String algorithmUnavailableHint(String description);
+
+  /// No description provided for @algorithmStartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double tap to start. {description}'**
+  String algorithmStartHint(String description);
+
+  /// No description provided for @executing.
+  ///
+  /// In en, this message translates to:
+  /// **'Executing'**
+  String get executing;
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get selected;
+
+  /// Transitional adapter for legacy algorithm prose localized at render time.
+  ///
+  /// In en, this message translates to:
+  /// **'{text}'**
+  String workflowLegacyText(String text);
 }
 
 class _AppLocalizationsDelegate

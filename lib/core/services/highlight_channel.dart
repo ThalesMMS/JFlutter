@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 
 import '../models/simulation_highlight.dart';
 
@@ -86,7 +86,8 @@ class HighlightDispatchController<TChannel extends HighlightChannel> {
 }
 
 void logHighlightEvent(String source, String message) {
-  if (kDebugMode) {
-    debugPrint('[$source] $message');
-  }
+  assert(() {
+    developer.log(message, name: source);
+    return true;
+  }());
 }

@@ -13,7 +13,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -23,6 +22,7 @@ import '../../../presentation/providers/automaton_state_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_automaton_mapper.dart';
 import 'graphview_canvas_models.dart';
+import 'graphview_state_notifier_adapter.dart';
 
 void _logGraphViewCanvas(String message) {
   if (kDebugMode) {
@@ -45,30 +45,42 @@ class GraphViewCanvasController
 
   AutomatonStateNotifier get _provider => notifier;
 
+  @override
+  late final GraphViewStateNotifierAdapter<FSA> stateNotifierAdapter =
+      GraphViewStateNotifierAdapter<FSA>(
+    currentData: () => _provider.currentAutomaton,
+    stateIdsOf: (automaton) => automaton.states.map((state) => state.id),
+    stateLabelsOf: (automaton) => automaton.states.map((state) => state.label),
+    transitionIdsOf: (automaton) =>
+        automaton.transitions.map((transition) => transition.id),
+    addState: ({required id, required label, required position}) {
+      final isFirstState = nodesCache.isEmpty &&
+          (_provider.currentAutomaton?.states.isEmpty ?? true);
+      _provider.addState(
+        id: id,
+        label: label,
+        x: position.dx,
+        y: position.dy,
+        isInitial: isFirstState ? true : null,
+        isAccepting: false,
+      );
+    },
+    moveState: ({required id, required position}) =>
+        _provider.moveState(id: id, x: position.dx, y: position.dy),
+    updateStateLabel: ({required id, required label}) =>
+        _provider.updateStateLabel(id: id, label: label),
+    updateStateFlags: ({required id, isInitial, isAccepting}) =>
+        _provider.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    ),
+    removeState: (id) => _provider.removeState(id: id),
+    logMutation: _logGraphViewCanvas,
+  );
+
   /// Algorithm step highlight service, if configured.
   AlgorithmStepHighlightService? algorithmStepHighlightService;
-
-  @override
-  FSA? get currentDomainData => _provider.currentAutomaton;
-
-  @override
-  Iterable<String> get domainStateIds {
-    final automaton = currentDomainData;
-    return automaton?.states.map((state) => state.id) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainStateLabels {
-    final automaton = currentDomainData;
-    return automaton?.states.map((state) => state.label) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainTransitionIds {
-    final automaton = currentDomainData;
-    return automaton?.transitions.map((transition) => transition.id) ??
-        const <String>[];
-  }
 
   @override
   GraphViewAutomatonSnapshot toSnapshot(FSA? automaton) {
@@ -82,57 +94,6 @@ class GraphViewCanvasController
       'Synchronizing canvas with automaton id=${automaton?.id} states=${automaton?.states.length ?? 0} transitions=${automaton?.transitions.length ?? 0}',
     );
     synchronizeGraph(automaton);
-  }
-
-  @override
-  void addDomainState({
-    required String id,
-    required String label,
-    required Offset position,
-  }) {
-    final isFirstState = nodesCache.isEmpty &&
-        (_provider.currentAutomaton?.states.isEmpty ?? true);
-    _provider.addState(
-      id: id,
-      label: label,
-      x: position.dx,
-      y: position.dy,
-      isInitial: isFirstState ? true : null,
-      isAccepting: false,
-    );
-  }
-
-  @override
-  void moveDomainState({required String id, required Offset position}) {
-    _provider.moveState(id: id, x: position.dx, y: position.dy);
-  }
-
-  @override
-  void updateDomainStateLabel({required String id, required String label}) {
-    _provider.updateStateLabel(id: id, label: label);
-  }
-
-  @override
-  void updateDomainStateFlags({
-    required String id,
-    bool? isInitial,
-    bool? isAccepting,
-  }) {
-    _provider.updateStateFlags(
-      id: id,
-      isInitial: isInitial,
-      isAccepting: isAccepting,
-    );
-  }
-
-  @override
-  void removeDomainState(String id) {
-    _provider.removeState(id: id);
-  }
-
-  @override
-  void logCanvasStateMutation(String message) {
-    _logGraphViewCanvas(message);
   }
 
   /// Adds or updates a transition between [fromStateId] and [toStateId].
@@ -161,6 +122,7 @@ class GraphViewCanvasController
   }
 
   /// Removes the transition identified by [id] from the automaton.
+  @override
   void removeTransition(String id) {
     _logGraphViewCanvas('removeTransition -> id=$id');
     performMutation(() {

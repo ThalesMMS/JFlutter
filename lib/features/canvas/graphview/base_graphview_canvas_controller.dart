@@ -17,9 +17,11 @@ import 'package:flutter/material.dart';
 import 'package:graphview/graphview_jflutter.dart';
 import 'package:vector_math/vector_math_64.dart' as vmath;
 
+import '../../../core/constants/automaton_canvas_constants.dart';
 import '../../../core/models/simulation_highlight.dart';
 import 'graphview_canvas_models.dart';
 import 'graphview_highlight_controller.dart';
+import 'graphview_state_notifier_adapter.dart';
 import 'jflutter_adaptive_edge_renderer.dart';
 import 'graphview_viewport_highlight_mixin.dart';
 import 'graphview_snapshot_codec.dart';
@@ -34,42 +36,79 @@ void _logGraphViewBase(String message) {
 mixin SharedGraphViewStateController<TNotifier, TSnapshot>
     on BaseGraphViewCanvasController<TNotifier, TSnapshot> {
   @protected
-  Iterable<String> get domainStateIds;
+  GraphViewStateNotifierAdapter<TSnapshot> get stateNotifierAdapter;
+
+  @override
+  TSnapshot? get currentDomainData => stateNotifierAdapter.currentData();
 
   @protected
-  Iterable<String> get domainStateLabels;
+  Iterable<String> get domainStateIds {
+    final data = currentDomainData;
+    return data == null
+        ? const <String>[]
+        : stateNotifierAdapter.stateIdsOf(data);
+  }
 
   @protected
-  Iterable<String> get domainTransitionIds;
+  Iterable<String> get domainStateLabels {
+    final data = currentDomainData;
+    return data == null
+        ? const <String>[]
+        : stateNotifierAdapter.stateLabelsOf(data);
+  }
+
+  @protected
+  Iterable<String> get domainTransitionIds {
+    final data = currentDomainData;
+    return data == null
+        ? const <String>[]
+        : stateNotifierAdapter.transitionIdsOf(data);
+  }
 
   @protected
   void addDomainState({
     required String id,
     required String label,
     required Offset position,
-  });
+  }) {
+    stateNotifierAdapter.addState(id: id, label: label, position: position);
+  }
 
   @protected
-  void moveDomainState({required String id, required Offset position});
+  void moveDomainState({required String id, required Offset position}) {
+    stateNotifierAdapter.moveState(id: id, position: position);
+  }
 
   @protected
   void updateDomainStateLabel({
     required String id,
     required String label,
-  });
+  }) {
+    stateNotifierAdapter.updateStateLabel(id: id, label: label);
+  }
 
   @protected
   void updateDomainStateFlags({
     required String id,
     bool? isInitial,
     bool? isAccepting,
-  });
+  }) {
+    stateNotifierAdapter.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    );
+  }
 
   @protected
-  void removeDomainState(String id);
+  void removeDomainState(String id) {
+    stateNotifierAdapter.removeState(id);
+  }
 
   @protected
-  void logCanvasStateMutation(String message);
+  void logCanvasStateMutation(String message) {
+    stateNotifierAdapter.logMutation(message);
+  }
 
   @protected
   String generateNodeId() {
@@ -113,22 +152,25 @@ mixin SharedGraphViewStateController<TNotifier, TSnapshot>
   }
 
   /// Adds a new state centred in the current viewport.
+  @override
   void addStateAtCenter() {
     logCanvasStateMutation('addStateAtCenter requested');
     final worldCenter = resolveViewportCenterWorld();
     addStateAt(worldCenter);
   }
 
-  /// Adds a new state at the provided [worldPosition].
+  /// Adds a new state centred on the provided [worldCenter].
   @override
-  void addStateAt(Offset worldPosition) {
+  void addStateAt(Offset worldCenter) {
     final nodeId = generateNodeId();
     final label = nextAvailableStateLabel();
+    const nodeRadius = kAutomatonStateDiameter / 2;
+    final topLeft = worldCenter - const Offset(nodeRadius, nodeRadius);
     logCanvasStateMutation(
-      'addStateAt -> id=$nodeId label=$label position=(${worldPosition.dx.toStringAsFixed(2)}, ${worldPosition.dy.toStringAsFixed(2)})',
+      'addStateAt -> id=$nodeId label=$label center=(${worldCenter.dx.toStringAsFixed(2)}, ${worldCenter.dy.toStringAsFixed(2)})',
     );
     performMutation(() {
-      addDomainState(id: nodeId, label: label, position: worldPosition);
+      addDomainState(id: nodeId, label: label, position: topLeft);
     });
   }
 
@@ -277,6 +319,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   bool _isSynchronizing = false;
   bool _isRestoringHistory = false;
+  String? _pendingDomainEchoSignature;
 
   final List<_GraphHistoryEntry> _undoHistory = [];
   final List<_GraphHistoryEntry> _redoHistory = [];
@@ -305,11 +348,34 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   GraphViewCanvasEdge? edgeById(String id) => _edges[id];
   Edge? graphEdgeById(String id) => _graphEdges[id];
 
-  /// Adds a new state at the provided [worldPosition].
-  void addStateAt(Offset worldPosition);
+  /// Adds a new state at the centre of the current viewport.
+  void addStateAtCenter();
+
+  /// Adds a new state centred on the provided [worldCenter].
+  void addStateAt(Offset worldCenter);
 
   /// Moves an existing state to a new [position].
   void moveState(String id, Offset position);
+
+  /// Moves a state locally while a drag gesture is active.
+  ///
+  /// This deliberately avoids mutating the domain or recording undo history;
+  /// callers must finish the gesture with [moveState].
+  void previewStatePosition(String id, Offset position) {
+    final node = _nodes[id];
+    final graphNode = _graphNodes[id];
+    if (node == null || graphNode == null) {
+      return;
+    }
+    if (node.x == position.dx && node.y == position.dy) {
+      return;
+    }
+
+    _nodes[id] = node.copyWith(x: position.dx, y: position.dy);
+    graphNode.position = position;
+    graph.markModified();
+    graph.notifyGraphObserver();
+  }
 
   /// Updates the human-readable label associated with the state [id].
   void updateStateLabel(String id, String label);
@@ -319,6 +385,9 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   /// Removes the state identified by [id] from the canvas/domain.
   void removeState(String id);
+
+  /// Removes the transition identified by [id] from the canvas/domain.
+  void removeTransition(String id);
 
   /// Returns the world position of the graph node with the provided [id].
   @visibleForTesting
@@ -348,7 +417,6 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   /// Converts the provided [viewportOffset] from viewport space into world
   /// coordinates based on the current transformation matrix.
-  @protected
   Offset toWorldOffset(Offset viewportOffset) {
     final transformation = graphController.transformationController;
     if (transformation == null) {
@@ -391,6 +459,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     );
     _undoHistory.clear();
     _redoHistory.clear();
+    _pendingDomainEchoSignature = null;
     highlightedTransitionIds.clear();
     _evictGraphCaches(notifyGraph: false);
     disposeViewportHighlight();
@@ -523,8 +592,24 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
   /// Synchronises the canvas with the provided domain [data].
   @protected
   void synchronizeGraph(TSnapshot? data, {bool fromMutation = false}) {
+    final snapshot = toSnapshot(data);
+    final incomingSignature = _snapshotContentSignature(snapshot);
+    final isDomainEcho = !fromMutation &&
+        !_isRestoringHistory &&
+        incomingSignature == _pendingDomainEchoSignature;
+
+    if (fromMutation || _isRestoringHistory) {
+      _pendingDomainEchoSignature = incomingSignature;
+    } else if (isDomainEcho) {
+      _pendingDomainEchoSignature = null;
+      _logGraphViewBase('Acknowledged domain echo without clearing history');
+    } else {
+      _pendingDomainEchoSignature = null;
+    }
+
     final isExternalSync = !fromMutation && !_isRestoringHistory;
     if (isExternalSync &&
+        !isDomainEcho &&
         (_undoHistory.isNotEmpty || _redoHistory.isNotEmpty)) {
       _undoHistory.clear();
       _redoHistory.clear();
@@ -534,7 +619,6 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
       );
     }
 
-    final snapshot = toSnapshot(data);
     final incomingNodes = {for (final node in snapshot.nodes) node.id: node};
     final incomingEdges = {for (final edge in snapshot.edges) edge.id: edge};
     _logGraphViewBase(
@@ -763,6 +847,30 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     } catch (_) {
       return null;
     }
+  }
+
+  String _snapshotContentSignature(GraphViewAutomatonSnapshot snapshot) {
+    final nodes = [...snapshot.nodes]..sort((a, b) => a.id.compareTo(b.id));
+    final edges = [...snapshot.edges]..sort((a, b) => a.id.compareTo(b.id));
+    final metadata = Map<String, dynamic>.from(snapshot.metadata.toJson());
+    for (final key in const ['alphabet', 'tapeAlphabet']) {
+      final values = (metadata[key] as List?)?.cast<String>();
+      if (values != null) {
+        metadata[key] = [...values]..sort();
+      }
+    }
+
+    return jsonEncode({
+      'nodes': [for (final node in nodes) node.toJson()],
+      'edges': [
+        for (final edge in edges)
+          {
+            ...edge.toJson(),
+            'symbols': [...edge.symbols]..sort(),
+          },
+      ],
+      'metadata': metadata,
+    });
   }
 
   void _applyHistoryEntry(_GraphHistoryEntry entry) {

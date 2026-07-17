@@ -61,13 +61,18 @@ class HelpSearchDelegate extends SearchDelegate<HelpContentModel?> {
         Semantics(
           label: l10n.helpSearchClear,
           button: true,
-          child: IconButton(
-            onPressed: () {
-              query = '';
-              showSuggestions(context);
-            },
-            icon: const Icon(Icons.clear),
-            tooltip: l10n.helpSearchClear,
+          excludeSemantics: true,
+          child: Tooltip(
+            message: l10n.helpSearchClear,
+            excludeFromSemantics: true,
+            child: IconButton(
+              onPressed: () {
+                query = '';
+                showSuggestions(context);
+              },
+              icon: const Icon(Icons.clear),
+              tooltip: null,
+            ),
           ),
         ),
     ];

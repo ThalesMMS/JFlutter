@@ -90,7 +90,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
                       child: SimulationPanel(
                         onSimulate: (input) {
                           _testStringController.text = input;
-                          _testStringMatch();
+                          return _testStringMatch();
                         },
                       ),
                     ),
@@ -134,7 +134,7 @@ extension _RegexPageLayoutSections on _RegexPageState {
           simulationPanel: SimulationPanel(
             onSimulate: (input) {
               _testStringController.text = input;
-              _testStringMatch();
+              return _testStringMatch();
             },
           ),
         ),
@@ -204,11 +204,29 @@ extension _RegexPageLayoutSections on _RegexPageState {
                 : (regexState.errorMessage.isNotEmpty
                     ? regexState.errorMessage
                     : l10n.invalidRegex),
-            severity:
-                regexState.isValid ? ErrorSeverity.success : ErrorSeverity.error,
+            severity: regexState.isValid
+                ? ErrorSeverity.success
+                : ErrorSeverity.error,
             showRetryButton: false,
             showDismissButton: false,
           ),
+
+        const SizedBox(height: 16),
+        TextField(
+          key: const ValueKey('regex_alphabet_field'),
+          controller: _alphabetController,
+          decoration: InputDecoration(
+            labelText: l10n.regexAlphabetLabel,
+            helperText: l10n.regexAlphabetHelper,
+            errorText: regexState.alphabet.isEmpty
+                ? l10n.regexAlphabetEmptyError
+                : null,
+            border: const OutlineInputBorder(),
+          ),
+          autocorrect: false,
+          enableSuggestions: false,
+          onChanged: _setAlphabet,
+        ),
 
         const SizedBox(height: 24),
 

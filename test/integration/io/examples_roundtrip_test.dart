@@ -166,10 +166,6 @@ void main() {
         expect(categories, contains(ExampleCategory.cfg));
         expect(categories, contains(ExampleCategory.pda));
         expect(categories, contains(ExampleCategory.tm));
-
-        // Verify category display names
-        expect(ExampleCategory.dfa.displayName, equals('DFA'));
-        expect(ExampleCategory.cfg.displayName, equals('CFG'));
       });
 
       test('Provides example counts by category', () {
@@ -198,35 +194,31 @@ void main() {
         expect(example.name, equals('AFD - Termina com A'));
         expect(example.category, ExampleCategory.dfa);
         expect(example.difficultyLevel, DifficultyLevel.easy);
-        expect(example.complexityLevel, ComplexityLevel.low);
+        expect(example.complexityLevel, ExampleComplexityLevel.low);
         expect(example.tags, contains('dfa'));
       });
     });
 
     group('Metadata Logic', () {
       test('Difficulty level enum works correctly', () {
-        expect(DifficultyLevel.easy.displayName, equals('Fácil'));
-        expect(DifficultyLevel.medium.displayName, equals('Médio'));
-        expect(DifficultyLevel.hard.displayName, equals('Difícil'));
-
-        expect(DifficultyLevel.values.length, equals(3));
+        expect(
+          DifficultyLevel.values.map((value) => value.name),
+          ['easy', 'medium', 'hard'],
+        );
       });
 
       test('Complexity level enum works correctly', () {
-        expect(ComplexityLevel.low.displayName, equals('Baixa'));
-        expect(ComplexityLevel.medium.displayName, equals('Média'));
-        expect(ComplexityLevel.high.displayName, equals('Alta'));
-
-        expect(ComplexityLevel.values.length, equals(3));
+        expect(
+          ExampleComplexityLevel.values.map((value) => value.name),
+          ['low', 'medium', 'high'],
+        );
       });
 
       test('Example category enum works correctly', () {
-        expect(ExampleCategory.dfa.displayName, equals('DFA'));
-        expect(ExampleCategory.cfg.displayName, equals('CFG'));
-        expect(ExampleCategory.pda.displayName, equals('PDA'));
-        expect(ExampleCategory.tm.displayName, equals('TM'));
-
-        expect(ExampleCategory.values.length, equals(5));
+        expect(
+          ExampleCategory.values.map((value) => value.name),
+          ['dfa', 'nfa', 'cfg', 'pda', 'tm'],
+        );
       });
 
       test('Data source provides category information', () {
@@ -263,46 +255,10 @@ void main() {
         expect(example.payload.productions, isNotEmpty);
       });
 
-      test('DifficultyLevel has correct properties', () {
-        expect(DifficultyLevel.easy.displayName, equals('Fácil'));
-        expect(DifficultyLevel.easy.description, contains('iniciantes'));
-
-        expect(DifficultyLevel.medium.displayName, equals('Médio'));
-        expect(
-          DifficultyLevel.medium.description,
-          contains('conhecimento prévio'),
-        );
-
-        expect(DifficultyLevel.hard.displayName, equals('Difícil'));
-        expect(
-          DifficultyLevel.hard.description,
-          contains('estudantes avançados'),
-        );
-      });
-
-      test('ComplexityLevel has correct properties', () {
-        expect(ComplexityLevel.low.displayName, equals('Baixa'));
-        expect(ComplexityLevel.low.description, contains('simples'));
-
-        expect(ComplexityLevel.medium.displayName, equals('Média'));
-        expect(ComplexityLevel.medium.description, contains('moderado'));
-
-        expect(ComplexityLevel.high.displayName, equals('Alta'));
-        expect(ComplexityLevel.high.description, contains('complexas'));
-      });
-
-      test('ExampleCategory has correct properties', () {
-        expect(ExampleCategory.dfa.displayName, equals('DFA'));
-        expect(
-          ExampleCategory.dfa.fullName,
-          equals('Deterministic Finite Automaton'),
-        );
-
-        expect(ExampleCategory.cfg.displayName, equals('CFG'));
-        expect(ExampleCategory.cfg.fullName, equals('Context-Free Grammar'));
-
-        expect(ExampleCategory.pda.displayName, equals('PDA'));
-        expect(ExampleCategory.pda.fullName, equals('Pushdown Automaton'));
+      test('example metadata enums remain locale-neutral', () {
+        expect(DifficultyLevel.easy.name, 'easy');
+        expect(ExampleComplexityLevel.low.name, 'low');
+        expect(ExampleCategory.dfa.name, 'dfa');
       });
 
       test('ExamplesAssetDataSource provides metadata correctly', () {

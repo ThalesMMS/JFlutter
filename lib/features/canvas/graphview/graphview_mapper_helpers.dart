@@ -109,4 +109,19 @@ class GraphViewMapperHelpers {
   static Vector2 resolveControlPoint(GraphViewCanvasEdge edge) {
     return resolveOptionalControlPoint(edge) ?? Vector2.zero();
   }
+
+  static Set<String> effectiveTapeAlphabet({
+    required Iterable<String> metadataTapeAlphabet,
+    required Iterable<String> fallbackTapeAlphabet,
+    required String blankSymbol,
+  }) {
+    final metadataAlphabet = metadataTapeAlphabet.toSet();
+    final baseAlphabet = metadataAlphabet.isNotEmpty
+        ? metadataAlphabet
+        : fallbackTapeAlphabet.toSet();
+    return {
+      ...baseAlphabet,
+      if (blankSymbol.isNotEmpty) blankSymbol,
+    };
+  }
 }

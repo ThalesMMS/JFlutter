@@ -17,6 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/tm_simulator.dart';
 import '../../core/models/simulation_step.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import '../../core/services/simulation_runner.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/tm_editor_provider.dart';
 import '../../core/models/step_explanation.dart';
 import 'base_simulation_panel.dart';
@@ -25,10 +28,14 @@ import 'trace_viewers/tm_trace_viewer.dart';
 
 /// Panel for Turing Machine simulation and string testing
 class TMSimulationPanel extends ConsumerStatefulWidget {
-  final SimulationHighlightService highlightService;
+  final SimulationHighlightService? highlightService;
+  final SimulationRunner? simulationRunner;
 
-  TMSimulationPanel({super.key, SimulationHighlightService? highlightService})
-      : highlightService = highlightService ?? SimulationHighlightService();
+  const TMSimulationPanel({
+    super.key,
+    this.highlightService,
+    this.simulationRunner,
+  });
 
   @override
   ConsumerState<TMSimulationPanel> createState() => _TMSimulationPanelState();
@@ -37,6 +44,7 @@ class TMSimulationPanel extends ConsumerStatefulWidget {
 class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
     with TickerProviderStateMixin {
   final TextEditingController _inputController = TextEditingController();
+  late final SimulationHighlightService _fallbackHighlightService;
 
   bool _isSimulating = false;
   bool _hasSimulationResult = false;
@@ -44,6 +52,9 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   String? _statusMessage;
   List<SimulationStep> _simulationSteps = const [];
   TMSimulationResult? _result;
+  late final SimulationRunner _simulationRunner;
+  SimulationTask<TMSimulationResult>? _activeTask;
+  int _requestGeneration = 0;
   TapeState _currentTapeState = TapeState.initial();
 
   // Animation controllers for smooth transitions
@@ -51,9 +62,14 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   late Animation<double> _stepFadeAnimation;
   bool _isTransitioning = false;
 
+  SimulationHighlightService get _highlightService =>
+      widget.highlightService ?? _fallbackHighlightService;
+
   @override
   void initState() {
     super.initState();
+    _fallbackHighlightService = SimulationHighlightService();
+    _simulationRunner = widget.simulationRunner ?? SimulationRunner();
     _stepTransitionController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -68,10 +84,19 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   }
 
   @override
+  void didUpdateWidget(covariant TMSimulationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.highlightService != widget.highlightService) {
+      (oldWidget.highlightService ?? _fallbackHighlightService).clear();
+    }
+  }
+
+  @override
   void dispose() {
+    _activeTask?.cancel();
     _stepTransitionController.dispose();
     _inputController.dispose();
-    widget.highlightService.clear();
+    _highlightService.clear();
     super.dispose();
   }
 
@@ -104,12 +129,14 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
         SimulationTextField(
           controller: _inputController,
           labelText: 'Input String',
-          hintText: 'e.g., 101, 1100, 111',
+          hintText: 'Leave blank for ε; whitespace is preserved',
           isDense: false,
         ),
         const SizedBox(height: 8),
         Text(
-          'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
+          appLocalizationsOf(context).localizeWorkflowText(
+            'Examples: 101 (binary), 1100 (palindrome), 111 (counting)',
+          ),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,
@@ -125,6 +152,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
       isSimulating: _isSimulating,
       label: 'Simulate TM',
       onPressed: _simulateTM,
+      onCancel: _cancelSimulation,
     );
   }
 
@@ -181,7 +209,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
               opacity: _stepFadeAnimation,
               child: TMTraceViewer(
                 result: _result!,
-                highlightService: widget.highlightService,
+                highlightService: _highlightService,
                 onStepChanged: _handleStepChanged,
               ),
             ),
@@ -191,11 +219,7 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
   }
 
   Future<void> _simulateTM() async {
-    final inputString = _inputController.text.trim();
-
-    if (inputString.isEmpty) {
-      // Allow empty string — TMs can legitimately accept/reject ε
-    }
+    final inputString = _inputController.text;
 
     final tm = ref.read(tmEditorProvider).tm;
     if (tm == null) {
@@ -213,18 +237,32 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
       _currentTapeState = TapeState.initial();
     });
 
-    widget.highlightService.clear();
+    _highlightService.clear();
+    _activeTask?.cancel();
+    final generation = ++_requestGeneration;
 
-    final result = await Future(
-      () => TMSimulator.simulate(tm, inputString, stepByStep: true),
+    final task = _simulationRunner.runTm(
+      tm,
+      inputString,
+      stepByStep: true,
+      timeout: const Duration(seconds: 5),
     );
+    _activeTask = task;
+    final outcome = await task.outcome;
 
-    if (!mounted) {
+    if (!mounted || generation != _requestGeneration) {
+      return;
+    }
+    _activeTask = null;
+
+    if (outcome.kind == SimulationOutcomeKind.cancelled) {
+      _finishCancelledSimulation();
       return;
     }
 
-    if (result.isFailure) {
-      final message = result.error ?? 'Simulation failed';
+    final simulation = outcome.result;
+    if (simulation == null) {
+      final message = outcome.message ?? 'Simulation failed';
       setState(() {
         _isSimulating = false;
         _hasSimulationResult = true;
@@ -233,12 +271,10 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
         _simulationSteps = const [];
         _result = null;
       });
-      widget.highlightService.clear();
+      _highlightService.clear();
       _showError(message);
       return;
     }
-
-    final simulation = result.data!;
 
     setState(() {
       _isSimulating = false;
@@ -257,14 +293,35 @@ class _TMSimulationPanelState extends ConsumerState<TMSimulationPanel>
     });
 
     if (simulation.steps.isNotEmpty) {
-      widget.highlightService.emitFromSteps(simulation.steps, 0);
+      _highlightService.emitFromSteps(simulation.steps, 0);
     } else {
-      widget.highlightService.clear();
+      _highlightService.clear();
     }
   }
 
+  void _cancelSimulation() {
+    if (!_isSimulating) return;
+    _requestGeneration++;
+    _activeTask?.cancel();
+    _activeTask = null;
+    _finishCancelledSimulation();
+  }
+
+  void _finishCancelledSimulation() {
+    if (!mounted) return;
+    setState(() {
+      _isSimulating = false;
+      _hasSimulationResult = true;
+      _isAccepted = null;
+      _statusMessage = 'Simulation cancelled';
+      _simulationSteps = const [];
+      _result = null;
+    });
+    _highlightService.clear();
+  }
+
   void _showError(String message) {
-    widget.highlightService.clear();
+    _highlightService.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

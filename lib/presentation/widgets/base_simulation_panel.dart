@@ -11,6 +11,9 @@
 //
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
+
 /// Card shell shared by the simulation side panels.
 class SimulationPanelShell extends StatelessWidget {
   const SimulationPanelShell({
@@ -62,8 +65,10 @@ class SimulationPanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedTitle =
+        appLocalizationsOf(context).localizeWorkflowText(title);
     final titleText = Text(
-      title,
+      localizedTitle,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(
@@ -98,6 +103,8 @@ class SimulationInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedTitle =
+        appLocalizationsOf(context).localizeWorkflowText(title);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -108,7 +115,7 @@ class SimulationInputSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            localizedTitle,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -146,11 +153,14 @@ class SimulationTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
+    final localizedLabel = l10n.localizeWorkflowText(labelText);
+    final localizedHint = l10n.localizeWorkflowText(hintText);
     final field = TextField(
       controller: controller,
       decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
+        labelText: localizedLabel,
+        hintText: localizedHint,
         border: const OutlineInputBorder(),
         isDense: isDense,
       ),
@@ -160,8 +170,12 @@ class SimulationTextField extends StatelessWidget {
       onSubmitted: (_) => onSubmitted?.call(),
     );
 
-    final label = semanticsLabel ?? 'Simulation input: $labelText';
-    final hint = semanticsHint ?? '$hintText. Double tap to edit.';
+    final label = semanticsLabel == null
+        ? l10n.simulationInputSemantics(localizedLabel)
+        : l10n.localizeWorkflowText(semanticsLabel!);
+    final hint = semanticsHint == null
+        ? l10n.simulationEditHint(localizedHint)
+        : l10n.localizeWorkflowText(semanticsHint!);
 
     return Semantics(
       label: label,
@@ -188,6 +202,7 @@ class SimulationRunButton extends StatelessWidget {
     this.semanticsLabel,
     this.semanticsHint,
     this.excludeSemantics = false,
+    this.onCancel,
   });
 
   final bool isSimulating;
@@ -200,33 +215,46 @@ class SimulationRunButton extends StatelessWidget {
   final String? semanticsLabel;
   final String? semanticsHint;
   final bool excludeSemantics;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     final button = SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isSimulating ? null : onPressed,
+        onPressed: isSimulating ? onCancel : onPressed,
         icon: isSimulating
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+            ? onCancel == null
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.close)
             : Icon(icon, size: iconSize),
-        label: Text(isSimulating ? simulatingLabel : label),
+        label: Text(
+          isSimulating && onCancel != null
+              ? l10n.cancelSimulation
+              : isSimulating
+                  ? l10n.localizeWorkflowText(simulatingLabel)
+                  : l10n.localizeWorkflowText(label),
+        ),
         style:
             padding == null ? null : ElevatedButton.styleFrom(padding: padding),
       ),
     );
 
     return Semantics(
-      label: semanticsLabel ?? 'Run simulation',
-      hint: semanticsHint ??
-          'Runs the machine using the currently entered input string.',
-      value: isSimulating ? 'Simulating' : null,
+      label: semanticsLabel == null
+          ? l10n.runSimulation
+          : l10n.localizeWorkflowText(semanticsLabel!),
+      hint: semanticsHint == null
+          ? l10n.runSimulationHint
+          : l10n.localizeWorkflowText(semanticsHint!),
+      value: isSimulating ? l10n.simulating : null,
       button: true,
-      enabled: !isSimulating,
+      enabled: !isSimulating || onCancel != null,
       excludeSemantics: excludeSemantics,
       child: button,
     );
@@ -248,6 +276,8 @@ class SimulationResultsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedTitle =
+        appLocalizationsOf(context).localizeWorkflowText(title);
     final content = maxHeight == null
         ? child
         : Container(
@@ -260,7 +290,7 @@ class SimulationResultsSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          title,
+          localizedTitle,
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -288,6 +318,7 @@ class SimulationEmptyResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = appLocalizationsOf(context);
 
     return Container(
       width: double.infinity,
@@ -305,14 +336,14 @@ class SimulationEmptyResults extends StatelessWidget {
           Icon(icon, size: 48, color: colorScheme.outline),
           const SizedBox(height: 16),
           Text(
-            title,
+            l10n.localizeWorkflowText(title),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: colorScheme.outline,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            message,
+            l10n.localizeWorkflowText(message),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: colorScheme.outline,
                 ),
@@ -340,6 +371,8 @@ class SimulationStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final localizedMessage =
+        appLocalizationsOf(context).localizeWorkflowText(message);
     final isSuccess = isAccepted == true;
     final color = isSuccess ? colorScheme.tertiary : colorScheme.error;
     final icon = isAccepted == null
@@ -365,7 +398,7 @@ class SimulationStatusCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  message,
+                  localizedMessage,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(

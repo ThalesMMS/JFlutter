@@ -14,23 +14,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/settings_model.dart';
 import '../../core/repositories/settings_repository.dart';
-import '../../data/repositories/settings_repository_impl.dart';
-
-/// Signature for a repository factory to ease testing overrides.
-typedef SettingsRepositoryFactory = SettingsRepository Function();
+import '../../injection/data_providers.dart';
 
 /// Provider that exposes the persisted [SettingsModel] to the widget tree.
 final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsModel>(
   (ref) {
-    final repository = ref.watch(_settingsRepositoryProvider)();
+    final repository = ref.watch(settingsRepositoryProvider);
     final notifier = SettingsNotifier(repository);
     return notifier;
   },
 );
-
-final _settingsRepositoryProvider = Provider<SettingsRepositoryFactory>((ref) {
-  return () => const SharedPreferencesSettingsRepository();
-});
 
 /// State notifier responsible for reading and persisting [SettingsModel].
 class SettingsNotifier extends StateNotifier<SettingsModel> {

@@ -8,6 +8,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/models/step_explanation.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 
 class StepExplanationCard extends StatelessWidget {
   final StepExplanation? explanation;
@@ -25,13 +27,15 @@ class StepExplanationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = appLocalizationsOf(context);
 
     final title = explanation?.title?.trim().isNotEmpty == true
         ? explanation!.title!.trim()
         : titleWhenEmpty;
 
     final bullets = explanation?.bullets ?? const <String>[];
-    final suggestedFixes = explanation?.suggestedFixes ?? const <SuggestedFix>[];
+    final suggestedFixes =
+        explanation?.suggestedFixes ?? const <SuggestedFix>[];
 
     final hasBullets = bullets.isNotEmpty;
     final hasFixes = suggestedFixes.isNotEmpty;
@@ -56,7 +60,7 @@ class StepExplanationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    title,
+                    l10n.localizeWorkflowText(title),
                     style: theme.textTheme.titleSmall
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
@@ -66,7 +70,7 @@ class StepExplanationCard extends StatelessWidget {
             if (hasFallback) ...[
               const SizedBox(height: 8),
               Text(
-                fallbackText!.trim(),
+                l10n.localizeWorkflowText(fallbackText!.trim()),
                 style: theme.textTheme.bodyMedium,
               ),
             ],
@@ -89,7 +93,7 @@ class StepExplanationCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          bullet,
+                          l10n.localizeWorkflowText(bullet),
                           style: theme.textTheme.bodyMedium,
                         ),
                       ),
@@ -102,7 +106,7 @@ class StepExplanationCard extends StatelessWidget {
               const SizedBox(height: 6),
               Divider(height: 16, color: scheme.outline.withValues(alpha: 0.2)),
               Text(
-                'Suggested fixes',
+                l10n.suggestedFixes,
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -130,6 +134,7 @@ class _SuggestedFixRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = appLocalizationsOf(context);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +146,7 @@ class _SuggestedFixRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                fix.label,
+                l10n.localizeWorkflowText(fix.label),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(fontWeight: FontWeight.w600),
               ),
@@ -149,7 +154,7 @@ class _SuggestedFixRow extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    fix.details!.trim(),
+                    l10n.localizeWorkflowText(fix.details!.trim()),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurface.withValues(alpha: 0.7),
                     ),

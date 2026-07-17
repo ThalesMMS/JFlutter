@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart';
 import 'package:jflutter/core/models/fsa_transition.dart';
+import 'package:jflutter/core/models/transition.dart';
 import 'package:jflutter/core/algorithms/nfa_to_dfa_converter.dart';
 import 'package:jflutter/core/algorithms/automaton_simulator.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -410,6 +411,34 @@ void main() {
           }
         },
       );
+
+      test('plain and step-capturing conversion produce the same DFA', () {
+        final plainResult = NFAToDFAConverter.convert(epsilonNFA);
+        final steppedResult = NFAToDFAConverter.convertWithSteps(epsilonNFA);
+
+        expect(plainResult.isSuccess, isTrue, reason: plainResult.error);
+        expect(steppedResult.isSuccess, isTrue, reason: steppedResult.error);
+
+        final plain = plainResult.data!;
+        final stepped = steppedResult.data!.resultDFA;
+        String transitionKey(Transition transition) =>
+            '${transition.fromState.id}|${transition.symbol}|${transition.toState.id}';
+
+        expect(
+          stepped.states.map((state) => state.id).toSet(),
+          plain.states.map((state) => state.id).toSet(),
+        );
+        expect(
+          stepped.acceptingStates.map((state) => state.id).toSet(),
+          plain.acceptingStates.map((state) => state.id).toSet(),
+        );
+        expect(
+          stepped.transitions.map(transitionKey).toSet(),
+          plain.transitions.map(transitionKey).toSet(),
+        );
+        expect(stepped.alphabet, plain.alphabet);
+        expect(steppedResult.data!.steps, isNotEmpty);
+      });
     });
 
     group('Equivalence Testing', () {

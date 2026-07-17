@@ -27,7 +27,10 @@ class GraphViewController {
     _hasAttachedView = true;
   }
 
-  void _detach() => _state = null;
+  void _detach() {
+    _state = null;
+    _hasAttachedView = false;
+  }
 
   void dispose() => _detach();
 

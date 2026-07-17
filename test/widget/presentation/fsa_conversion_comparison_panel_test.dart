@@ -7,6 +7,8 @@ import 'package:jflutter/core/models/algorithm_step.dart';
 import 'package:jflutter/core/models/conversion_step_history.dart';
 import 'package:jflutter/core/models/fsa.dart';
 import 'package:jflutter/core/models/state.dart' as automaton_state;
+import 'package:jflutter/l10n/app_localizations.dart';
+import 'package:jflutter/presentation/widgets/before_after_comparison.dart';
 import 'package:jflutter/presentation/widgets/fsa_conversion_comparison_panel.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -22,6 +24,55 @@ void main() {
   });
 
   testWidgets(
+    'renders shrink when comparison inputs are incomplete',
+    (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: FSAConversionComparisonPanel(
+            history: null,
+            currentAutomaton: null,
+          ),
+        ),
+      );
+
+      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox));
+      expect(sizedBox.width, equals(0.0));
+      expect(sizedBox.height, equals(0.0));
+      expect(find.byType(BeforeAfterComparison), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'renders BeforeAfterComparison for valid conversion snapshots',
+    (tester) async {
+      final automaton = _fsa();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: FSAConversionComparisonPanel(
+              history: ConversionHistory(
+                id: 'history',
+                algorithmType: AlgorithmType.nfaToDfa,
+                initialSnapshot: automaton.toJson(),
+                finalSnapshot: automaton.toJson(),
+              ),
+              currentAutomaton: automaton,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(BeforeAfterComparison), findsOneWidget);
+      expect(find.text('Conversion result'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'logs and shows fallback when conversion snapshots cannot deserialize',
     (tester) async {
       final logs = <String>[];
@@ -31,6 +82,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: FSAConversionComparisonPanel(
               history: ConversionHistory(

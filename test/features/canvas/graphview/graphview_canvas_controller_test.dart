@@ -227,8 +227,8 @@ void main() {
       final call = provider.addStateCalls.single;
       expect(call['id'], isNotEmpty);
       expect(call['label'], equals('q0'));
-      expect(call['x'], closeTo(120, 0.0001));
-      expect(call['y'], closeTo(80, 0.0001));
+      expect(call['x'], closeTo(72, 0.0001));
+      expect(call['y'], closeTo(32, 0.0001));
       expect(call['isInitial'], isTrue);
     });
 
@@ -245,8 +245,8 @@ void main() {
 
         expect(provider.addStateCalls, hasLength(1));
         final firstCall = provider.addStateCalls.first;
-        expect(firstCall['x'], closeTo(400, 0.0001));
-        expect(firstCall['y'], closeTo(300, 0.0001));
+        expect(firstCall['x'], closeTo(352, 0.0001));
+        expect(firstCall['y'], closeTo(252, 0.0001));
 
         transformation.value = Matrix4.identity()
           ..translateByDouble(150.0, -50.0, 0.0, 1.0)
@@ -255,8 +255,8 @@ void main() {
 
         expect(provider.addStateCalls, hasLength(2));
         final secondCall = provider.addStateCalls.last;
-        expect(secondCall['x'], closeTo((400 - 150) / 1.5, 0.0001));
-        expect(secondCall['y'], closeTo((300 - (-50)) / 1.5, 0.0001));
+        expect(secondCall['x'], closeTo((400 - 150) / 1.5 - 48, 0.0001));
+        expect(secondCall['y'], closeTo((300 - (-50)) / 1.5 - 48, 0.0001));
       },
     );
 
@@ -301,6 +301,27 @@ void main() {
       expect(call['id'], equals(id));
       expect(call['x'], closeTo(240, 0.0001));
       expect(call['y'], closeTo(160, 0.0001));
+    });
+
+    test('drag previews commit one domain mutation and one undo entry', () {
+      controller.addStateAt(const Offset(0, 0));
+      final id = provider.addStateCalls.first['id'] as String;
+      final revisionBeforeDrag = controller.graphRevision.value;
+
+      controller.previewStatePosition(id, const Offset(40, 20));
+      controller.previewStatePosition(id, const Offset(120, 80));
+
+      expect(provider.moveStateCalls, isEmpty);
+      expect(controller.graphRevision.value, revisionBeforeDrag);
+      expect(controller.nodePosition(id), const Offset(120, 80));
+
+      controller.moveState(id, const Offset(120, 80));
+
+      expect(provider.moveStateCalls, hasLength(1));
+      expect(controller.undo(), isTrue);
+      expect(controller.nodePosition(id), const Offset(-48, -48));
+      expect(controller.undo(), isTrue);
+      expect(controller.nodeById(id), isNull);
     });
 
     test('updateStateLabel normalises empty labels', () {
@@ -534,6 +555,22 @@ void main() {
         controller.graphRevision.value,
         greaterThan(revisionBeforeExternalSync),
       );
+    });
+
+    test('domain echoes preserve mutation and restoration history', () {
+      controller.addStateAt(const Offset(120, 80));
+      expect(controller.canUndo, isTrue);
+
+      controller.synchronize(provider.state.currentAutomaton);
+
+      expect(controller.canUndo, isTrue);
+      expect(controller.undo(), isTrue);
+      expect(controller.canRedo, isTrue);
+
+      controller.synchronize(provider.state.currentAutomaton);
+
+      expect(controller.canRedo, isTrue);
+      expect(controller.redo(), isTrue);
     });
 
     test('enforces undo history limit by discarding oldest entries', () {

@@ -186,8 +186,8 @@ void main() {
       icons,
       equals(<IconData>[
         Icons.add,
-        Icons.redo,
         Icons.undo,
+        Icons.redo,
         Icons.fit_screen,
         Icons.center_focus_strong,
         Icons.delete_outline,
@@ -248,8 +248,8 @@ void main() {
 
     final labels = <String>[
       'Add state',
-      'Redo',
       'Undo',
+      'Redo',
       'Fit to content',
       'Reset view',
       'Clear canvas',

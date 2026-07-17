@@ -13,11 +13,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/simulation_result.dart';
 import '../../core/models/simulation_step.dart';
-import '../../data/services/trace_persistence_service.dart' as data_trace;
+import '../../core/repositories/trace_repository.dart';
+import '../../injection/data_providers.dart';
 import 'trace_step_navigation.dart';
+
+export '../../injection/data_providers.dart' show sharedPreferencesProvider;
 
 Map<String, dynamic> _deepUnmodifiableMap(Map<String, dynamic> source) {
   return Map<String, dynamic>.unmodifiable(
@@ -146,7 +148,7 @@ class UnifiedTraceState with TraceStepNavigation<UnifiedTraceState> {
 
 /// Unified trace notifier that handles traces across different automaton types
 class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
-  final data_trace.TracePersistenceService _persistenceService;
+  final TraceRepository _persistenceService;
 
   UnifiedTraceNotifier(this._persistenceService)
       : super(const UnifiedTraceState()) {
@@ -176,6 +178,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   Future<void> loadTraceFromHistory(String traceId) async {
     try {
       final traceData = await _persistenceService.getTraceById(traceId);
+      if (!mounted) return;
       if (traceData == null) return;
 
       final traceJson = traceData['trace'] as Map<String, dynamic>;
@@ -187,12 +190,14 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
         errorMessage: null,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(errorMessage: 'Failed to load trace: $e');
     }
   }
 
   /// Save current trace to history
   Future<void> saveCurrentTraceToHistory() async {
+    if (!mounted) return;
     if (state.currentTrace == null) return;
 
     try {
@@ -201,8 +206,10 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
         automatonType: state.automatonType,
         automatonId: state.automatonId,
       );
+      if (!mounted) return;
       await _loadTraceHistory();
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(errorMessage: 'Failed to save trace: $e');
     }
   }
@@ -216,7 +223,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
     );
 
     final saveSucceeded = await _saveCurrentTrace();
-    if (!saveSucceeded) {
+    if (!mounted || !saveSucceeded) {
       return;
     }
 
@@ -266,6 +273,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   /// Clear all trace history
   Future<void> clearAllTraces() async {
     await _persistenceService.clearAllTraces();
+    if (!mounted) return;
     state = state.copyWith(
       traceHistory: [],
       currentTrace: null,
@@ -283,9 +291,12 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   Future<void> importTraceHistory(String jsonData) async {
     try {
       await _persistenceService.importTraceHistory(jsonData);
+      if (!mounted) return;
       await _loadTraceHistory();
+      if (!mounted) return;
       await _loadTraceStatistics();
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(errorMessage: 'Failed to import traces: $e');
     }
   }
@@ -299,8 +310,10 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   Future<void> _loadTraceHistory() async {
     try {
       final history = await _persistenceService.getTraceHistory();
+      if (!mounted) return;
       state = state.copyWith(traceHistory: history);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(errorMessage: 'Failed to load trace history: $e');
     }
   }
@@ -309,6 +322,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   Future<void> _loadTraceStatistics() async {
     try {
       final statistics = await _persistenceService.getTraceStatistics();
+      if (!mounted) return;
       state = state.copyWith(traceStatistics: statistics);
     } catch (e) {
       // Statistics loading failure is not critical
@@ -330,6 +344,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
     } catch (error, stackTrace) {
       debugPrint('Failed to save current trace: $error');
       debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return false;
       state = state.copyWith(
         errorMessage: 'Failed to save current trace: $error',
       );
@@ -340,6 +355,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
   Future<void> _restoreCurrentTrace() async {
     try {
       final persisted = await _persistenceService.getCurrentTrace();
+      if (!mounted) return;
       if (persisted == null) {
         return;
       }
@@ -376,19 +392,7 @@ class UnifiedTraceNotifier extends StateNotifier<UnifiedTraceState> {
       _deepUnmodifiableTraceList(state.tracesForCurrentType);
 }
 
-/// Bridge for startup-initialized platform preferences.
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw StateError(
-    'sharedPreferencesProvider must be overridden at app startup.',
-  );
-});
-
-/// Provider for trace persistence service (data layer version)
-final dataTracePersistenceServiceProvider =
-    Provider<data_trace.TracePersistenceService>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return data_trace.TracePersistenceService(prefs);
-});
+final dataTracePersistenceServiceProvider = traceRepositoryProvider;
 
 /// Provider for unified trace state
 final unifiedTraceProvider =

@@ -14,9 +14,6 @@ class SettingsModel {
   /// Symbol used to represent the empty string.
   final String emptyStringSymbol;
 
-  /// Symbol used to represent epsilon transitions.
-  final String epsilonSymbol;
-
   /// Theme mode preference (system, light, dark).
   final String themeMode;
 
@@ -46,7 +43,6 @@ class SettingsModel {
 
   const SettingsModel({
     this.emptyStringSymbol = 'λ',
-    this.epsilonSymbol = 'ε',
     this.themeMode = 'system',
     this.showGrid = true,
     this.showCoordinates = false,
@@ -61,7 +57,6 @@ class SettingsModel {
   /// Creates a new [SettingsModel] with updated values.
   SettingsModel copyWith({
     String? emptyStringSymbol,
-    String? epsilonSymbol,
     String? themeMode,
     bool? showGrid,
     bool? showCoordinates,
@@ -74,7 +69,6 @@ class SettingsModel {
   }) {
     return SettingsModel(
       emptyStringSymbol: emptyStringSymbol ?? this.emptyStringSymbol,
-      epsilonSymbol: epsilonSymbol ?? this.epsilonSymbol,
       themeMode: themeMode ?? this.themeMode,
       showGrid: showGrid ?? this.showGrid,
       showCoordinates: showCoordinates ?? this.showCoordinates,
@@ -93,7 +87,6 @@ class SettingsModel {
     if (other.runtimeType != runtimeType) return false;
     return other is SettingsModel &&
         other.emptyStringSymbol == emptyStringSymbol &&
-        other.epsilonSymbol == epsilonSymbol &&
         other.themeMode == themeMode &&
         other.showGrid == showGrid &&
         other.showCoordinates == showCoordinates &&
@@ -107,16 +100,15 @@ class SettingsModel {
 
   @override
   int get hashCode => Object.hash(
-    emptyStringSymbol,
-    epsilonSymbol,
-    themeMode,
-    showGrid,
-    showCoordinates,
-    autoSave,
-    showTooltips,
-    gridSize,
-    nodeSize,
-    fontSize,
-    animationSpeed,
-  );
+        emptyStringSymbol,
+        themeMode,
+        showGrid,
+        showCoordinates,
+        autoSave,
+        showTooltips,
+        gridSize,
+        nodeSize,
+        fontSize,
+        animationSpeed,
+      );
 }

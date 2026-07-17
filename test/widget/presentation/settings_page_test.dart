@@ -8,10 +8,13 @@ import 'package:jflutter/core/repositories/settings_repository.dart';
 import 'package:jflutter/presentation/pages/settings_page.dart';
 
 class _FakeSettingsRepository implements SettingsRepository {
-  _FakeSettingsRepository([SettingsModel? initialSettings])
-      : _settings = initialSettings ?? const SettingsModel();
+  _FakeSettingsRepository({
+    SettingsModel? initialSettings,
+    this.failOnSave = false,
+  }) : _settings = initialSettings ?? const SettingsModel();
 
   SettingsModel _settings;
+  final bool failOnSave;
   final List<SettingsModel> savedSettings = [];
 
   @override
@@ -19,6 +22,7 @@ class _FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> saveSettings(SettingsModel settings) async {
+    if (failOnSave) throw StateError('save failed');
     _settings = settings;
     savedSettings.add(settings);
   }
@@ -72,6 +76,21 @@ void main() {
   });
 
   group('SettingsPage interactions', () {
+    testWidgets('does not advertise an unused epsilon symbol preference', (
+      tester,
+    ) async {
+      await _pumpSettingsPage(
+        tester,
+        repository: _FakeSettingsRepository(),
+      );
+
+      expect(find.text('Epsilon Symbol'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('settings_epsilon_lambda')),
+        findsNothing,
+      );
+    });
+
     testWidgets('save settings button persists the current settings', (
       tester,
     ) async {
@@ -100,13 +119,32 @@ void main() {
       expect(find.text('Settings saved.'), findsOneWidget);
     });
 
+    testWidgets('save error snackbar has no no-op dismiss action', (
+      tester,
+    ) async {
+      await _pumpSettingsPage(
+        tester,
+        repository: _FakeSettingsRepository(failOnSave: true),
+      );
+
+      await _ensureVisibleAndTap(
+        tester,
+        find.byKey(const ValueKey('settings_save_button')),
+      );
+
+      expect(
+        find.text('Failed to save settings. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('Dismiss'), findsNothing);
+    });
+
     testWidgets('reset to defaults reverts state and persists defaults', (
       tester,
     ) async {
       final repository = _FakeSettingsRepository(
-        const SettingsModel(
+        initialSettings: const SettingsModel(
           emptyStringSymbol: 'ε',
-          epsilonSymbol: 'λ',
           themeMode: 'dark',
           showGrid: false,
           showCoordinates: true,
@@ -266,10 +304,6 @@ void main() {
       );
       await _ensureVisibleAndTap(
         tester,
-        find.byKey(const ValueKey('settings_epsilon_lambda')),
-      );
-      await _ensureVisibleAndTap(
-        tester,
         find.byKey(const ValueKey('settings_theme_dark')),
       );
 
@@ -285,22 +319,6 @@ void main() {
         tester
             .widget<FilterChip>(
               find.byKey(const ValueKey('settings_empty_string_lambda')),
-            )
-            .selected,
-        isFalse,
-      );
-      expect(
-        tester
-            .widget<FilterChip>(
-              find.byKey(const ValueKey('settings_epsilon_lambda')),
-            )
-            .selected,
-        isTrue,
-      );
-      expect(
-        tester
-            .widget<FilterChip>(
-              find.byKey(const ValueKey('settings_epsilon_epsilon')),
             )
             .selected,
         isFalse,

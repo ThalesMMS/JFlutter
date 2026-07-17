@@ -106,6 +106,18 @@ Result<PDA> convertAssetJsonToPda(
     requiredField: true,
   );
   if (initialStackResult.isFailure) return Failure(initialStackResult.error!);
+  final initialStack = initialStackResult.data!;
+  if (initialStack.length != 1) {
+    return Failure(
+      'Example "$exampleName" must define initialStack with exactly one symbol.',
+    );
+  }
+  final initialStackSymbol = initialStack.single;
+  if (!stackAlphabetResult.data!.contains(initialStackSymbol)) {
+    return Failure(
+      'Example "$exampleName" initial stack symbol "$initialStackSymbol" must be in stackAlphabet.',
+    );
+  }
 
   final states = statesResult.data!;
   final now = DateTime.now();
@@ -128,7 +140,7 @@ Result<PDA> convertAssetJsonToPda(
       zoomLevel: 1.0,
       panOffset: Vector2.zero(),
       stackAlphabet: stackAlphabetResult.data!,
-      initialStackSymbol: initialStackResult.data!.first,
+      initialStackSymbol: initialStackSymbol,
     ),
   );
 }

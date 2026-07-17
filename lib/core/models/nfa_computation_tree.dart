@@ -11,6 +11,8 @@
 //  Thales Matheus Mendonça Santos - January 2026
 //
 
+import 'dart:collection';
+
 import 'nfa_path_node.dart';
 
 /// Represents the complete computation tree for an NFA simulation,
@@ -229,10 +231,11 @@ class NFAComputationTree {
   /// Gets all nodes at a specific depth level
   List<NFAPathNode> getNodesAtDepth(int depth) {
     final nodesAtDepth = <NFAPathNode>[];
-    final queue = <({NFAPathNode node, int depth})>[(node: root, depth: 0)];
+    final queue = Queue<({NFAPathNode node, int depth})>()
+      ..add((node: root, depth: 0));
 
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
       if (current.depth == depth) {
         nodesAtDepth.add(current.node);
       } else if (current.depth < depth) {

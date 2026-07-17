@@ -17,6 +17,7 @@ import '../../../core/algorithms/tm_simulator.dart';
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
 import '../../../core/services/simulation_highlight_service.dart';
+import '../../../l10n/app_localizations_resolver.dart';
 import 'base_trace_viewer.dart';
 
 class TMTraceViewer extends StatelessWidget {
@@ -33,16 +34,16 @@ class TMTraceViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return BaseTraceViewer(
-      result: _asSimulationResult(),
-      title: 'TM Trace (${result.steps.length} steps)',
+      result: _asSimulationResult(l10n.rejected),
+      title: l10n.tmTrace(result.steps.length),
       highlightService: highlightService,
       onStepChanged: onStepChanged,
       buildStepLine: (SimulationStep step, int index) {
         final tape = step.tapeContents.isEmpty ? '□' : step.tapeContents;
-        final transition = step.usedTransition != null
-            ? ' | δ: ${step.usedTransition}'
-            : '';
+        final transition =
+            step.usedTransition != null ? ' | δ: ${step.usedTransition}' : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -60,7 +61,7 @@ class TMTraceViewer extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'q=${step.currentState} | tape=$tape$transition',
+                  'q=${step.currentState} | ${l10n.traceTape}=$tape$transition',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
@@ -73,7 +74,7 @@ class TMTraceViewer extends StatelessWidget {
     );
   }
 
-  SimulationResult _asSimulationResult() {
+  SimulationResult _asSimulationResult(String rejectedMessage) {
     final errorMessage = result.errorMessage ?? '';
 
     if (result.accepted) {
@@ -101,9 +102,8 @@ class TMTraceViewer extends StatelessWidget {
       );
     }
 
-    final failureMessage = errorMessage.isNotEmpty
-        ? errorMessage
-        : 'Simulation rejected';
+    final failureMessage =
+        errorMessage.isNotEmpty ? errorMessage : rejectedMessage;
 
     return SimulationResult.failure(
       inputString: result.inputString,

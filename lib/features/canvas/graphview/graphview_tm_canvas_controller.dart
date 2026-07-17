@@ -13,7 +13,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../../../core/models/tm.dart';
@@ -21,6 +20,8 @@ import '../../../core/models/tm_transition.dart';
 import '../../../presentation/providers/tm_editor_provider.dart';
 import 'base_graphview_canvas_controller.dart';
 import 'graphview_canvas_models.dart';
+import 'graphview_mapper_helpers.dart';
+import 'graphview_state_notifier_adapter.dart';
 import 'graphview_tm_mapper.dart';
 
 void _logTmCanvas(String message) {
@@ -51,26 +52,33 @@ class GraphViewTmCanvasController
   double get fitToContentMaxScale => _kTmFitToContentMaxScale;
 
   @override
-  TM? get currentDomainData => _notifier.currentTm;
-
-  @override
-  Iterable<String> get domainStateIds {
-    final machine = currentDomainData;
-    return machine?.states.map((state) => state.id) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainStateLabels {
-    final machine = currentDomainData;
-    return machine?.states.map((state) => state.label) ?? const <String>[];
-  }
-
-  @override
-  Iterable<String> get domainTransitionIds {
-    final machine = currentDomainData;
-    return machine?.tmTransitions.map((transition) => transition.id) ??
-        const <String>[];
-  }
+  late final GraphViewStateNotifierAdapter<TM> stateNotifierAdapter =
+      GraphViewStateNotifierAdapter<TM>(
+    currentData: () => _notifier.currentTm,
+    stateIdsOf: (machine) => machine.states.map((state) => state.id),
+    stateLabelsOf: (machine) => machine.states.map((state) => state.label),
+    transitionIdsOf: (machine) =>
+        machine.tmTransitions.map((transition) => transition.id),
+    addState: ({required id, required label, required position}) =>
+        _notifier.upsertState(
+      id: id,
+      label: label,
+      x: position.dx,
+      y: position.dy,
+    ),
+    moveState: ({required id, required position}) =>
+        _notifier.moveState(id: id, x: position.dx, y: position.dy),
+    updateStateLabel: ({required id, required label}) =>
+        _notifier.updateStateLabel(id: id, label: label),
+    updateStateFlags: ({required id, isInitial, isAccepting}) =>
+        _notifier.updateStateFlags(
+      id: id,
+      isInitial: isInitial,
+      isAccepting: isAccepting,
+    ),
+    removeState: (id) => _notifier.removeState(id: id),
+    logMutation: _logTmCanvas,
+  );
 
   @override
   GraphViewAutomatonSnapshot toSnapshot(TM? machine) {
@@ -84,53 +92,6 @@ class GraphViewTmCanvasController
       'Synchronizing TM canvas (states=${machine?.states.length ?? 0}, transitions=${machine?.tmTransitions.length ?? 0})',
     );
     synchronizeGraph(machine);
-  }
-
-  @override
-  void addDomainState({
-    required String id,
-    required String label,
-    required Offset position,
-  }) {
-    _notifier.upsertState(
-      id: id,
-      label: label,
-      x: position.dx,
-      y: position.dy,
-    );
-  }
-
-  @override
-  void moveDomainState({required String id, required Offset position}) {
-    _notifier.moveState(id: id, x: position.dx, y: position.dy);
-  }
-
-  @override
-  void updateDomainStateLabel({required String id, required String label}) {
-    _notifier.updateStateLabel(id: id, label: label);
-  }
-
-  @override
-  void updateDomainStateFlags({
-    required String id,
-    bool? isInitial,
-    bool? isAccepting,
-  }) {
-    _notifier.updateStateFlags(
-      id: id,
-      isInitial: isInitial,
-      isAccepting: isAccepting,
-    );
-  }
-
-  @override
-  void removeDomainState(String id) {
-    _notifier.removeState(id: id);
-  }
-
-  @override
-  void logCanvasStateMutation(String message) {
-    _logTmCanvas(message);
   }
 
   /// Adds or updates a TM transition between [fromStateId] and [toStateId].
@@ -194,6 +155,7 @@ class GraphViewTmCanvasController
   }
 
   /// Removes the transition identified by [id] from the machine.
+  @override
   void removeTransition(String id) {
     _logTmCanvas('removeTransition -> id=$id');
     performMutation(() {
@@ -204,16 +166,11 @@ class GraphViewTmCanvasController
   @override
   void applySnapshotToDomain(GraphViewAutomatonSnapshot snapshot) {
     final metadataBlankSymbol = snapshot.metadata.blankSymbol ?? 'B';
-    final metadataTapeAlphabet = snapshot.metadata.tapeAlphabet.toSet();
-    final initialTapeAlphabet = metadataTapeAlphabet.isNotEmpty
-        ? {
-            ...metadataTapeAlphabet,
-            if (metadataBlankSymbol.isNotEmpty) metadataBlankSymbol,
-          }
-        : {
-            ...snapshot.metadata.alphabet,
-            if (metadataBlankSymbol.isNotEmpty) metadataBlankSymbol,
-          };
+    final initialTapeAlphabet = GraphViewMapperHelpers.effectiveTapeAlphabet(
+      metadataTapeAlphabet: snapshot.metadata.tapeAlphabet,
+      fallbackTapeAlphabet: snapshot.metadata.alphabet,
+      blankSymbol: metadataBlankSymbol,
+    );
     final template = _notifier.currentTm ??
         TM(
           id: snapshot.metadata.id ??

@@ -15,14 +15,14 @@ void main() {
         terminals: const {'a', 'b'},
         nonterminals: const {'S'},
         startSymbol: 'S',
-        productions: const {
-          Production(
+        productions: {
+          const Production(
             id: 'p0',
             leftSide: ['S'],
             rightSide: ['a', 'S', 'b'],
             order: 0,
           ),
-          Production(
+          const Production(
             id: 'p1',
             leftSide: ['S'],
             rightSide: [],
@@ -53,8 +53,8 @@ void main() {
         terminals: const {'a'},
         nonterminals: const {'S'},
         startSymbol: 'S',
-        productions: const {
-          Production(
+        productions: {
+          const Production(
             id: 'p0',
             leftSide: ['S'],
             rightSide: ['a'],

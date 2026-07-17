@@ -76,6 +76,9 @@ FSA _buildSymbolNFA(String symbol) {
 
 /// Builds NFA for dot (any symbol)
 FSA _buildDotNFA({Set<String>? contextAlphabet}) {
+  if (contextAlphabet == null || contextAlphabet.isEmpty) {
+    throw StateError('Dot requires a non-empty alphabet universe');
+  }
   final now = DateTime.now();
   final q0 = State(
     id: _newStateId('q'),
@@ -97,9 +100,7 @@ FSA _buildDotNFA({Set<String>? contextAlphabet}) {
     fromState: q0,
     toState: q1,
     label: '.',
-    inputSymbols: contextAlphabet != null && contextAlphabet.isNotEmpty
-        ? contextAlphabet
-        : {'a', 'b', 'c'},
+    inputSymbols: contextAlphabet,
   );
 
   return FSA(
@@ -107,9 +108,7 @@ FSA _buildDotNFA({Set<String>? contextAlphabet}) {
     name: 'Dot (Any Symbol)',
     states: {q0, q1},
     transitions: {transition},
-    alphabet: contextAlphabet != null && contextAlphabet.isNotEmpty
-        ? contextAlphabet
-        : {'a', 'b', 'c'},
+    alphabet: contextAlphabet,
     initialState: q0,
     acceptingStates: {q1},
     created: now,
@@ -585,15 +584,24 @@ Set<String> _expandShortcut(String code, Set<String>? contextAlphabet) {
     case 'd':
       return _shortcutDigits();
     case 'D':
-      return contextAlphabet?.difference(_shortcutDigits()) ?? {};
+      if (contextAlphabet == null || contextAlphabet.isEmpty) {
+        throw StateError('\\D requires a non-empty alphabet universe');
+      }
+      return contextAlphabet.difference(_shortcutDigits());
     case 'w':
       return _shortcutWordChars();
     case 'W':
-      return contextAlphabet?.difference(_shortcutWordChars()) ?? {};
+      if (contextAlphabet == null || contextAlphabet.isEmpty) {
+        throw StateError('\\W requires a non-empty alphabet universe');
+      }
+      return contextAlphabet.difference(_shortcutWordChars());
     case 's':
       return _shortcutWhitespaceChars();
     case 'S':
-      return contextAlphabet?.difference(_shortcutWhitespaceChars()) ?? {};
+      if (contextAlphabet == null || contextAlphabet.isEmpty) {
+        throw StateError('\\S requires a non-empty alphabet universe');
+      }
+      return contextAlphabet.difference(_shortcutWhitespaceChars());
     default:
       throw ArgumentError.value(code, 'code', 'Unrecognized regex shortcut');
   }

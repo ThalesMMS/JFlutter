@@ -20,8 +20,12 @@ import '../../core/models/tm.dart';
 import '../../core/models/tm_analysis.dart';
 import '../../core/models/tm_transition.dart';
 import '../../core/models/tm_transition.dart' as tm_models show TapeDirection;
+import '../../core/models/asset_example.dart';
+import '../../core/repositories/examples_repository.dart';
 import '../../core/result.dart';
-import '../../data/data_sources/examples_asset_data_source.dart';
+import '../../injection/data_providers.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/tm_editor_provider.dart';
 import 'algorithm_panel_scaffold.dart';
 import 'app_snackbar.dart';
@@ -56,7 +60,7 @@ class TMAlgorithmPanel extends ConsumerStatefulWidget {
   });
 
   final bool useExpanded;
-  final ExamplesAssetDataSource? examplesDataSource;
+  final ExamplesRepository? examplesDataSource;
 
   @override
   ConsumerState<TMAlgorithmPanel> createState() => _TMAlgorithmPanelState();
@@ -69,14 +73,14 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
   TM? _analyzedTm;
   _TMAnalysisFocus? _currentFocus;
   String? _loadingExampleName;
-  late final ExamplesAssetDataSource _examplesDataSource;
+  late final ExamplesRepository _examplesDataSource;
   late final Future<ListResult<AssetExample<TM>>> _tmExamplesFuture;
 
   @override
   void initState() {
     super.initState();
     _examplesDataSource =
-        widget.examplesDataSource ?? ExamplesAssetDataSource();
+        widget.examplesDataSource ?? ref.read(examplesRepositoryProvider);
     _tmExamplesFuture = _examplesDataSource.loadAllTypedTmExamples();
   }
 
@@ -173,8 +177,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
     final hasData = _analysis != null || _analysisError != null;
     return AlgorithmResultsSection(
       hasResults: hasData,
-      empty: _buildEmptyResults(context),
-      results: _buildResults(context),
+      emptyBuilder: _buildEmptyResults,
+      resultsBuilder: _buildResults,
     );
   }
 
@@ -204,7 +208,8 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                _analysisError!,
+                appLocalizationsOf(context)
+                    .localizeWorkflowText(_analysisError!),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onErrorContainer,
                     ),
@@ -459,7 +464,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       if (result.isFailure) {
         showAppSnackBar(
           context,
-          message: 'Failed to load example: ${result.error}',
+          message: appLocalizationsOf(context).localizeWorkflowText(
+            'Failed to load example: ${result.error}',
+          ),
           tone: AppSnackBarTone.error,
         );
         return;
@@ -469,13 +476,15 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
       ref.read(tmEditorProvider.notifier).setTm(tm);
       showAppSnackBar(
         context,
-        message: 'Example loaded: ${tm.name}',
+        message: appLocalizationsOf(context)
+            .localizeWorkflowText('Example loaded: ${tm.name}'),
         tone: AppSnackBarTone.success,
       );
     } catch (error) {
       showAppSnackBar(
         context,
-        message: 'Failed to load example: $error',
+        message: appLocalizationsOf(context)
+            .localizeWorkflowText('Failed to load example: $error'),
         tone: AppSnackBarTone.error,
       );
     } finally {
@@ -544,7 +553,9 @@ class _TMAlgorithmPanelState extends ConsumerState<TMAlgorithmPanel> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Analysis focus: ${_focusLabel(focus)}',
+              appLocalizationsOf(context).localizeWorkflowText(
+                'Analysis focus: ${_focusLabel(focus)}',
+              ),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),

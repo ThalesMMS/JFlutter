@@ -14,6 +14,7 @@ import 'package:collection/collection.dart';
 
 import '../models/regex_simplification_step.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 
 part 'regex_simplifier_steps.dart';
 part 'regex_simplifier_parentheses.dart';

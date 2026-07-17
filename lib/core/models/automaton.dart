@@ -10,6 +10,7 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'dart:collection';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 import 'state.dart';
@@ -73,11 +74,11 @@ abstract class Automaton {
     required this.bounds,
     this.zoomLevel = 1.0,
     Vector2? panOffset,
-  }) : states = Set<State>.unmodifiable(states),
-       transitions = Set<Transition>.unmodifiable(transitions),
-       alphabet = Set<String>.unmodifiable(alphabet),
-       acceptingStates = Set<State>.unmodifiable(acceptingStates),
-       panOffset = (panOffset ?? Vector2.zero()).clone();
+  })  : states = Set<State>.unmodifiable(states),
+        transitions = Set<Transition>.unmodifiable(transitions),
+        alphabet = Set<String>.unmodifiable(alphabet),
+        acceptingStates = Set<State>.unmodifiable(acceptingStates),
+        panOffset = (panOffset ?? Vector2.zero()).clone();
 
   /// Creates a copy of this automaton with updated properties
   Automaton copyWith({
@@ -226,10 +227,10 @@ abstract class Automaton {
   /// Gets all states reachable from a given state
   Set<State> getReachableStates(State startState) {
     final reachable = <State>{startState};
-    final queue = <State>[startState];
+    final queue = Queue<State>()..add(startState);
 
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
       final outgoingTransitions = getTransitionsFrom(current);
 
       for (final transition in outgoingTransitions) {
@@ -246,10 +247,10 @@ abstract class Automaton {
   /// Gets all states that can reach a given state
   Set<State> getStatesReaching(State targetState) {
     final reaching = <State>{targetState};
-    final queue = <State>[targetState];
+    final queue = Queue<State>()..add(targetState);
 
     while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
+      final current = queue.removeFirst();
       final incomingTransitions = getTransitionsTo(current);
 
       for (final transition in incomingTransitions) {
@@ -282,9 +283,8 @@ abstract class Automaton {
 
     for (final state in states) {
       final reachable = getReachableStates(state);
-      final canReachAccepting = reachable
-          .intersection(acceptingStates)
-          .isNotEmpty;
+      final canReachAccepting =
+          reachable.intersection(acceptingStates).isNotEmpty;
       if (!canReachAccepting) {
         dead.add(state);
       }

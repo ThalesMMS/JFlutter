@@ -78,6 +78,7 @@ class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
   int addStateAtCallCount = 0;
   Offset? lastAddStateWorldOffset;
   int moveStateCallCount = 0;
+  int previewStatePositionCallCount = 0;
   String? lastMoveStateId;
   Offset? lastMoveStatePosition;
 
@@ -98,6 +99,12 @@ class _RecordingGraphViewCanvasController extends GraphViewCanvasController {
     moveStateCallCount++;
     lastMoveStateId = id;
     lastMoveStatePosition = position;
+  }
+
+  @override
+  void previewStatePosition(String id, Offset position) {
+    previewStatePositionCallCount++;
+    super.previewStatePosition(id, position);
   }
 }
 
@@ -544,6 +551,8 @@ void main() {
       await gesture.moveBy(const Offset(24, 0));
       await tester.pump();
 
+      expect(controller.previewStatePositionCallCount, greaterThan(0));
+      expect(controller.moveStateCallCount, equals(0));
       expect(
         tester.widget<GraphView>(find.byType(GraphView)).animated,
         isFalse,
@@ -552,6 +561,7 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
 
+      expect(controller.moveStateCallCount, equals(1));
       expect(tester.widget<GraphView>(find.byType(GraphView)).animated, isTrue);
     });
   });

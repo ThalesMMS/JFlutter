@@ -1,5 +1,42 @@
 part of 'regex_to_nfa_converter.dart';
 
+enum RegexValidationCategory {
+  emptyExpression,
+  escape,
+  delimiter,
+  operatorPlacement,
+  characterClass,
+  syntax,
+}
+
+class RegexValidationDiagnostic {
+  const RegexValidationDiagnostic({
+    required this.message,
+    required this.position,
+    required this.length,
+    required this.category,
+  });
+
+  final String message;
+  final int position;
+  final int length;
+  final RegexValidationCategory category;
+
+  int get end => position + length;
+
+  String get displayMessage => '$message (at position ${position + 1})';
+}
+
+class RegexValidationResult {
+  const RegexValidationResult.valid() : diagnostic = null;
+
+  const RegexValidationResult.invalid(this.diagnostic);
+
+  final RegexValidationDiagnostic? diagnostic;
+
+  bool get isValid => diagnostic == null;
+}
+
 /// Abstract base class for regex nodes
 abstract class RegexNode {
   final int? position;

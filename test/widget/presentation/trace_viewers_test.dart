@@ -5,10 +5,31 @@ import 'package:jflutter/core/algorithms/pda_simulator.dart';
 import 'package:jflutter/core/algorithms/tm_simulator.dart';
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
+import 'package:jflutter/core/models/simulation_highlight.dart';
 import 'package:jflutter/core/services/simulation_highlight_service.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/pda_trace_viewer.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/tm_trace_viewer.dart';
 import 'package:jflutter/presentation/widgets/trace_viewers/base_trace_viewer.dart';
+
+class _SpyHighlightService extends SimulationHighlightService {
+  final emittedIndices = <int>[];
+  int clearCount = 0;
+
+  @override
+  SimulationHighlight emitFromSteps(
+    List<SimulationStep> steps,
+    int currentIndex,
+  ) {
+    emittedIndices.add(currentIndex);
+    return super.emitFromSteps(steps, currentIndex);
+  }
+
+  @override
+  void clear() {
+    clearCount++;
+    super.clear();
+  }
+}
 
 Future<void> _pumpPDATraceViewer(
   WidgetTester tester, {
@@ -37,6 +58,8 @@ Future<void> _pumpTMTraceViewer(
 Future<void> _pumpBaseTraceViewer(
   WidgetTester tester, {
   required SimulationResult result,
+  SimulationHighlightService? highlightService,
+  ValueChanged<int>? onStepChanged,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -44,8 +67,9 @@ Future<void> _pumpBaseTraceViewer(
         body: BaseTraceViewer(
           result: result,
           title: 'Trace (${result.steps.length} steps)',
-          highlightService: SimulationHighlightService(),
+          highlightService: highlightService ?? SimulationHighlightService(),
           animationSpeed: 10,
+          onStepChanged: onStepChanged,
           buildStepLine: (step, index) =>
               Text('${index + 1}. ${step.currentState}'),
         ),
@@ -153,6 +177,132 @@ void main() {
       await tester.pump(const Duration(milliseconds: 110));
 
       expect(find.text('3 / 4'), findsOneWidget);
+    });
+  });
+
+  group('BaseTraceViewer highlight lifecycle', () {
+    SimulationResult result(String state) => SimulationResult.success(
+          inputString: 'a',
+          steps: [
+            SimulationStep(
+              currentState: state,
+              remainingInput: 'a',
+              stepNumber: 0,
+            ),
+            SimulationStep(
+              currentState: '${state}1',
+              remainingInput: '',
+              stepNumber: 1,
+            ),
+          ],
+          executionTime: Duration.zero,
+        );
+
+    testWidgets('synchronizes init, navigation, playback, and reset',
+        (tester) async {
+      final service = _SpyHighlightService();
+      final selected = <int>[];
+      await _pumpBaseTraceViewer(
+        tester,
+        result: result('q0'),
+        highlightService: service,
+        onStepChanged: selected.add,
+      );
+
+      expect(service.emittedIndices, [0]);
+      expect(selected, [0]);
+
+      await tester.tap(find.byTooltip('Next Step'));
+      await tester.pump();
+      expect(service.emittedIndices.last, 1);
+
+      await tester.tap(find.byTooltip('Reset'));
+      await tester.pump();
+      expect(service.emittedIndices.last, 0);
+      expect(find.text('1 / 2'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Play'));
+      await tester.pump(const Duration(milliseconds: 110));
+      expect(service.emittedIndices.last, 1);
+    });
+
+    testWidgets('clears old ownership on result, service, and dispose',
+        (tester) async {
+      final oldService = _SpyHighlightService();
+      await _pumpBaseTraceViewer(
+        tester,
+        result: result('old'),
+        highlightService: oldService,
+      );
+
+      await _pumpBaseTraceViewer(
+        tester,
+        result: result('new'),
+        highlightService: oldService,
+      );
+      expect(oldService.clearCount, 1);
+      expect(oldService.emittedIndices.last, 0);
+
+      final newService = _SpyHighlightService();
+      await _pumpBaseTraceViewer(
+        tester,
+        result: result('new'),
+        highlightService: newService,
+      );
+      expect(oldService.clearCount, 2);
+      expect(newService.emittedIndices, [0]);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(newService.clearCount, 1);
+    });
+
+    testWidgets('keeps the active row visible across the fold boundary',
+        (tester) async {
+      final longResult = SimulationResult.success(
+        inputString: '',
+        steps: List.generate(
+          101,
+          (index) => SimulationStep(
+            currentState: 'q$index',
+            remainingInput: '',
+            stepNumber: index,
+          ),
+        ),
+        executionTime: Duration.zero,
+      );
+      await _pumpBaseTraceViewer(tester, result: longResult);
+
+      void select(int index) {
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(index.toDouble());
+      }
+
+      for (final index in [49, 50, 100]) {
+        select(index);
+        await tester.pumpAndSettle();
+        expect(find.text('${index + 1}. q$index'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.selected == true &&
+                widget.properties.label == 'Active step ${index + 1} of 101',
+          ),
+          findsOneWidget,
+        );
+      }
+
+      await tester.tap(find.text('Expand'));
+      await tester.pumpAndSettle();
+      expect(find.text('101. q100'), findsOneWidget);
+
+      await tester.tap(find.text('Collapse'));
+      await tester.pumpAndSettle();
+      expect(find.text('101. q100'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Reset'));
+      await tester.pumpAndSettle();
+      expect(find.text('1. q0'), findsOneWidget);
+      expect(find.text('1 / 101'), findsOneWidget);
     });
   });
 

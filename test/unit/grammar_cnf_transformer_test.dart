@@ -236,6 +236,41 @@ void main() {
       expect(report.steps, isNotEmpty);
     });
 
+    test('recomputes reachability after removing unproductive symbols', () {
+      final grammar = buildGrammar(
+        id: 'g5',
+        name: 'sequential useless-symbol removal',
+        terminals: {'a', 'b'},
+        nonterminals: {'S', 'A', 'B'},
+        startSymbol: 'S',
+        productions: {
+          const Production(id: 'p1', leftSide: ['S'], rightSide: ['a']),
+          const Production(
+            id: 'p2',
+            leftSide: ['S'],
+            rightSide: ['A', 'B'],
+          ),
+          const Production(id: 'p3', leftSide: ['B'], rightSide: ['b']),
+        },
+      );
+
+      final result = GrammarCnfTransformer.toCnf(grammar);
+      expect(result.isSuccess, isTrue, reason: result.error);
+
+      final transformed = result.data!.grammar;
+      expect(transformed.nonterminals, {'S'});
+      expect(
+        transformed.productions,
+        everyElement(
+          predicate<Production>(
+            (production) =>
+                !production.leftSide.contains('B') &&
+                !production.rightSide.contains('B'),
+          ),
+        ),
+      );
+    });
+
     test('reports an error when nullable subset expansion exceeds the cap', () {
       final grammar = buildGrammar(
         id: 'g5',

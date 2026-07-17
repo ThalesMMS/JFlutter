@@ -531,6 +531,24 @@ void main() {
         }
       });
 
+      test('Should enforce timeout before handling empty input', () {
+        final parseResult = CYKParser.parse(
+          lambdaGrammar,
+          '',
+          timeout: Duration.zero,
+        );
+        final stepResult = CYKParser.parseWithSteps(
+          lambdaGrammar,
+          '',
+          timeout: Duration.zero,
+        );
+
+        expect(parseResult.isFailure, isTrue);
+        expect(parseResult.error, 'CYK parsing timed out');
+        expect(stepResult.isFailure, isTrue);
+        expect(stepResult.error, 'CYK parsing timed out');
+      });
+
       test('Should generate cell processing steps', () {
         final result = CYKParser.parseWithSteps(simpleCNFGrammar, 'ab');
 

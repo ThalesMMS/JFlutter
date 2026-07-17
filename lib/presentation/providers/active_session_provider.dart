@@ -3,9 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/automaton.dart';
+import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
+import '../../core/models/pda.dart';
+import '../../core/models/production.dart';
 import '../../core/models/settings_model.dart';
-import '../../data/services/active_session_persistence_service.dart';
+import '../../core/models/tm.dart';
+import '../../core/repositories/active_session_repository.dart';
+import '../../injection/data_providers.dart';
 import 'automaton_state_provider.dart';
 import 'grammar_provider.dart';
 import 'home_navigation_provider.dart';
@@ -13,82 +19,146 @@ import 'pda_editor_provider.dart';
 import 'regex_editor_provider.dart';
 import 'settings_provider.dart';
 import 'tm_editor_provider.dart';
-import 'unified_trace_provider.dart';
 
-final activeSessionPersistenceServiceProvider =
-    Provider<ActiveSessionPersistenceService>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ActiveSessionPersistenceService(prefs);
-});
+final activeSessionPersistenceServiceProvider = activeSessionRepositoryProvider;
 
-final activeSessionPersistenceProvider =
-    Provider<ActiveSessionPersistenceCoordinator>((ref) {
+const activeSessionSaveDebounceDuration = Duration(milliseconds: 300);
+
+final activeSessionPersistenceProvider = StateNotifierProvider<
+    ActiveSessionPersistenceNotifier, ActiveSessionPersistenceState>((ref) {
   final service = ref.watch(activeSessionPersistenceServiceProvider);
-  final coordinator = ActiveSessionPersistenceCoordinator(ref, service);
-  ref.onDispose(coordinator.dispose);
-  return coordinator;
+  return ActiveSessionPersistenceNotifier(ref, service);
 });
 
-class ActiveSessionPersistenceCoordinator {
-  ActiveSessionPersistenceCoordinator(this._ref, this._service) {
+class ActiveSessionPersistenceState {
+  const ActiveSessionPersistenceState({
+    required this.restoreComplete,
+    this.isRestoring = false,
+  });
+
+  final Future<void> restoreComplete;
+  final bool isRestoring;
+
+  ActiveSessionPersistenceState copyWith({
+    Future<void>? restoreComplete,
+    bool? isRestoring,
+  }) {
+    return ActiveSessionPersistenceState(
+      restoreComplete: restoreComplete ?? this.restoreComplete,
+      isRestoring: isRestoring ?? this.isRestoring,
+    );
+  }
+}
+
+class ActiveSessionPersistenceNotifier
+    extends StateNotifier<ActiveSessionPersistenceState> {
+  ActiveSessionPersistenceNotifier(this._ref, this._service)
+      : super(
+          ActiveSessionPersistenceState(
+            restoreComplete: Future<void>.value(),
+          ),
+        ) {
     _attachListeners();
-    _restoreComplete = _restore();
+    final restoreComplete = _restore();
+    state = state.copyWith(restoreComplete: restoreComplete);
   }
 
   final Ref _ref;
-  final ActiveSessionPersistenceService _service;
+  final ActiveSessionRepository _service;
   Timer? _saveDebounce;
+  Future<void>? _activeWrite;
+  ActiveSessionSnapshot? _pendingSnapshot;
+  bool _pendingAutoSave = true;
+  bool _hasPendingChange = false;
   bool _isRestoring = false;
   bool _disposed = false;
-
-  late final Future<void> _restoreComplete;
-
-  Future<void> get restoreComplete => _restoreComplete;
+  late int _latestWorkspaceIndex;
+  FSA? _latestFsa;
+  Grammar? _latestGrammar;
+  PDA? _latestPda;
+  TM? _latestTm;
+  RegexSessionSnapshot? _latestRegex;
 
   Future<void> flush() async {
     _saveDebounce?.cancel();
     _saveDebounce = null;
-    await _saveNow();
+    _capturePendingSnapshotIfNeeded();
+    await _persistPendingChange();
   }
 
+  @override
   void dispose() {
-    _disposed = true;
     _saveDebounce?.cancel();
+    _saveDebounce = null;
+    _capturePendingSnapshotIfNeeded();
+    unawaited(
+      _persistPendingChange().catchError((Object error, StackTrace stackTrace) {
+        _logSaveFailure(error, stackTrace);
+      }),
+    );
+    _disposed = true;
+    super.dispose();
   }
 
   void _attachListeners() {
+    _latestWorkspaceIndex = _ref.read(homeNavigationProvider);
+    _latestFsa = _ref.read(automatonStateProvider).currentAutomaton;
+    _latestGrammar = _buildGrammarSnapshot(_ref.read(grammarProvider));
+    _latestPda = _ref.read(pdaEditorProvider).pda;
+    _latestTm = _ref.read(tmEditorProvider).tm;
+    _latestRegex = _buildRegexSnapshot(_ref.read(regexEditorProvider));
+
     _ref.listen<SettingsModel>(settingsProvider, _handleSettingsChanged);
-    _ref.listen<int>(homeNavigationProvider, (_, __) => _scheduleSave());
+    _ref.listen<int>(homeNavigationProvider, (_, next) {
+      _latestWorkspaceIndex = next;
+      _scheduleSave();
+    });
     _ref.listen<AutomatonStateProviderState>(
       automatonStateProvider,
-      (_, __) => _scheduleSave(),
+      (_, next) {
+        _latestFsa = next.currentAutomaton;
+        _scheduleSave();
+      },
     );
-    _ref.listen<GrammarState>(
-      grammarProvider,
-      (_, __) => _scheduleSave(),
+    _ref.listen<_PersistedGrammarState>(
+      grammarProvider.select(_PersistedGrammarState.fromState),
+      (_, __) {
+        _latestGrammar = _buildGrammarSnapshot(_ref.read(grammarProvider));
+        _scheduleSave();
+      },
     );
-    _ref.listen<PDAEditorState>(
-      pdaEditorProvider,
-      (_, __) => _scheduleSave(),
+    _ref.listen<_PersistedPdaState>(
+      pdaEditorProvider.select(_PersistedPdaState.fromState),
+      (_, next) {
+        _latestPda = next.pda;
+        _scheduleSave();
+      },
     );
-    _ref.listen<TMEditorState>(
-      tmEditorProvider,
-      (_, __) => _scheduleSave(),
+    _ref.listen<_PersistedTmState>(
+      tmEditorProvider.select(_PersistedTmState.fromState),
+      (_, next) {
+        _latestTm = next.tm;
+        _scheduleSave();
+      },
     );
-    _ref.listen<RegexEditorState>(
-      regexEditorProvider,
-      (_, __) => _scheduleSave(),
+    _ref.listen<_PersistedRegexState>(
+      regexEditorProvider.select(_PersistedRegexState.fromState),
+      (_, next) {
+        _latestRegex = next.toSnapshot();
+        _scheduleSave();
+      },
     );
   }
 
   Future<void> _restore() async {
-    if (!_service.autoSaveEnabled) {
-      await _service.clearSession();
-      return;
-    }
-
     _isRestoring = true;
+    state = state.copyWith(isRestoring: true);
     try {
+      if (!_service.autoSaveEnabled) {
+        await _service.clearSession();
+        return;
+      }
+
       final session = await _service.loadSession();
       if (_disposed || session == null) {
         return;
@@ -100,6 +170,9 @@ class ActiveSessionPersistenceCoordinator {
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       _isRestoring = false;
+      if (!_disposed) {
+        state = state.copyWith(isRestoring: false);
+      }
     }
   }
 
@@ -122,6 +195,7 @@ class ActiveSessionPersistenceCoordinator {
             currentRegex: regex.currentRegex,
             testString: regex.testString,
             simplifyOutput: regex.simplifyOutput,
+            alphabet: regex.alphabet,
           );
     }
 
@@ -138,7 +212,13 @@ class ActiveSessionPersistenceCoordinator {
     if (!next.autoSave) {
       _saveDebounce?.cancel();
       _saveDebounce = null;
-      unawaited(_service.clearSession());
+      _capturePendingChange(autoSave: false);
+      unawaited(
+        _persistPendingChange()
+            .catchError((Object error, StackTrace stackTrace) {
+          _logSaveFailure(error, stackTrace);
+        }),
+      );
       return;
     }
 
@@ -152,48 +232,96 @@ class ActiveSessionPersistenceCoordinator {
       return;
     }
 
-    if (!_ref.read(settingsProvider).autoSave) {
+    final autoSave = _ref.read(settingsProvider).autoSave;
+
+    if (!autoSave) {
       _saveDebounce?.cancel();
       _saveDebounce = null;
-      unawaited(_service.clearSession());
+      _capturePendingChange(autoSave: false);
+      unawaited(
+        _persistPendingChange()
+            .catchError((Object error, StackTrace stackTrace) {
+          _logSaveFailure(error, stackTrace);
+        }),
+      );
       return;
     }
 
+    _pendingAutoSave = true;
+    _pendingSnapshot = null;
+    _hasPendingChange = true;
+
     _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 300), () {
-      unawaited(_saveNow());
+    _saveDebounce = Timer(activeSessionSaveDebounceDuration, () {
+      _saveDebounce = null;
+      _capturePendingChange(autoSave: true);
+      unawaited(
+        _persistPendingChange()
+            .catchError((Object error, StackTrace stackTrace) {
+          _logSaveFailure(error, stackTrace);
+        }),
+      );
     });
   }
 
-  Future<void> _saveNow() async {
-    if (_disposed) {
+  Future<void> _persistPendingChange() async {
+    final existingWrite = _activeWrite;
+    if (!_hasPendingChange) {
+      if (existingWrite != null) {
+        await existingWrite;
+      }
       return;
     }
 
-    if (!_ref.read(settingsProvider).autoSave) {
-      await _service.clearSession();
-      return;
-    }
+    _hasPendingChange = false;
+    final autoSave = _pendingAutoSave;
+    final snapshot = _pendingSnapshot;
+    final previousWrite = existingWrite ?? Future<void>.value();
+    final write = previousWrite.then((_) {
+      return autoSave
+          ? _service.saveSession(snapshot!)
+          : _service.clearSession();
+    });
+    _activeWrite = write;
 
     try {
-      await _service.saveSession(_buildSnapshot());
-    } catch (error, stackTrace) {
-      debugPrint('Failed to persist active editor session: $error');
-      debugPrintStack(stackTrace: stackTrace);
+      await write;
+    } catch (_) {
+      _hasPendingChange = true;
+      rethrow;
+    } finally {
+      if (identical(_activeWrite, write)) {
+        _activeWrite = null;
+      }
     }
   }
 
-  ActiveSessionSnapshot _buildSnapshot() {
-    final regexSnapshot = _buildRegexSnapshot(_ref.read(regexEditorProvider));
+  void _capturePendingChange({required bool autoSave}) {
+    _pendingAutoSave = autoSave;
+    _pendingSnapshot = autoSave ? _buildSnapshot() : null;
+    _hasPendingChange = true;
+  }
 
+  void _capturePendingSnapshotIfNeeded() {
+    if (_hasPendingChange && _pendingAutoSave && _pendingSnapshot == null) {
+      _capturePendingChange(autoSave: true);
+    }
+  }
+
+  void _logSaveFailure(Object error, StackTrace stackTrace) {
+    debugPrint('Failed to persist active editor session: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
+  ActiveSessionSnapshot _buildSnapshot() {
     return ActiveSessionSnapshot(
-      activeWorkspaceIndex: _ref.read(homeNavigationProvider),
+      activeWorkspaceIndex: _latestWorkspaceIndex,
       savedAt: DateTime.now(),
-      fsa: _ref.read(automatonStateProvider).currentAutomaton,
-      grammar: _buildGrammarSnapshot(_ref.read(grammarProvider)),
-      pda: _ref.read(pdaEditorProvider).pda,
-      tm: _ref.read(tmEditorProvider).tm,
-      regex: regexSnapshot?.hasContent == true ? regexSnapshot : null,
+      fsa: _latestFsa,
+      grammar: _latestGrammar,
+      pda: _latestPda,
+      tm: _latestTm,
+      regex: _latestRegex,
     );
   }
 
@@ -216,8 +344,227 @@ class ActiveSessionPersistenceCoordinator {
       currentRegex: state.currentRegex,
       testString: state.testString,
       simplifyOutput: state.simplifyOutput,
+      alphabet: state.alphabet,
     );
 
     return snapshot.hasContent ? snapshot : null;
   }
+}
+
+class _PersistedGrammarState {
+  const _PersistedGrammarState({
+    required this.name,
+    required this.startSymbol,
+    required this.productions,
+    required this.type,
+  });
+
+  factory _PersistedGrammarState.fromState(GrammarState state) {
+    return _PersistedGrammarState(
+      name: state.name,
+      startSymbol: state.startSymbol,
+      productions: state.productions,
+      type: state.type,
+    );
+  }
+
+  final String name;
+  final String startSymbol;
+  final List<Production> productions;
+  final GrammarType type;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _PersistedGrammarState &&
+        other.name == name &&
+        other.startSymbol == startSymbol &&
+        other.type == type &&
+        _listEquals(other.productions, productions);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        name,
+        startSymbol,
+        type,
+        Object.hashAll(productions),
+      );
+}
+
+class _PersistedRegexState {
+  const _PersistedRegexState({
+    required this.currentRegex,
+    required this.testString,
+    required this.simplifyOutput,
+    required this.alphabet,
+  });
+
+  factory _PersistedRegexState.fromState(RegexEditorState state) {
+    return _PersistedRegexState(
+      currentRegex: state.currentRegex,
+      testString: state.testString,
+      simplifyOutput: state.simplifyOutput,
+      alphabet: state.alphabet,
+    );
+  }
+
+  final String currentRegex;
+  final String testString;
+  final bool simplifyOutput;
+  final String alphabet;
+
+  RegexSessionSnapshot? toSnapshot() {
+    final snapshot = RegexSessionSnapshot(
+      currentRegex: currentRegex,
+      testString: testString,
+      simplifyOutput: simplifyOutput,
+      alphabet: alphabet,
+    );
+    return snapshot.hasContent ? snapshot : null;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _PersistedRegexState &&
+        other.currentRegex == currentRegex &&
+        other.testString == testString &&
+        other.simplifyOutput == simplifyOutput &&
+        other.alphabet == alphabet;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(currentRegex, testString, simplifyOutput, alphabet);
+}
+
+class _PersistedPdaState {
+  const _PersistedPdaState(this.pda);
+
+  factory _PersistedPdaState.fromState(PDAEditorState state) {
+    return _PersistedPdaState(state.pda);
+  }
+
+  final PDA? pda;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _PersistedPdaState && _pdaEquals(other.pda, pda);
+  }
+
+  @override
+  int get hashCode => pda == null ? 0 : _pdaHash(pda!);
+}
+
+class _PersistedTmState {
+  const _PersistedTmState(this.tm);
+
+  factory _PersistedTmState.fromState(TMEditorState state) {
+    return _PersistedTmState(state.tm);
+  }
+
+  final TM? tm;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _PersistedTmState && _tmEquals(other.tm, tm);
+  }
+
+  @override
+  int get hashCode => tm == null ? 0 : _tmHash(tm!);
+}
+
+bool _listEquals<T>(List<T> left, List<T> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (var index = 0; index < left.length; index++) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool _pdaEquals(PDA? left, PDA? right) {
+  if (identical(left, right)) {
+    return true;
+  }
+  if (left == null || right == null) {
+    return false;
+  }
+
+  return _automatonContentEquals(left, right) &&
+      setEquals(left.stackAlphabet, right.stackAlphabet) &&
+      left.initialStackSymbol == right.initialStackSymbol;
+}
+
+bool _tmEquals(TM? left, TM? right) {
+  if (identical(left, right)) {
+    return true;
+  }
+  if (left == null || right == null) {
+    return false;
+  }
+
+  return _automatonContentEquals(left, right) &&
+      setEquals(left.tapeAlphabet, right.tapeAlphabet) &&
+      left.blankSymbol == right.blankSymbol &&
+      left.tapeCount == right.tapeCount;
+}
+
+bool _automatonContentEquals(Automaton left, Automaton right) {
+  return left.id == right.id &&
+      left.name == right.name &&
+      left.type == right.type &&
+      setEquals(left.states, right.states) &&
+      setEquals(left.transitions, right.transitions) &&
+      setEquals(left.alphabet, right.alphabet) &&
+      left.initialState == right.initialState &&
+      setEquals(left.acceptingStates, right.acceptingStates) &&
+      left.created == right.created &&
+      left.modified == right.modified &&
+      left.bounds == right.bounds &&
+      left.zoomLevel == right.zoomLevel &&
+      left.panOffset == right.panOffset;
+}
+
+int _pdaHash(PDA pda) {
+  return Object.hash(
+    _automatonHash(pda),
+    Object.hashAllUnordered(pda.stackAlphabet),
+    pda.initialStackSymbol,
+  );
+}
+
+int _tmHash(TM tm) {
+  return Object.hash(
+    _automatonHash(tm),
+    Object.hashAllUnordered(tm.tapeAlphabet),
+    tm.blankSymbol,
+    tm.tapeCount,
+  );
+}
+
+int _automatonHash(Automaton automaton) {
+  return Object.hash(
+    automaton.id,
+    automaton.name,
+    automaton.type,
+    Object.hashAllUnordered(automaton.states),
+    Object.hashAllUnordered(automaton.transitions),
+    Object.hashAllUnordered(automaton.alphabet),
+    automaton.initialState,
+    Object.hashAllUnordered(automaton.acceptingStates),
+    automaton.created,
+    automaton.modified,
+    automaton.bounds,
+    automaton.zoomLevel,
+    automaton.panOffset,
+  );
 }

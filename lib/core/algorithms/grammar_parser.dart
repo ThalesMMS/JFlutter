@@ -13,14 +13,27 @@ import '../models/derivation_tree.dart';
 import '../models/derivation_tree_node.dart';
 import '../models/grammar.dart';
 import '../models/grammar_parse_report.dart';
-import '../models/production.dart';
-import '../models/parse_table.dart';
 import '../result.dart';
+import 'cfg/cyk_parser.dart';
 import 'grammar_parser_simple_recursive.dart';
 import 'grammar_parser_earley.dart';
 
 /// Parses strings using context-free grammars
 enum ParsingStrategyHint { auto, bruteForce, cyk, ll, lr }
+
+class GrammarParserCapability {
+  const GrammarParserCapability({
+    required this.strategy,
+    required this.label,
+    required this.isAvailable,
+    this.unavailableReason,
+  });
+
+  final ParsingStrategyHint strategy;
+  final String label;
+  final bool isAvailable;
+  final String? unavailableReason;
+}
 
 typedef _ParsingStrategy = ParseResult? Function(
   Grammar grammar,
@@ -29,6 +42,53 @@ typedef _ParsingStrategy = ParseResult? Function(
 );
 
 class GrammarParser {
+  static const _llUnavailableMessage =
+      'LL parsing is not available because a complete LL(1) parser with '
+      'nullable, FIRST/FOLLOW, and conflict detection is not implemented.';
+  static const _lrUnavailableMessage =
+      'LR parsing is not available because the LR parser is not implemented.';
+
+  static const capabilities = <GrammarParserCapability>[
+    GrammarParserCapability(
+      strategy: ParsingStrategyHint.auto,
+      label: 'Automatic (Earley)',
+      isAvailable: true,
+    ),
+    GrammarParserCapability(
+      strategy: ParsingStrategyHint.bruteForce,
+      label: 'Brute force',
+      isAvailable: true,
+    ),
+    GrammarParserCapability(
+      strategy: ParsingStrategyHint.cyk,
+      label: 'CYK (Cocke-Younger-Kasami)',
+      isAvailable: true,
+    ),
+    GrammarParserCapability(
+      strategy: ParsingStrategyHint.ll,
+      label: 'LL(1)',
+      isAvailable: false,
+      unavailableReason: _llUnavailableMessage,
+    ),
+    GrammarParserCapability(
+      strategy: ParsingStrategyHint.lr,
+      label: 'LR',
+      isAvailable: false,
+      unavailableReason: _lrUnavailableMessage,
+    ),
+  ];
+
+  static GrammarParserCapability capabilityFor(ParsingStrategyHint strategy) {
+    return capabilities.firstWhere(
+      (capability) => capability.strategy == strategy,
+      orElse: () => throw ArgumentError.value(
+        strategy,
+        'strategy',
+        'No parser capability is registered',
+      ),
+    );
+  }
+
   /// Parses a string using a grammar (legacy API).
   static Result<ParseResult> parse(
     Grammar grammar,
@@ -42,6 +102,23 @@ class GrammarParser {
     final validation = _validateInput(grammar, inputString);
     if (!validation.isSuccess) {
       return Failure(validation.error!);
+    }
+
+    final capability = capabilityFor(strategyHint);
+    if (!capability.isAvailable) {
+      return Failure(capability.unavailableReason!);
+    }
+
+    if (strategyHint != ParsingStrategyHint.auto) {
+      return Success(
+        _parseString(
+          grammar,
+          inputString,
+          timeout,
+          _resolveStrategies(strategyHint),
+          strategyHint,
+        ),
+      );
     }
 
     // First, decide acceptance robustly with Earley
@@ -132,7 +209,44 @@ class GrammarParser {
       return Failure(validation.error!);
     }
 
-    // Dyck-1 fast path (accept/reject only; no trees).
+    final capability = capabilityFor(strategyHint);
+    if (!capability.isAvailable) {
+      return Failure(capability.unavailableReason!);
+    }
+
+    if (strategyHint != ParsingStrategyHint.auto) {
+      final result = _parseString(
+        grammar,
+        inputString,
+        timeout,
+        _resolveStrategies(strategyHint),
+        strategyHint,
+      );
+      final elapsed = DateTime.now().difference(startTime);
+      if (!result.accepted) {
+        return Success(
+          GrammarParseReport.rejected(
+            inputString: inputString,
+            farthestPosition: 0,
+            message: result.errorMessage ??
+                'String "$inputString" cannot be derived from grammar',
+            executionTime: elapsed,
+          ),
+        );
+      }
+
+      final allTrees = _treesFromDerivations(result.derivations, inputString);
+      return Success(
+        GrammarParseReport.accepted(
+          inputString: inputString,
+          executionTime: elapsed,
+          trees: allTrees.take(maxTrees).toList(growable: false),
+          isAmbiguous: allTrees.length > maxTrees,
+        ),
+      );
+    }
+
+    // Dyck-1 fast path (accept/reject only; no trees) for auto mode.
     final dyckDelims = _detectDyck1Delimiters(grammar);
     if (dyckDelims != null) {
       final open = dyckDelims.item1;
@@ -163,41 +277,6 @@ class GrammarParser {
           ),
         );
       }
-    }
-
-    if (strategyHint != ParsingStrategyHint.auto) {
-      final result = _parseString(
-        grammar,
-        inputString,
-        timeout,
-        _resolveStrategies(strategyHint),
-        strategyHint,
-      );
-      final elapsed = DateTime.now().difference(startTime);
-      if (!result.accepted) {
-        return Success(
-          GrammarParseReport.rejected(
-            inputString: inputString,
-            farthestPosition: 0,
-            message: result.errorMessage ??
-                'String "$inputString" cannot be derived from grammar',
-            executionTime: elapsed,
-          ),
-        );
-      }
-
-      final allTrees = _treesFromDerivations(
-        result.derivations,
-        inputString,
-      );
-      return Success(
-        GrammarParseReport.accepted(
-          inputString: inputString,
-          executionTime: elapsed,
-          trees: allTrees.take(maxTrees).toList(growable: false),
-          isAmbiguous: allTrees.length > maxTrees,
-        ),
-      );
     }
 
     // Robust acceptance via Earley.
@@ -339,15 +418,13 @@ class GrammarParser {
       case ParsingStrategyHint.cyk:
         return [_parseWithCYK];
       case ParsingStrategyHint.ll:
-        return [_parseWithLL];
+        return const [];
       case ParsingStrategyHint.lr:
-        return [_parseWithLR];
+        return const [];
       case ParsingStrategyHint.auto:
         return [
           _parseWithBruteForce,
           _parseWithCYK,
-          _parseWithLL,
-          _parseWithLR,
         ];
     }
   }
@@ -561,78 +638,32 @@ class GrammarParser {
     String inputString,
     Duration timeout,
   ) {
-    final startTime = DateTime.now();
-
-    // Handle empty string case
-    if (inputString.isEmpty) {
-      // Check if grammar can derive empty string
-      if (_canDeriveEmptyString(grammar)) {
-        return ParseResult.success(
-          inputString: inputString,
-          derivations: [],
-          executionTime: DateTime.now().difference(startTime),
-        );
-      }
-      return null;
-    }
-
-    // Convert grammar to Chomsky Normal Form
-    final cnfGrammar = _convertToCNF(grammar);
-
-    // Apply CYK algorithm
-    final n = inputString.length;
-    final table = List.generate(n, (i) => List.generate(n, (j) => <String>{}));
-
-    // Initialize table for strings of length 1
-    for (int i = 0; i < n; i++) {
-      final symbol = inputString[i];
-      for (final production in cnfGrammar.productions) {
-        if (production.rightSide.length == 1 &&
-            production.rightSide.first == symbol) {
-          table[i][i].add(production.leftSide.first);
-        }
-      }
-    }
-
-    // Fill table for longer strings
-    for (int length = 2; length <= n; length++) {
-      for (int i = 0; i <= n - length; i++) {
-        final j = i + length - 1;
-        for (int k = i; k < j; k++) {
-          for (final production in cnfGrammar.productions) {
-            if (production.rightSide.length == 2) {
-              final left = production.rightSide.first;
-              final right = production.rightSide.last;
-              if (table[i][k].contains(left) &&
-                  table[k + 1][j].contains(right)) {
-                table[i][j].add(production.leftSide.first);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Check if start symbol is in table[0][n-1]
-    if (table[0][n - 1].contains(cnfGrammar.startSymbol)) {
-      return ParseResult.success(
+    final stopwatch = Stopwatch()..start();
+    final result = CYKParser.parse(
+      grammar,
+      inputString,
+      timeout: timeout,
+    );
+    stopwatch.stop();
+    if (result.isFailure) {
+      return ParseResult.failure(
         inputString: inputString,
-        derivations: [], // CYK doesn't provide derivations
-        executionTime: DateTime.now().difference(startTime),
+        errorMessage: result.error!,
+        executionTime: stopwatch.elapsed,
       );
     }
-
-    return null;
-  }
-
-  /// Checks if a grammar can derive the empty string
-  static bool _canDeriveEmptyString(Grammar grammar) {
-    // Check if start symbol can derive empty string
-    return _canDeriveEmptyStringFromSymbol(
-      grammar,
-      grammar.startSymbol,
-      <String>{},
-    );
+    return result.data!.accepted
+        ? ParseResult.success(
+            inputString: inputString,
+            derivations: const [],
+            executionTime: stopwatch.elapsed,
+          )
+        : ParseResult.failure(
+            inputString: inputString,
+            errorMessage:
+                'String "$inputString" cannot be derived from grammar',
+            executionTime: stopwatch.elapsed,
+          );
   }
 
   /// Recursively checks if a symbol can derive empty string
@@ -676,307 +707,6 @@ class GrammarParser {
     }
 
     return false;
-  }
-
-  /// Converts grammar to Chomsky Normal Form (simplified)
-  static Grammar _convertToCNF(Grammar grammar) {
-    // This is a simplified conversion - in practice, this would be more complex
-    final productions = <Production>[];
-
-    for (final production in grammar.productions) {
-      if (production.rightSide.length <= 2) {
-        productions.add(production);
-      } else {
-        // Break down longer productions (simplified)
-        var currentLeft = production.leftSide;
-        for (int i = 0; i < production.rightSide.length - 1; i++) {
-          final newNonTerminal = '${currentLeft}_$i';
-          if (i == production.rightSide.length - 2) {
-            productions.add(
-              Production(
-                id: 'p_cnf_${productions.length}',
-                leftSide: currentLeft,
-                rightSide: [
-                  production.rightSide[i],
-                  production.rightSide[i + 1],
-                ],
-              ),
-            );
-          } else {
-            productions.add(
-              Production(
-                id: 'p_cnf_${productions.length}',
-                leftSide: currentLeft,
-                rightSide: [production.rightSide[i], newNonTerminal],
-              ),
-            );
-            currentLeft = [newNonTerminal];
-          }
-        }
-      }
-    }
-
-    return Grammar(
-      id: 'cnf_${grammar.id}',
-      name: '${grammar.name} (CNF)',
-      productions: productions.toSet(),
-      startSymbol: grammar.startSymbol,
-      nonterminals: grammar.nonterminals,
-      terminals: grammar.terminals,
-      type: grammar.type,
-      created: DateTime.now(),
-      modified: DateTime.now(),
-    );
-  }
-
-  /// Parses using LL parsing
-  static ParseResult? _parseWithLL(
-    Grammar grammar,
-    String inputString,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return null;
-    }
-
-    // Build LL parse table
-    final parseTable = _buildLLParseTable(grammar);
-    if (parseTable == null) {
-      return null; // Grammar is not LL(1)
-    }
-
-    // Parse using LL table
-    final stack = <String>[grammar.startSymbol];
-    final input = inputString.split('').toList();
-    final derivations = <List<String>>[];
-
-    while (stack.isNotEmpty) {
-      final top = stack.removeLast();
-
-      if (grammar.terminals.contains(top)) {
-        if (input.isNotEmpty && input[0] == top) {
-          input.removeAt(0);
-        } else {
-          return null; // Parse error
-        }
-      } else if (grammar.nonTerminals.contains(top)) {
-        if (input.isNotEmpty) {
-          final symbol = input[0];
-          final action = parseTable.getAction(top, symbol);
-          if (action != null && action.type == ParseActionType.reduce) {
-            final production = action.production!;
-            for (int i = production.rightSide.length - 1; i >= 0; i--) {
-              stack.add(production.rightSide[i]);
-            }
-            derivations.add([top, ...production.rightSide]);
-          } else {
-            return null; // Parse error
-          }
-        } else {
-          return null; // Parse error
-        }
-      }
-    }
-
-    if (input.isEmpty) {
-      return ParseResult.success(
-        inputString: inputString,
-        derivations: derivations,
-        executionTime: DateTime.now().difference(startTime),
-      );
-    }
-
-    return null;
-  }
-
-  /// Builds LL parse table
-  static ParseTable? _buildLLParseTable(Grammar grammar) {
-    // This is a simplified LL table building - in practice, this would be more complex
-    final table = <String, Map<String, ParseAction>>{};
-
-    for (final nonTerminal in grammar.nonTerminals) {
-      table[nonTerminal] = <String, ParseAction>{};
-    }
-
-    for (final production in grammar.productions) {
-      if (production.leftSide.isEmpty) {
-        continue;
-      }
-
-      final leftSymbol = production.leftSide.first;
-      final rightSide = production.rightSide;
-      final actions = table[leftSymbol];
-      if (actions == null) {
-        continue;
-      }
-
-      // Calculate FIRST set (simplified)
-      final firstSet = _calculateFirst(grammar, rightSide);
-
-      for (final terminal in firstSet) {
-        if (grammar.terminals.contains(terminal)) {
-          actions[terminal] = ParseAction(
-            type: ParseActionType.reduce,
-            stateNumber: 0,
-            production: production,
-          );
-        }
-      }
-    }
-
-    return ParseTable(
-      actionTable: table.map(
-        (key, value) => MapEntry(
-          key,
-          value.map(
-            (k, v) => MapEntry(
-              k,
-              ParseAction(
-                type: v.type,
-                stateNumber: v.stateNumber,
-                production: v.production,
-              ),
-            ),
-          ),
-        ),
-      ),
-      gotoTable: {}, // Tabela goto não é usada em LL
-      grammar: grammar,
-      type: ParseType.ll,
-    );
-  }
-
-  /// Calculates FIRST set (simplified)
-  static Set<String> _calculateFirst(Grammar grammar, List<String> symbols) {
-    if (symbols.isEmpty) {
-      return {'ε'}; // Epsilon
-    }
-
-    final first = <String>{};
-    final firstSymbol = symbols[0];
-
-    if (grammar.terminals.contains(firstSymbol)) {
-      first.add(firstSymbol);
-    } else if (grammar.nonTerminals.contains(firstSymbol)) {
-      // Add FIRST of non-terminal (simplified)
-      for (final production in grammar.productions) {
-        if (production.leftSide.isNotEmpty &&
-            production.leftSide.first == firstSymbol) {
-          first.addAll(_calculateFirst(grammar, production.rightSide));
-        }
-      }
-    }
-
-    return first;
-  }
-
-  /// Parses using LR parsing
-  static ParseResult? _parseWithLR(
-    Grammar grammar,
-    String inputString,
-    Duration timeout,
-  ) {
-    final startTime = DateTime.now();
-
-    // Check timeout
-    if (DateTime.now().difference(startTime) > timeout) {
-      return null;
-    }
-
-    // Build LR parse table
-    final parseTable = _buildLRParseTable(grammar);
-    if (parseTable == null) {
-      return null; // Grammar is not LR(1)
-    }
-
-    // Parse using LR table
-    final stack = <String>[];
-    final input = inputString.split('').toList();
-    final derivations = <List<String>>[];
-
-    stack.add('0'); // Initial state
-
-    while (true) {
-      final state = stack.last;
-      final symbol = input.isNotEmpty ? input[0] : '\$';
-
-      final action = parseTable.getAction(state, symbol);
-      if (action == null) {
-        return null; // Parse error
-      }
-
-      if (action.type == ParseActionType.shift) {
-        stack.add(symbol);
-        stack.add(action.stateNumber.toString());
-        input.removeAt(0);
-      } else if (action.type == ParseActionType.reduce) {
-        final production = action.production!;
-        final rightSideLength = production.rightSide.length;
-
-        // Pop 2 * rightSideLength elements (state and symbol pairs)
-        for (int i = 0; i < 2 * rightSideLength; i++) {
-          stack.removeLast();
-        }
-
-        final newState = stack.last;
-        stack.add(production.leftSide.first);
-        stack.add(
-          parseTable.getGoto(newState, production.leftSide.first) ?? '',
-        );
-
-        derivations.add([...production.leftSide, ...production.rightSide]);
-      } else if (action.type == ParseActionType.accept) {
-        return ParseResult.success(
-          inputString: inputString,
-          derivations: derivations,
-          executionTime: DateTime.now().difference(startTime),
-        );
-      }
-    }
-  }
-
-  /// Builds LR parse table
-  static ParseTable? _buildLRParseTable(Grammar grammar) {
-    // This is a simplified LR table building - in practice, this would be more complex
-    final table = <String, Map<String, ParseAction>>{};
-
-    // Initialize table with states
-    table['0'] = <String, ParseAction>{};
-
-    // Add basic actions (simplified)
-    for (final production in grammar.productions) {
-      if (production.leftSide.isNotEmpty &&
-          production.leftSide.first == grammar.startSymbol) {
-        table['0']!['\$'] = const ParseAction(
-          type: ParseActionType.accept,
-          stateNumber: 0,
-        );
-      }
-    }
-
-    return ParseTable(
-      actionTable: table.map(
-        (key, value) => MapEntry(
-          key,
-          value.map(
-            (k, v) => MapEntry(
-              k,
-              ParseAction(
-                type: v.type,
-                stateNumber: v.stateNumber,
-                production: v.production,
-              ),
-            ),
-          ),
-        ),
-      ),
-      gotoTable: {}, // Tabela goto simplificada para LR
-      grammar: grammar,
-      type: ParseType.lr,
-    );
   }
 
   /// Tests if a grammar can generate a specific string

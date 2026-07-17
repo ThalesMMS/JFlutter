@@ -11,14 +11,30 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import '../../models/grammar.dart';
-import '../../models/production.dart';
 import '../../models/cyk_step.dart';
 import '../../result.dart';
+import '../grammar_cnf_transformer.dart';
 
 /// CYK parser for CFGs in CNF. Builds parse table and derivation tree.
 class CYKParser {
-  static Result<CYKResult> parse(Grammar g, String input) {
+  static Result<CYKResult> parse(
+    Grammar g,
+    String input, {
+    Duration? timeout,
+  }) {
+    final stopwatch = Stopwatch()..start();
+
+    Result<CYKResult>? timeoutFailure() {
+      if (timeout != null && stopwatch.elapsed >= timeout) {
+        return ResultFactory.failure('CYK parsing timed out');
+      }
+      return null;
+    }
+
     try {
+      final initialTimeout = timeoutFailure();
+      if (initialTimeout != null) return initialTimeout;
+
       // Handle empty string using nullable analysis (original grammar)
       if (input.isEmpty) {
         final acceptsEmpty = g.nullableNonterminals.contains(g.startSymbol);
@@ -26,16 +42,16 @@ class CYKParser {
           CYKResult(
             accepted: acceptsEmpty,
             table: const [],
-            derivation: acceptsEmpty
-                ? CYKDerivation.node(g.startSymbol, [])
-                : null,
+            derivation:
+                acceptsEmpty ? CYKDerivation.node(g.startSymbol, []) : null,
           ),
         );
       }
 
       // Convert to CNF for CYK (does not mutate original grammar)
-      final cnf = _toCNF(g);
-      final cnfG = cnf.grammar;
+      final cnfG = _toCnfForParsing(g);
+      final conversionTimeout = timeoutFailure();
+      if (conversionTimeout != null) return conversionTimeout;
 
       final n = input.length;
       final table = List.generate(
@@ -51,6 +67,8 @@ class CYKParser {
       final unary = <String, Set<String>>{}; // a -> {A}
       final binary = <(String, String), Set<String>>{}; // (B,C) -> {A}
       for (final p in cnfG.productions) {
+        final productionTimeout = timeoutFailure();
+        if (productionTimeout != null) return productionTimeout;
         if (p.isLambda) continue;
         if (p.rightSide.length == 1 &&
             cnfG.terminals.contains(p.rightSide.first)) {
@@ -66,6 +84,8 @@ class CYKParser {
 
       // Fill length-1 substrings
       for (int i = 0; i < n; i++) {
+        final baseTimeout = timeoutFailure();
+        if (baseTimeout != null) return baseTimeout;
         final a = input[i];
         for (final A in unary[a] ?? const <String>{}) {
           table[i][0].add(A);
@@ -75,16 +95,26 @@ class CYKParser {
 
       // Fill longer substrings
       for (int len = 2; len <= n; len++) {
+        final lengthTimeout = timeoutFailure();
+        if (lengthTimeout != null) return lengthTimeout;
         for (int i = 0; i <= n - len; i++) {
           final j = len - 1; // column width
           for (int split = 1; split < len; split++) {
+            final splitTimeout = timeoutFailure();
+            if (splitTimeout != null) return splitTimeout;
             final leftWidth = split - 1;
             final rightWidth = len - split - 1;
             for (final B in table[i][leftWidth]) {
+              final leftTimeout = timeoutFailure();
+              if (leftTimeout != null) return leftTimeout;
               for (final C in table[i + split][rightWidth]) {
+                final rightTimeout = timeoutFailure();
+                if (rightTimeout != null) return rightTimeout;
                 final candidates = binary[(B, C)];
                 if (candidates == null) continue;
                 for (final A in candidates) {
+                  final candidateTimeout = timeoutFailure();
+                  if (candidateTimeout != null) return candidateTimeout;
                   if (table[i][j].add(A)) {
                     back[i][j][A] = CYKBackptr.internal(
                       left: (i, leftWidth, B),
@@ -98,11 +128,21 @@ class CYKParser {
         }
       }
 
+      final completedTableTimeout = timeoutFailure();
+      if (completedTableTimeout != null) return completedTableTimeout;
+
       final accepted = table[0][n - 1].contains(cnfG.startSymbol);
       CYKDerivation? tree;
       if (accepted) {
+        final derivationStartTimeout = timeoutFailure();
+        if (derivationStartTimeout != null) return derivationStartTimeout;
         tree = _buildTree(back, 0, n - 1, cnfG.startSymbol);
+        final derivationTimeout = timeoutFailure();
+        if (derivationTimeout != null) return derivationTimeout;
       }
+
+      final resultAssemblyTimeout = timeoutFailure();
+      if (resultAssemblyTimeout != null) return resultAssemblyTimeout;
       return ResultFactory.success(
         CYKResult(accepted: accepted, table: table, derivation: tree),
       );
@@ -112,9 +152,24 @@ class CYKParser {
   }
 
   /// Parses a string with step-by-step information
-  static Result<CYKParseResult> parseWithSteps(Grammar g, String input) {
+  static Result<CYKParseResult> parseWithSteps(
+    Grammar g,
+    String input, {
+    Duration? timeout,
+  }) {
+    final stopwatch = Stopwatch()..start();
+
+    Result<CYKParseResult>? timeoutFailure() {
+      if (timeout != null && stopwatch.elapsed >= timeout) {
+        return ResultFactory.failure('CYK parsing timed out');
+      }
+      return null;
+    }
+
     try {
-      final stopwatch = Stopwatch()..start();
+      final initialTimeout = timeoutFailure();
+      if (initialTimeout != null) return initialTimeout;
+
       final steps = <CYKStep>[];
       int stepCounter = 1;
 
@@ -145,9 +200,8 @@ class CYKParser {
           CYKParseResult(
             accepted: acceptsEmpty,
             table: const [],
-            derivation: acceptsEmpty
-                ? CYKDerivation.node(g.startSymbol, [])
-                : null,
+            derivation:
+                acceptsEmpty ? CYKDerivation.node(g.startSymbol, []) : null,
             steps: steps,
             executionTime: stopwatch.elapsed,
           ),
@@ -155,8 +209,9 @@ class CYKParser {
       }
 
       // Convert to CNF for CYK (does not mutate original grammar)
-      final cnf = _toCNF(g);
-      final cnfG = cnf.grammar;
+      final cnfG = _toCnfForParsing(g);
+      final conversionTimeout = timeoutFailure();
+      if (conversionTimeout != null) return conversionTimeout;
 
       final n = input.length;
       final table = List.generate(
@@ -182,6 +237,8 @@ class CYKParser {
       final unary = <String, Set<String>>{}; // a -> {A}
       final binary = <(String, String), Set<String>>{}; // (B,C) -> {A}
       for (final p in cnfG.productions) {
+        final productionTimeout = timeoutFailure();
+        if (productionTimeout != null) return productionTimeout;
         if (p.isLambda) continue;
         if (p.rightSide.length == 1 &&
             cnfG.terminals.contains(p.rightSide.first)) {
@@ -197,6 +254,8 @@ class CYKParser {
 
       // Fill length-1 substrings
       for (int i = 0; i < n; i++) {
+        final baseTimeout = timeoutFailure();
+        if (baseTimeout != null) return baseTimeout;
         final a = input[i];
         final derivingVars = unary[a] ?? const <String>{};
         for (final A in derivingVars) {
@@ -218,7 +277,11 @@ class CYKParser {
 
       // Fill longer substrings
       for (int len = 2; len <= n; len++) {
+        final lengthTimeout = timeoutFailure();
+        if (lengthTimeout != null) return lengthTimeout;
         for (int i = 0; i <= n - len; i++) {
+          final cellTimeout = timeoutFailure();
+          if (cellTimeout != null) return cellTimeout;
           final j = len - 1; // column width
           final substring = input.substring(i, i + len);
 
@@ -235,6 +298,8 @@ class CYKParser {
           );
 
           for (int split = 1; split < len; split++) {
+            final splitTimeout = timeoutFailure();
+            if (splitTimeout != null) return splitTimeout;
             final leftWidth = split - 1;
             final rightWidth = len - split - 1;
             final leftNTs = Set<String>.from(table[i][leftWidth]);
@@ -259,10 +324,16 @@ class CYKParser {
             );
 
             for (final B in table[i][leftWidth]) {
+              final leftTimeout = timeoutFailure();
+              if (leftTimeout != null) return leftTimeout;
               for (final C in table[i + split][rightWidth]) {
+                final rightTimeout = timeoutFailure();
+                if (rightTimeout != null) return rightTimeout;
                 final candidates = binary[(B, C)];
                 if (candidates == null) continue;
                 for (final A in candidates) {
+                  final candidateTimeout = timeoutFailure();
+                  if (candidateTimeout != null) return candidateTimeout;
                   if (table[i][j].add(A)) {
                     back[i][j][A] = CYKBackptr.internal(
                       left: (i, leftWidth, B),
@@ -302,11 +373,21 @@ class CYKParser {
         }
       }
 
+      final completedTableTimeout = timeoutFailure();
+      if (completedTableTimeout != null) return completedTableTimeout;
+
       final accepted = table[0][n - 1].contains(cnfG.startSymbol);
       CYKDerivation? tree;
       if (accepted) {
+        final derivationStartTimeout = timeoutFailure();
+        if (derivationStartTimeout != null) return derivationStartTimeout;
         tree = _buildTree(back, 0, n - 1, cnfG.startSymbol);
+        final derivationTimeout = timeoutFailure();
+        if (derivationTimeout != null) return derivationTimeout;
       }
+
+      final acceptanceStepTimeout = timeoutFailure();
+      if (acceptanceStepTimeout != null) return acceptanceStepTimeout;
 
       // Capture check acceptance step
       steps.add(
@@ -320,6 +401,9 @@ class CYKParser {
         ),
       );
 
+      final completionStepTimeout = timeoutFailure();
+      if (completionStepTimeout != null) return completionStepTimeout;
+
       // Capture completion step
       final totalCells = (n * (n + 1)) ~/ 2;
       steps.add(
@@ -332,6 +416,9 @@ class CYKParser {
           filledCells: totalCells,
         ),
       );
+
+      final resultAssemblyTimeout = timeoutFailure();
+      if (resultAssemblyTimeout != null) return resultAssemblyTimeout;
 
       stopwatch.stop();
       return ResultFactory.success(
@@ -366,236 +453,21 @@ class CYKParser {
       _buildTree(back, ri, rj, C),
     ]);
   }
-}
 
-/// CNF conversion output container
-class _CNFGrammar {
-  final Grammar grammar;
-  const _CNFGrammar(this.grammar);
-}
-
-/// Converts an arbitrary CFG to (weak) Chomsky Normal Form suitable for CYK.
-/// - Eliminates terminals in binary+ productions by introducing X_a → a
-/// - Eliminates unit productions
-/// - Binarizes long right-sides
-/// - Preserves start symbol and terminal set
-_CNFGrammar _toCNF(Grammar g) {
-  final now = DateTime.now();
-
-  // Working sets (mutable during construction)
-  final Set<String> terminals = {...g.terminals};
-  final Set<String> nonterminals = {...g.nonterminals};
-  final List<Production> newProds = [];
-
-  // Map each terminal to a dedicated nonterminal if needed in binary rules
-  final Map<String, String> termNt = {};
-
-  String fresh0(String base) {
-    var idx = 0;
-    String cand;
-    do {
-      cand = '${base}_${idx++}';
-    } while (nonterminals.contains(cand));
-    nonterminals.add(cand);
-    return cand;
-  }
-
-  String ensureTerminalNt(String t) {
-    return termNt.putIfAbsent(t, () {
-      final nt = 'T_${t.hashCode.abs()}';
-      if (!nonterminals.contains(nt)) nonterminals.add(nt);
-      newProds.add(
-        Production(
-          id: 'cnf_t_${newProds.length}',
-          leftSide: [nt],
-          rightSide: [t],
-          isLambda: false,
-          order: newProds.length,
-        ),
-      );
-      return nt;
-    });
-  }
-
-  final nullable = g.nullableNonterminals;
-  final nullableExpanded = <Production>[];
-  final seenNullableExpansions = <String>{};
-
-  void addNullableExpansion(
-    Production source,
-    List<String> rightSide, {
-    required bool isLambda,
-  }) {
-    final key =
-        '${source.leftSide.join('\u0000')}->${rightSide.join('\u0000')}|$isLambda';
-    if (!seenNullableExpansions.add(key)) return;
-
-    nullableExpanded.add(
-      Production(
-        id: 'cnf_nullable_${nullableExpanded.length}',
-        leftSide: source.leftSide,
-        rightSide: rightSide,
-        isLambda: isLambda,
-        order: nullableExpanded.length,
-      ),
-    );
-  }
-
-  for (final p in g.productions) {
-    if (p.isLambda || p.rightSide.isEmpty) {
-      if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
-        addNullableExpansion(p, const [], isLambda: true);
-      }
-      continue;
+  static Grammar _toCnfForParsing(Grammar grammar) {
+    final result = GrammarCnfTransformer.toCnf(grammar);
+    final report = result.data;
+    if (report == null) {
+      throw StateError(result.error ?? 'CNF conversion failed');
     }
-
-    final nullablePositions = <int>[];
-    for (var i = 0; i < p.rightSide.length; i++) {
-      if (nullable.contains(p.rightSide[i])) {
-        nullablePositions.add(i);
-      }
-    }
-
-    final subsetCount = 1 << nullablePositions.length;
-    for (var mask = 0; mask < subsetCount; mask++) {
-      final rhs = <String>[];
-      for (var i = 0; i < p.rightSide.length; i++) {
-        var omit = false;
-        for (var bit = 0; bit < nullablePositions.length; bit++) {
-          if (nullablePositions[bit] == i && ((mask >> bit) & 1) == 1) {
-            omit = true;
-            break;
-          }
-        }
-        if (!omit) rhs.add(p.rightSide[i]);
-      }
-
-      if (rhs.isEmpty) {
-        if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
-          addNullableExpansion(p, rhs, isLambda: true);
-        }
-      } else {
-        addNullableExpansion(p, rhs, isLambda: false);
-      }
-    }
+    return report.grammar;
   }
-
-  // 1) Start from nullable-expanded productions; expand into CNF-friendly ones
-  final List<Production> work = [];
-  for (final p in nullableExpanded) {
-    // Keep epsilon only if left is start symbol.
-    if (p.isLambda) {
-      if (p.leftSide.isNotEmpty && p.leftSide.first == g.startSymbol) {
-        work.add(p);
-      }
-      continue;
-    }
-
-    // Replace terminals in RHS positions of length > 1 with their NT wrappers
-    final rhs = <String>[];
-    for (final s in p.rightSide) {
-      if (terminals.contains(s) && p.rightSide.length > 1) {
-        rhs.add(ensureTerminalNt(s));
-      } else {
-        rhs.add(s);
-      }
-    }
-
-    // Binarize if needed
-    if (rhs.length <= 2) {
-      work.add(
-        Production(
-          id: 'cnf_keep_${newProds.length}',
-          leftSide: p.leftSide,
-          rightSide: rhs,
-          isLambda: false,
-          order: newProds.length,
-        ),
-      );
-    } else {
-      // Chain of new nonterminals: A -> X1 X2 X3 ... -> ... in binary form
-      var left = p.leftSide.first;
-      for (int i = 0; i < rhs.length - 2; i++) {
-        final fresh = fresh0('X');
-        work.add(
-          Production(
-            id: 'cnf_bin_${newProds.length}',
-            leftSide: [left],
-            rightSide: [rhs[i], fresh],
-            isLambda: false,
-            order: newProds.length,
-          ),
-        );
-        left = fresh;
-      }
-      work.add(
-        Production(
-          id: 'cnf_bin_last_${newProds.length}',
-          leftSide: [left],
-          rightSide: [rhs[rhs.length - 2], rhs[rhs.length - 1]],
-          isLambda: false,
-          order: newProds.length,
-        ),
-      );
-    }
-  }
-
-  // 2) Eliminate unit productions A -> B
-  final List<Production> withoutUnits = [];
-  final Map<String, Set<String>> unitReach = {};
-  for (final A in nonterminals) {
-    unitReach[A] = {A};
-  }
-  bool changed = true;
-  while (changed) {
-    changed = false;
-    for (final p in work) {
-      final A = p.leftSide.first;
-      if (p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first)) {
-        final B = p.rightSide.first;
-        if (unitReach[A]!.add(B)) changed = true;
-      }
-    }
-  }
-  for (final A in nonterminals) {
-    for (final p in work) {
-      final B = p.leftSide.first;
-      if (!unitReach[A]!.contains(B)) continue;
-      // Keep only non-unit productions
-      if (p.rightSide.length == 1 && nonterminals.contains(p.rightSide.first)) {
-        continue;
-      }
-      withoutUnits.add(
-        Production(
-          id: 'cnf_unitfree_${withoutUnits.length}',
-          leftSide: [A],
-          rightSide: p.rightSide,
-          isLambda: false,
-          order: withoutUnits.length,
-        ),
-      );
-    }
-  }
-
-  final cnfGrammar = Grammar(
-    id: 'cnf_${g.id}',
-    name: '${g.name} (CNF)',
-    terminals: terminals,
-    nonterminals: nonterminals,
-    startSymbol: g.startSymbol,
-    productions: {...newProds, ...withoutUnits}.toSet(),
-    type: g.type,
-    created: now,
-    modified: now,
-  );
-
-  return _CNFGrammar(cnfGrammar);
 }
 
 class CYKResult {
   final bool accepted;
   final List<List<Set<String>>>
-  table; // upper triangular table; table[i][len-1]
+      table; // upper triangular table; table[i][len-1]
   final CYKDerivation? derivation;
   final List<CYKStep>? steps;
   const CYKResult({
@@ -626,7 +498,8 @@ class CYKBackptr {
   factory CYKBackptr.internal({
     required (int, int, String) left,
     required (int, int, String) right,
-  }) => CYKBackptr._(false, null, left, right);
+  }) =>
+      CYKBackptr._(false, null, left, right);
 }
 
 /// Result of CYK parsing with step-by-step information

@@ -9,12 +9,16 @@
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
+import 'package:collection/collection.dart';
 import 'package:vector_math/vector_math_64.dart';
+import 'serialized_state_resolver.dart';
 import 'state.dart';
 import 'transition.dart';
 
 /// Transition for Pushdown Automata (PDA)
 class PDATransition extends Transition {
+  static const _pushSymbolsEquality = ListEquality<String>();
+
   /// Input symbol that triggers this transition
   final String inputSymbol;
 
@@ -23,6 +27,12 @@ class PDATransition extends Transition {
 
   /// Symbol to push onto the stack
   final String pushSymbol;
+
+  /// Ordered, atomic symbols pushed by this transition.
+  ///
+  /// Legacy transitions without this metadata treat each character in
+  /// [pushSymbol] as one stack symbol.
+  final List<String> pushSymbols;
 
   /// Whether the input is lambda (epsilon)
   final bool isLambdaInput;
@@ -51,11 +61,16 @@ class PDATransition extends Transition {
     super.type,
     required this.inputSymbol,
     required this.popSymbol,
-    required this.pushSymbol,
+    required String pushSymbol,
+    List<String>? pushSymbols,
     this.isLambdaInput = false,
     this.isLambdaPop = false,
     this.isLambdaPush = false,
-  });
+  })  : pushSymbol = pushSymbols?.join() ?? pushSymbol,
+        pushSymbols = List<String>.unmodifiable(
+          pushSymbols ??
+              (pushSymbol.isEmpty ? const <String>[] : pushSymbol.split('')),
+        );
 
   /// Creates a copy of this PDA transition with updated properties
   @override
@@ -69,6 +84,7 @@ class PDATransition extends Transition {
     String? inputSymbol,
     String? popSymbol,
     String? pushSymbol,
+    List<String>? pushSymbols,
     bool? isLambdaInput,
     bool? isLambdaPop,
     bool? isLambdaPush,
@@ -83,6 +99,8 @@ class PDATransition extends Transition {
       inputSymbol: inputSymbol ?? this.inputSymbol,
       popSymbol: popSymbol ?? this.popSymbol,
       pushSymbol: pushSymbol ?? this.pushSymbol,
+      pushSymbols:
+          pushSymbols ?? (pushSymbol == null ? this.pushSymbols : null),
       isLambdaInput: isLambdaInput ?? this.isLambdaInput,
       isLambdaPop: isLambdaPop ?? this.isLambdaPop,
       isLambdaPush: isLambdaPush ?? this.isLambdaPush,
@@ -103,6 +121,7 @@ class PDATransition extends Transition {
       'inputSymbol': inputSymbol,
       'popSymbol': popSymbol,
       'pushSymbol': pushSymbol,
+      'pushSymbols': pushSymbols,
       'isLambdaInput': isLambdaInput,
       'isLambdaPop': isLambdaPop,
       'isLambdaPush': isLambdaPush,
@@ -114,22 +133,24 @@ class PDATransition extends Transition {
     Map<String, dynamic> json, {
     Map<String, State>? statesById,
   }) {
-    final controlPointData = (json['controlPoint'] as Map?)
-        ?.cast<String, dynamic>();
+    final controlPointData =
+        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 
     return PDATransition(
       id: json['id'] as String,
-      fromState: _resolveSerializedState(
+      fromState: resolveSerializedState(
         json['fromState'],
         statesById,
         'fromState',
+        'PDA',
       ),
-      toState: _resolveSerializedState(
+      toState: resolveSerializedState(
         json['toState'],
         statesById,
         'toState',
+        'PDA',
       ),
       label: json['label'] as String,
       controlPoint: Vector2(controlPointX, controlPointY),
@@ -140,6 +161,7 @@ class PDATransition extends Transition {
       inputSymbol: json['inputSymbol'] as String,
       popSymbol: json['popSymbol'] as String,
       pushSymbol: json['pushSymbol'] as String,
+      pushSymbols: (json['pushSymbols'] as List?)?.cast<String>(),
       isLambdaInput: json['isLambdaInput'] as bool? ?? false,
       isLambdaPop: json['isLambdaPop'] as bool? ?? false,
       isLambdaPush: json['isLambdaPush'] as bool? ?? false,
@@ -154,6 +176,7 @@ class PDATransition extends Transition {
         other.inputSymbol == inputSymbol &&
         other.popSymbol == popSymbol &&
         other.pushSymbol == pushSymbol &&
+        _pushSymbolsEquality.equals(other.pushSymbols, pushSymbols) &&
         other.isLambdaInput == isLambdaInput &&
         other.isLambdaPop == isLambdaPop &&
         other.isLambdaPush == isLambdaPush;
@@ -166,6 +189,7 @@ class PDATransition extends Transition {
       inputSymbol,
       popSymbol,
       pushSymbol,
+      _pushSymbolsEquality.hash(pushSymbols),
       isLambdaInput,
       isLambdaPop,
       isLambdaPush,
@@ -207,6 +231,14 @@ class PDATransition extends Transition {
 
     if (isLambdaPush && pushSymbol.isNotEmpty) {
       errors.add('PDA transition cannot have both push symbol and lambda push');
+    }
+
+    if (pushSymbols.any((symbol) => symbol.isEmpty)) {
+      errors.add('PDA transition push symbols cannot contain empty values');
+    }
+
+    if (pushSymbols.join() != pushSymbol) {
+      errors.add('PDA transition push symbols must compose push symbol');
     }
 
     return errors;
@@ -340,29 +372,4 @@ class PDATransition extends Transition {
       isLambdaInput: true,
     );
   }
-}
-
-State _resolveSerializedState(
-  Object? value,
-  Map<String, State>? statesById,
-  String fieldName,
-) {
-  if (value is String) {
-    final state = statesById?[value];
-    if (state == null) {
-      throw ArgumentError(
-        'Unknown $fieldName state id "$value" in PDA transition JSON',
-      );
-    }
-    return state;
-  }
-
-  if (value is Map) {
-    final state = State.fromJson(value.cast<String, dynamic>());
-    return statesById?[state.id] ?? state;
-  }
-
-  throw ArgumentError(
-    'Expected $fieldName to be a state object or state id string',
-  );
 }

@@ -17,8 +17,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/algorithms/pda_simulator.dart' as pda_core;
 import '../../core/models/simulation_step.dart';
 import '../../core/models/step_explanation.dart';
-import '../../core/result.dart';
 import '../../core/services/simulation_highlight_service.dart';
+import '../../core/services/simulation_runner.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/pda_editor_provider.dart';
 import '../providers/pda_simulation_provider.dart';
 import 'base_simulation_panel.dart';
@@ -27,18 +29,20 @@ import 'pda/stack_drawer.dart';
 
 /// Panel for PDA simulation and string testing
 class PDASimulationPanel extends ConsumerStatefulWidget {
-  final SimulationHighlightService highlightService;
+  final SimulationHighlightService? highlightService;
   final ValueChanged<StackState>? onStackChanged;
   final VoidCallback? onSimulationStart;
   final VoidCallback? onSimulationEnd;
+  final SimulationRunner? simulationRunner;
 
-  PDASimulationPanel({
+  const PDASimulationPanel({
     super.key,
-    SimulationHighlightService? highlightService,
+    this.highlightService,
     this.onStackChanged,
     this.onSimulationStart,
     this.onSimulationEnd,
-  }) : highlightService = highlightService ?? SimulationHighlightService();
+    this.simulationRunner,
+  });
 
   @override
   ConsumerState<PDASimulationPanel> createState() => _PDASimulationPanelState();
@@ -46,6 +50,7 @@ class PDASimulationPanel extends ConsumerStatefulWidget {
 
 class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   final TextEditingController _inputController = TextEditingController();
+  late final SimulationHighlightService _fallbackHighlightService;
   final TextEditingController _initialStackController = TextEditingController(
     text: 'Z',
   );
@@ -54,12 +59,34 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   pda_core.PDASimulationResult? _simulationResult;
   String? _errorMessage;
   bool _stepByStep = true;
+  late final SimulationRunner _simulationRunner;
+  SimulationTask<pda_core.PDASimulationResult>? _activeTask;
+  int _requestGeneration = 0;
+
+  SimulationHighlightService get _highlightService =>
+      widget.highlightService ?? _fallbackHighlightService;
+
+  @override
+  void initState() {
+    super.initState();
+    _fallbackHighlightService = SimulationHighlightService();
+    _simulationRunner = widget.simulationRunner ?? SimulationRunner();
+  }
+
+  @override
+  void didUpdateWidget(covariant PDASimulationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.highlightService != widget.highlightService) {
+      (oldWidget.highlightService ?? _fallbackHighlightService).clear();
+    }
+  }
 
   @override
   void dispose() {
+    _activeTask?.cancel();
     _inputController.dispose();
     _initialStackController.dispose();
-    widget.highlightService.clear();
+    _highlightService.clear();
     super.dispose();
   }
 
@@ -101,7 +128,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         SimulationTextField(
           controller: _inputController,
           labelText: 'Input String',
-          hintText: 'e.g., aabb, abab',
+          hintText: 'Leave blank for ε; whitespace is preserved',
           isDense: false,
         ),
         const SizedBox(height: 12),
@@ -116,16 +143,19 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           type: MaterialType.transparency,
           child: SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Record step-by-step trace'),
+            title: Text(
+              appLocalizationsOf(context)
+                  .localizeWorkflowText('Record step-by-step trace'),
+            ),
             value: _stepByStep,
             onChanged: (value) {
               setState(() {
                 _stepByStep = value;
               });
               if (!value) {
-                widget.highlightService.clear();
+                _highlightService.clear();
               } else if (_simulationResult?.steps.isNotEmpty == true) {
-                widget.highlightService.emitFromSteps(
+                _highlightService.emitFromSteps(
                   _simulationResult!.steps,
                   0,
                 );
@@ -135,7 +165,9 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Examples: aabb (for balanced parentheses), abab (for palindromes)',
+          appLocalizationsOf(context).localizeWorkflowText(
+            'Examples: aabb (for balanced parentheses), abab (for palindromes)',
+          ),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,
@@ -151,10 +183,12 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       isSimulating: _isSimulating,
       label: 'Simulate PDA',
       onPressed: _simulatePDA,
+      onCancel: _cancelSimulation,
     );
   }
 
   Widget _buildStepControls(BuildContext context, PDASimulationState simState) {
+    final l10n = appLocalizationsOf(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -168,7 +202,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Step ${simState.currentStepIndex + 1} of ${simState.totalSteps}',
+                l10n.stepOf(
+                  simState.currentStepIndex + 1,
+                  simState.totalSteps,
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -194,7 +231,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       }
                     : null,
                 icon: const Icon(Icons.skip_previous),
-                tooltip: 'Previous Step',
+                tooltip: l10n.previousStep,
               ),
               const SizedBox(width: 8),
               IconButton.outlined(
@@ -207,7 +244,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       }
                     : null,
                 icon: const Icon(Icons.first_page),
-                tooltip: 'Reset to First',
+                tooltip: l10n.resetToFirst,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -229,7 +266,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       }
                     : null,
                 icon: const Icon(Icons.last_page),
-                tooltip: 'Jump to Last',
+                tooltip: l10n.jumpToLast,
               ),
               const SizedBox(width: 8),
               IconButton.outlined(
@@ -240,7 +277,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
                       }
                     : null,
                 icon: const Icon(Icons.skip_next),
-                tooltip: 'Next Step',
+                tooltip: l10n.nextStep,
               ),
             ],
           ),
@@ -403,7 +440,6 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
   Widget _buildResultsSection(BuildContext context) {
     return SimulationResultsSection(
       title: 'Simulation Results',
-      maxHeight: 220,
       child: _simulationResult == null && _errorMessage == null
           ? _buildEmptyResults(context)
           : _buildResults(context),
@@ -456,21 +492,16 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           const SizedBox(height: 8),
           PDATraceViewer(
             result: simulationResult,
-            highlightService: widget.highlightService,
+            highlightService: _highlightService,
           ),
         ],
       ],
     );
   }
 
-  void _simulatePDA() {
-    final inputString = _inputController.text.trim();
+  Future<void> _simulatePDA() async {
+    final inputString = _inputController.text;
     final initialStack = _initialStackController.text.trim();
-
-    if (inputString.isEmpty) {
-      _showError('Please enter an input string');
-      return;
-    }
 
     if (initialStack.isEmpty) {
       _showError('Please enter an initial stack symbol');
@@ -491,8 +522,10 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _errorMessage = null;
     });
 
-    widget.highlightService.clear();
+    _highlightService.clear();
     widget.onSimulationStart?.call();
+    _activeTask?.cancel();
+    final generation = ++_requestGeneration;
 
     // Initialize stack with initial symbol
     _updateStackState(
@@ -511,35 +544,42 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       initialStackSymbol: initialStack,
     );
 
-    final Result<pda_core.PDASimulationResult> result =
-        pda_core.PDASimulator.simulate(
+    final task = _simulationRunner.runPda(
       simulationPda,
       inputString,
       stepByStep: _stepByStep,
       timeout: const Duration(seconds: 5),
     );
+    _activeTask = task;
+    final outcome = await task.outcome;
 
-    if (!mounted) {
+    if (!mounted || generation != _requestGeneration) {
+      return;
+    }
+    _activeTask = null;
+
+    if (outcome.kind == SimulationOutcomeKind.cancelled) {
+      _finishCancelledSimulation();
       return;
     }
 
-    if (result.isSuccess) {
-      final simulation = result.data;
+    final simulation = outcome.result;
+    if (simulation != null) {
       setState(() {
         _isSimulating = false;
-        _simulationResult = result.data;
-        _errorMessage = result.data?.errorMessage?.isNotEmpty == true
-            ? result.data!.errorMessage
+        _simulationResult = simulation;
+        _errorMessage = simulation.errorMessage?.isNotEmpty == true
+            ? simulation.errorMessage
             : null;
       });
-      if (simulation != null && simulation.steps.isNotEmpty) {
+      if (simulation.steps.isNotEmpty) {
         // Sync with simulation provider for step controls
         final simNotifier = ref.read(pdaSimulationProvider.notifier);
         simNotifier.setPda(simulationPda);
         simNotifier.setStepByStep(_stepByStep);
         simNotifier.setResult(simulation);
 
-        widget.highlightService.emitFromSteps(simulation.steps, 0);
+        _highlightService.emitFromSteps(simulation.steps, 0);
         // Update stack to first step for step-by-step mode
         if (_stepByStep) {
           _updateStackFromStep(simulation.steps.first);
@@ -547,17 +587,36 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
           _updateStackFromStep(simulation.steps.last);
         }
       } else {
-        widget.highlightService.clear();
+        _highlightService.clear();
       }
     } else {
       setState(() {
         _isSimulating = false;
         _simulationResult = null;
-        _errorMessage = result.error;
+        _errorMessage = outcome.message ?? 'Simulation failed';
       });
-      widget.highlightService.clear();
+      _highlightService.clear();
     }
 
+    widget.onSimulationEnd?.call();
+  }
+
+  void _cancelSimulation() {
+    if (!_isSimulating) return;
+    _requestGeneration++;
+    _activeTask?.cancel();
+    _activeTask = null;
+    _finishCancelledSimulation();
+  }
+
+  void _finishCancelledSimulation() {
+    if (!mounted) return;
+    setState(() {
+      _isSimulating = false;
+      _simulationResult = null;
+      _errorMessage = 'Simulation cancelled';
+    });
+    _highlightService.clear();
     widget.onSimulationEnd?.call();
   }
 
@@ -630,7 +689,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _updateStackFromStep(currentStep);
       // Update highlight service to show current step
       if (_stepByStep && simState.result != null) {
-        widget.highlightService.emitFromSteps(
+        _highlightService.emitFromSteps(
           simState.result!.steps,
           simState.currentStepIndex,
         );
@@ -643,7 +702,7 @@ class _PDASimulationPanelState extends ConsumerState<PDASimulationPanel> {
       _errorMessage = message;
       _simulationResult = null;
     });
-    widget.highlightService.clear();
+    _highlightService.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

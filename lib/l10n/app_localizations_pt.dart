@@ -74,17 +74,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpQuickStartBody =>
-      'Bem-vindo ao JFlutter. Comece com este fluxo básico:\n\n'
-      '1. Escolha um espaço de trabalho, como AF, Gramática, AP, MT ou Regex.\n'
-      '2. Inicie em branco ou abra um exemplo ou arquivo compatível.\n'
-      '3. Use o editor para criar sua máquina ou gramática. Toque duas vezes em um estado para ações rápidas.\n'
-      '4. Execute simulações para testar seu trabalho.\n'
-      '5. Use os algoritmos para transformar estruturas.\n\n'
-      'Dicas:\n'
-      '• Use as abas de navegação ou chips de seção para trocar de espaço rapidamente.\n'
-      '• Toque duas vezes em um estado para abrir o menu de ações rápidas.\n'
-      '• Faça pinça para ampliar ou reduzir o canvas.\n'
-      '• Toque no ícone de guia rápido quando precisar relembrar o fluxo.';
+      'Bem-vindo ao JFlutter. Comece com este fluxo básico:\n\n1. Escolha um espaço de trabalho, como AF, Gramática, AP, MT ou Regex.\n2. Inicie em branco ou abra um exemplo ou arquivo compatível.\n3. Use o editor para criar sua máquina ou gramática. Toque duas vezes em um estado para ações rápidas.\n4. Execute simulações para testar seu trabalho.\n5. Use os algoritmos para transformar estruturas.\n\nDicas:\n• Use as abas de navegação ou chips de seção para trocar de espaço rapidamente.\n• Toque duas vezes em um estado para abrir o menu de ações rápidas.\n• Faça pinça para ampliar ou reduzir o canvas.\n• Toque no ícone de guia rápido quando precisar relembrar o fluxo.';
 
   @override
   String get helpGotIt => 'Entendi!';
@@ -338,4 +328,329 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get operators => 'Operadores';
+
+  @override
+  String get conversionComparisonUnavailable =>
+      'Comparação de conversão indisponível. Os snapshots salvos não puderam ser lidos.';
+
+  @override
+  String get conversionComparisonResult => 'Resultado da conversão';
+
+  @override
+  String get simulation => 'Simulação';
+
+  @override
+  String get inputString => 'Cadeia de entrada';
+
+  @override
+  String get simulationInputHint =>
+      'Deixe em branco para ε; os espaços são preservados';
+
+  @override
+  String get simulationInputString => 'Cadeia de entrada da simulação';
+
+  @override
+  String get simulate => 'Simular';
+
+  @override
+  String get simulating => 'Simulando...';
+
+  @override
+  String get cancelSimulation => 'Cancelar simulação';
+
+  @override
+  String get runSimulation => 'Executar simulação';
+
+  @override
+  String get runSimulationHint =>
+      'Executa a máquina usando a cadeia de entrada informada.';
+
+  @override
+  String simulationInputSemantics(String label) {
+    return 'Entrada da simulação: $label';
+  }
+
+  @override
+  String simulationEditHint(String hint) {
+    return '$hint. Toque duas vezes para editar.';
+  }
+
+  @override
+  String get simulationResult => 'Resultado da simulação';
+
+  @override
+  String get regexResult => 'Resultado da expressão regular';
+
+  @override
+  String get regularExpression => 'Expressão regular';
+
+  @override
+  String get stepByStepMode => 'Modo passo a passo';
+
+  @override
+  String get stepByStepModeSemantics => 'Modo passo a passo';
+
+  @override
+  String get stepByStepExecution => 'Execução passo a passo';
+
+  @override
+  String get play => 'Reproduzir';
+
+  @override
+  String get pause => 'Pausar';
+
+  @override
+  String get reset => 'Reiniciar';
+
+  @override
+  String get expand => 'Expandir';
+
+  @override
+  String get collapse => 'Recolher';
+
+  @override
+  String get noStepsRecorded => 'Nenhum passo registrado';
+
+  @override
+  String get noStepsAvailable => 'Nenhum passo disponível';
+
+  @override
+  String get noSteps => 'Sem passos';
+
+  @override
+  String get timeline => 'Linha do tempo';
+
+  @override
+  String get timelineScrubber => 'Controle da linha do tempo';
+
+  @override
+  String get timelineNavigationHint =>
+      'Arraste para navegar pelos passos da simulação';
+
+  @override
+  String stepOf(int current, int total) {
+    return 'Passo $current de $total';
+  }
+
+  @override
+  String activeStepOf(int current, int total) {
+    return 'Passo ativo $current de $total';
+  }
+
+  @override
+  String pdaTrace(int count) {
+    return 'Traço do AP ($count passos)';
+  }
+
+  @override
+  String tmTrace(int count) {
+    return 'Traço da MT ($count passos)';
+  }
+
+  @override
+  String get traceRemaining => 'restante';
+
+  @override
+  String get traceStack => 'pilha';
+
+  @override
+  String get traceTape => 'fita';
+
+  @override
+  String get timeout => 'Tempo limite excedido';
+
+  @override
+  String get infiniteLoop => 'Laço infinito';
+
+  @override
+  String get steps => 'Passos';
+
+  @override
+  String get states => 'Estados';
+
+  @override
+  String get executionPath => 'Caminho da execução';
+
+  @override
+  String get transitions => 'Transições';
+
+  @override
+  String get animationSpeed => 'Velocidade da animação';
+
+  @override
+  String get selectPlaybackSpeed => 'Selecione a velocidade de reprodução';
+
+  @override
+  String get speed => 'Velocidade:';
+
+  @override
+  String slowSpeed(String speed) {
+    return 'Lenta $speed';
+  }
+
+  @override
+  String get normalSpeed => 'Velocidade normal';
+
+  @override
+  String fastSpeed(String speed) {
+    return 'Rápida $speed';
+  }
+
+  @override
+  String get on => 'Ativado';
+
+  @override
+  String get off => 'Desativado';
+
+  @override
+  String get stepByStepToggleHint =>
+      'Ativa ou desativa a revisão manual da simulação atual.';
+
+  @override
+  String simulationStartDescription(String state, String input) {
+    return 'Comece em $state com a entrada $input.';
+  }
+
+  @override
+  String simulationFinalDescription(String state, String verdict) {
+    return 'Configuração final $state – entrada $verdict.';
+  }
+
+  @override
+  String simulationReadDescription(
+      String consumed, String state, String nextState, String remaining) {
+    return 'Leia \"$consumed\" de $state → $nextState com $remaining.';
+  }
+
+  @override
+  String get noInputRemaining => 'nenhuma entrada restante';
+
+  @override
+  String remainingQuoted(String input) {
+    return 'restante \"$input\"';
+  }
+
+  @override
+  String consumedValue(String value) {
+    return 'Consumido: \"$value\"';
+  }
+
+  @override
+  String nextStateValue(String state) {
+    return 'Próximo estado: $state';
+  }
+
+  @override
+  String remainingInputValue(String input) {
+    return 'Entrada restante: $input';
+  }
+
+  @override
+  String get previousSimulationStep => 'Passo anterior da simulação';
+
+  @override
+  String get previousSimulationStepHint =>
+      'Move para o passo anterior registrado.';
+
+  @override
+  String get nextSimulationStep => 'Próximo passo da simulação';
+
+  @override
+  String get nextSimulationStepHint =>
+      'Avança para o próximo passo registrado.';
+
+  @override
+  String get playSimulationSteps => 'Reproduzir passos da simulação';
+
+  @override
+  String get pauseSimulationPlayback => 'Pausar reprodução da simulação';
+
+  @override
+  String get playSimulationHint =>
+      'Avança automaticamente pelos passos registrados.';
+
+  @override
+  String get pauseSimulationHint => 'Pausa a reprodução automática dos passos.';
+
+  @override
+  String get resetSimulationSteps => 'Reiniciar passos da simulação';
+
+  @override
+  String get resetSimulationStepsHint =>
+      'Retorna a visualização ao primeiro passo registrado.';
+
+  @override
+  String get resetToFirst => 'Reiniciar no primeiro';
+
+  @override
+  String get jumpToLast => 'Ir para o último';
+
+  @override
+  String get previousStepLower => 'Passo anterior';
+
+  @override
+  String get nextStepLower => 'Próximo passo';
+
+  @override
+  String hiddenStepsSummary(int before, int after) {
+    return '$before anteriores e $after posteriores ocultos';
+  }
+
+  @override
+  String get noSimulationResults => 'Nenhum resultado de simulação';
+
+  @override
+  String get simulationEmptyHint =>
+      'Informe uma cadeia e ative Simular para ver os resultados';
+
+  @override
+  String get accepted => 'Aceita';
+
+  @override
+  String get rejected => 'Rejeitada';
+
+  @override
+  String get acceptedLower => 'aceita';
+
+  @override
+  String get rejectedLower => 'rejeitada';
+
+  @override
+  String get regexAlphabetLabel => 'Alfabeto / universo';
+
+  @override
+  String get regexAlphabetHelper =>
+      'Caracteres usados por ., \\D, \\W e \\S (espaços contam).';
+
+  @override
+  String get regexAlphabetEmptyError => 'O alfabeto não pode ficar vazio.';
+
+  @override
+  String get suggestedFixes => 'Correções sugeridas';
+
+  @override
+  String algorithmAction(String title) {
+    return 'Ação de algoritmo: $title';
+  }
+
+  @override
+  String algorithmUnavailableHint(String description) {
+    return 'Indisponível. $description';
+  }
+
+  @override
+  String algorithmStartHint(String description) {
+    return 'Toque duas vezes para iniciar. $description';
+  }
+
+  @override
+  String get executing => 'Executando';
+
+  @override
+  String get selected => 'Selecionado';
+
+  @override
+  String workflowLegacyText(String text) {
+    return '$text';
+  }
 }

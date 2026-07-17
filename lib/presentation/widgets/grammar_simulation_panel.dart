@@ -2,7 +2,7 @@
 //  grammar_simulation_panel.dart
 //  JFlutter
 //
-//  Constrói painel interativo para testar cadeias em gramáticas aplicando algoritmos como CYK, LL e LR. Gerencia seleção de estratégia, entradas do usuário, execução assíncrona e apresentação de resultados com métricas de tempo e passos.
+//  Constrói painel interativo para testar cadeias em gramáticas aplicando algoritmos como CYK e LL. Gerencia seleção de estratégia, entradas do usuário, execução assíncrona e apresentação de resultados com métricas de tempo e passos.
 //
 //  Thales Matheus Mendonça Santos - October 2025
 //
@@ -18,6 +18,8 @@ import '../../core/models/grammar.dart';
 import '../../core/models/grammar_parse_report.dart';
 import '../../core/models/typed_algorithm_step.dart';
 import '../../core/result.dart';
+import '../../l10n/app_localizations_resolver.dart';
+import '../../l10n/app_localizations_workflows.dart';
 import '../providers/grammar_provider.dart';
 import 'algorithm_step_renderer_registry.dart';
 import 'base_simulation_panel.dart';
@@ -44,7 +46,7 @@ class _GrammarSimulationPanelState
 
   bool _isParsing = false;
   GrammarParseReport? _parseReport;
-  String _selectedAlgorithm = 'CYK';
+  ParsingStrategyHint _selectedAlgorithm = ParsingStrategyHint.cyk;
 
   // Only used for CYK "with steps" mode.
   // Keeps UI changes surgical: other parsing strategies keep using GrammarParseReport.
@@ -75,7 +77,11 @@ class _GrammarSimulationPanelState
       String inputString,
     }) request,
   ) {
-    return CYKParser.parseWithSteps(request.grammar, request.inputString);
+    return CYKParser.parseWithSteps(
+      request.grammar,
+      request.inputString,
+      timeout: const Duration(seconds: 5),
+    );
   }
 
   @override
@@ -108,13 +114,14 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return Row(
       children: [
         Icon(Icons.play_arrow, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Grammar Parser',
+            l10n.localizeWorkflowText('Grammar Parser'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
@@ -127,6 +134,7 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildAlgorithmSelector(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -137,26 +145,27 @@ class _GrammarSimulationPanelState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Parsing Algorithm',
+            l10n.localizeWorkflowText('Parsing Algorithm'),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<ParsingStrategyHint>(
             initialValue: _selectedAlgorithm,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               isDense: true,
             ),
-            items: const [
-              DropdownMenuItem(
-                value: 'CYK',
-                child: Text('CYK (Cocke-Younger-Kasami)'),
-              ),
-              DropdownMenuItem(value: 'LL', child: Text('LL Parser')),
-              DropdownMenuItem(value: 'LR', child: Text('LR Parser')),
-            ],
+            items: GrammarParser.capabilities
+                .where((capability) => capability.isAvailable)
+                .map(
+                  (capability) => DropdownMenuItem(
+                    value: capability.strategy,
+                    child: Text(l10n.localizeWorkflowText(capability.label)),
+                  ),
+                )
+                .toList(growable: false),
             onChanged: (value) {
               if (value == null) {
                 return;
@@ -172,6 +181,7 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildInputSection(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -182,7 +192,7 @@ class _GrammarSimulationPanelState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Test String',
+            l10n.localizeWorkflowText('Test String'),
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -190,16 +200,18 @@ class _GrammarSimulationPanelState
           const SizedBox(height: 8),
           TextField(
             controller: _inputController,
-            decoration: const InputDecoration(
-              labelText: 'Input String',
-              hintText: 'e.g., aabb (try S→aSb|ab), abab, ε',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.inputString,
+              hintText: l10n.simulationInputHint,
+              border: const OutlineInputBorder(),
             ),
             onSubmitted: (_) => _parseString(),
           ),
           const SizedBox(height: 8),
           Text(
-            'Examples: aabb, abab, aabbb (for S → aSb | ab)',
+            l10n.localizeWorkflowText(
+              'Examples: aabb, abab, aabbb (for S → aSb | ab)',
+            ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(
                     context,
@@ -212,6 +224,7 @@ class _GrammarSimulationPanelState
   }
 
   Widget _buildParseButton(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -223,17 +236,22 @@ class _GrammarSimulationPanelState
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.play_arrow),
-        label: Text(_isParsing ? 'Parsing...' : 'Parse String'),
+        label: Text(
+          l10n.localizeWorkflowText(
+            _isParsing ? 'Parsing...' : 'Parse String',
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildResultsSection(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Parse Results',
+          l10n.localizeWorkflowText('Parse Results'),
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -382,12 +400,7 @@ class _GrammarSimulationPanelState
   }
 
   Future<void> _parseString() async {
-    final inputString = _inputController.text.trim();
-
-    if (inputString.isEmpty) {
-      _showError('Please enter a string to parse');
-      return;
-    }
+    final inputString = _inputController.text;
 
     final grammar = _buildCurrentGrammar();
 
@@ -399,7 +412,7 @@ class _GrammarSimulationPanelState
     });
 
     try {
-      final strategyHint = _mapSelectedAlgorithmToHint();
+      final strategyHint = _selectedAlgorithm;
 
       // When the user explicitly selects CYK, run the step-producing parser so we
       // can show per-step explanations and before/after highlights.
@@ -490,19 +503,6 @@ class _GrammarSimulationPanelState
     return ref.read(grammarProvider.notifier).buildGrammar();
   }
 
-  ParsingStrategyHint _mapSelectedAlgorithmToHint() {
-    switch (_selectedAlgorithm) {
-      case 'CYK':
-        return ParsingStrategyHint.cyk;
-      case 'LL':
-        return ParsingStrategyHint.ll;
-      case 'LR':
-        return ParsingStrategyHint.lr;
-      default:
-        return ParsingStrategyHint.auto;
-    }
-  }
-
   String _formatExecutionTime(Duration duration) {
     if (duration.inMicroseconds < 1000) {
       return '${duration.inMicroseconds} μs';
@@ -549,7 +549,7 @@ class _GrammarSimulationPanelState
           child: Row(
             children: [
               IconButton(
-                tooltip: 'Previous step',
+                tooltip: appLocalizationsOf(context).previousStepLower,
                 onPressed: _selectedStepIndex > 0
                     ? () => setState(() => _selectedStepIndex--)
                     : null,
@@ -569,7 +569,7 @@ class _GrammarSimulationPanelState
                     : const SizedBox.shrink(),
               ),
               IconButton(
-                tooltip: 'Next step',
+                tooltip: appLocalizationsOf(context).nextStepLower,
                 onPressed: _selectedStepIndex < steps.length - 1
                     ? () => setState(() => _selectedStepIndex++)
                     : null,

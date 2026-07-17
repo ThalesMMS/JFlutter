@@ -34,8 +34,6 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  static const int _navigationItemCount = 6;
-
   late final PageController _pageController;
   int? _lastNavigationIndex;
   final SimulationHighlightService _fallbackHighlightService =
@@ -83,11 +81,14 @@ class _HomePageState extends ConsumerState<HomePage> {
         PumpingLemmaPage(),
       ];
 
-  int _sanitizeNavigationIndex(int index) {
+  int _sanitizeNavigationIndex(int index, int itemCount) {
+    if (itemCount <= 0) {
+      return 0;
+    }
     if (index < 0) {
       return 0;
     }
-    const lastIndex = _navigationItemCount - 1;
+    final lastIndex = itemCount - 1;
     if (index > lastIndex) {
       return lastIndex;
     }
@@ -99,6 +100,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     final initialIndex = _sanitizeNavigationIndex(
       ref.read(homeNavigationProvider),
+      _pages.length,
     );
     _pageController = PageController(initialPage: initialIndex);
     _lastNavigationIndex = initialIndex;
@@ -119,23 +121,37 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
 
-  String _getCurrentPageTitle(int currentIndex) {
-    return _navigationItems(jflapLocalizationsOf(context))[currentIndex].label;
+  String _getCurrentPageTitle(
+    int currentIndex,
+    List<NavigationItem> navigationItems,
+  ) {
+    return navigationItems[currentIndex].label;
   }
 
-  String _getCurrentPageDescription(int currentIndex) {
-    return _navigationItems(
-      jflapLocalizationsOf(context),
-    )[currentIndex].description;
+  String _getCurrentPageDescription(
+    int currentIndex,
+    List<NavigationItem> navigationItems,
+  ) {
+    return navigationItems[currentIndex].description;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = jflapLocalizationsOf(context);
     final navigationItems = _navigationItems(l10n);
+    final pages = _pages;
+    final navigationCount = navigationItems.length < pages.length
+        ? navigationItems.length
+        : pages.length;
+    final visibleNavigationItems =
+        navigationItems.take(navigationCount).toList();
+    final visiblePages = pages.take(navigationCount).toList();
     final screenSize = MediaQuery.of(context).size;
     final currentIndex = ref.watch(homeNavigationProvider);
-    final visibleCurrentIndex = _sanitizeNavigationIndex(currentIndex);
+    final visibleCurrentIndex = _sanitizeNavigationIndex(
+      currentIndex,
+      navigationCount,
+    );
     final isMobile =
         screenSize.width < 1024; // Better breakpoint for modern devices
     final hasCanvasHighlight = visibleCurrentIndex == 0 ||
@@ -180,7 +196,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       controller: _pageController,
       onPageChanged: _onPageChanged,
       physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
-      children: _pages,
+      children: visiblePages,
     );
 
     final scaffold = FocusTraversalGroup(
@@ -191,9 +207,17 @@ class _HomePageState extends ConsumerState<HomePage> {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_getCurrentPageTitle(visibleCurrentIndex)),
                     Text(
-                      _getCurrentPageDescription(visibleCurrentIndex),
+                      _getCurrentPageTitle(
+                        visibleCurrentIndex,
+                        visibleNavigationItems,
+                      ),
+                    ),
+                    Text(
+                      _getCurrentPageDescription(
+                        visibleCurrentIndex,
+                        visibleNavigationItems,
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
                             theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -204,11 +228,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_getCurrentPageTitle(visibleCurrentIndex)),
+                    Text(
+                      _getCurrentPageTitle(
+                        visibleCurrentIndex,
+                        visibleNavigationItems,
+                      ),
+                    ),
                     const SizedBox(width: 16),
                     Flexible(
                       child: Text(
-                        _getCurrentPageDescription(visibleCurrentIndex),
+                        _getCurrentPageDescription(
+                          visibleCurrentIndex,
+                          visibleNavigationItems,
+                        ),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -243,7 +275,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: DesktopNavigation(
                       currentIndex: visibleCurrentIndex,
                       onDestinationSelected: _onNavigationTap,
-                      items: navigationItems,
+                      items: visibleNavigationItems,
                       extended: screenSize.width >= 1440,
                     ),
                   ),
@@ -255,7 +287,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ? MobileNavigation(
                 currentIndex: visibleCurrentIndex,
                 onTap: _onNavigationTap,
-                items: navigationItems,
+                items: visibleNavigationItems,
               )
             : null,
         floatingActionButton: _buildFloatingActionButton(
@@ -300,6 +332,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _showSettingsDialog(BuildContext context) {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (context) => SettingsPage()));
+    ).push(MaterialPageRoute(builder: (context) => const SettingsPage()));
   }
 }

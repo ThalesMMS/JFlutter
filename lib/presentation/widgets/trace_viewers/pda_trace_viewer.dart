@@ -18,6 +18,7 @@ import '../../../core/algorithms/pda_simulator.dart';
 import '../../../core/models/simulation_result.dart';
 import '../../../core/models/simulation_step.dart';
 import '../../../core/services/simulation_highlight_service.dart';
+import '../../../l10n/app_localizations_resolver.dart';
 import 'base_trace_viewer.dart';
 
 class PDATraceViewer extends StatelessWidget {
@@ -32,18 +33,17 @@ class PDATraceViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
     return BaseTraceViewer(
       result: _asSimulationResult(),
-      title: 'PDA Trace (${result.steps.length} steps)',
+      title: l10n.pdaTrace(result.steps.length),
       highlightService: highlightService,
       buildStepLine: (SimulationStep step, int index) {
-        final remaining = step.remainingInput.isEmpty
-            ? 'λ'
-            : step.remainingInput;
+        final remaining =
+            step.remainingInput.isEmpty ? 'λ' : step.remainingInput;
         final stack = step.stackContents.isEmpty ? 'λ' : step.stackContents;
-        final transition = step.usedTransition != null
-            ? ' | ${step.usedTransition}'
-            : '';
+        final transition =
+            step.usedTransition != null ? ' | ${step.usedTransition}' : '';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -61,7 +61,8 @@ class PDATraceViewer extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'q=${step.currentState} | rem=$remaining | stack=$stack$transition',
+                  'q=${step.currentState} | ${l10n.traceRemaining}=$remaining | '
+                  '${l10n.traceStack}=$stack$transition',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),

@@ -583,6 +583,17 @@ void main() {
       }
     });
 
+    test('forwards the context alphabet to analysis and samples', () {
+      final result = RegexAnalyzer.analyzeWithSamples(
+        '.',
+        contextAlphabet: const {'🧪'},
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data!.structureAnalysis.alphabet, {'🧪'});
+      expect(result.data!.samples, contains('🧪'));
+    });
+
     test('returns error for invalid regex', () {
       final result = RegexAnalyzer.analyzeWithSamples('(a');
       expect(result.isSuccess, false);

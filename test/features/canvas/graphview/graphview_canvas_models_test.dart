@@ -32,6 +32,24 @@ void main() {
       expect(restored.blankSymbol, 'B');
       expect(restored.tapeCount, 1);
     });
+
+    test('copyWith can clear nullable TM metadata', () {
+      const metadata = GraphViewAutomatonMetadata(
+        id: 'tm-1',
+        name: 'TM',
+        alphabet: ['a'],
+        blankSymbol: 'B',
+        tapeCount: 2,
+      );
+
+      final cleared = metadata.copyWith(
+        blankSymbol: null,
+        tapeCount: null,
+      );
+
+      expect(cleared.blankSymbol, isNull);
+      expect(cleared.tapeCount, isNull);
+    });
   });
 
   group('GraphViewCanvasEdge', () {

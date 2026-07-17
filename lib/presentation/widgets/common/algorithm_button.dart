@@ -12,6 +12,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations_resolver.dart';
+import '../../../l10n/app_localizations_workflows.dart';
 import 'algorithm_button_config.dart';
 
 /// Button for algorithm operations with consistent styling and state handling.
@@ -130,18 +132,21 @@ class AlgorithmButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = appLocalizationsOf(context);
+    final localizedTitle = l10n.localizeWorkflowText(title);
+    final localizedDescription = l10n.localizeWorkflowText(description);
     final colorScheme = Theme.of(context).colorScheme;
     final color = isDestructive ? colorScheme.error : colorScheme.primary;
 
     return Semantics(
-      label: 'Algorithm action: $title',
+      label: l10n.algorithmAction(localizedTitle),
       hint: _isDisabled
-          ? 'Unavailable. $description'
-          : 'Double tap to start. $description',
+          ? l10n.algorithmUnavailableHint(localizedDescription)
+          : l10n.algorithmStartHint(localizedDescription),
       value: isExecuting
-          ? 'Executing'
+          ? l10n.executing
           : isSelected
-              ? 'Selected'
+              ? l10n.selected
               : null,
       button: true,
       enabled: !_isDisabled,
@@ -210,14 +215,16 @@ class AlgorithmButton extends StatelessWidget {
     Color color,
     ColorScheme colorScheme,
   ) {
-    final displayDescription =
-        isExecuting && executionStatus != null ? executionStatus! : description;
+    final l10n = appLocalizationsOf(context);
+    final displayDescription = l10n.localizeWorkflowText(
+      isExecuting && executionStatus != null ? executionStatus! : description,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          l10n.localizeWorkflowText(title),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(

@@ -11,18 +11,19 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../converters/asset_example_converters.dart';
-import '../models/asset_example.dart';
+import '../../core/models/asset_example.dart';
 import '../../core/models/fsa.dart';
 import '../../core/models/grammar.dart';
 import '../../core/models/pda.dart';
 import '../../core/models/tm.dart';
 import '../../core/result.dart';
+import '../../core/repositories/examples_repository.dart';
 
-export '../models/asset_example.dart'
-    show AssetExample, ComplexityLevel, DifficultyLevel, ExampleCategory;
+export '../../core/models/asset_example.dart'
+    show AssetExample, DifficultyLevel, ExampleCategory, ExampleComplexityLevel;
 
 /// Enhanced data source for loading example automatons from assets (Examples v1)
-class ExamplesAssetDataSource {
+class ExamplesAssetDataSource implements ExamplesRepository {
   static const Map<String, _ExampleMetadata> _exampleMetadata = {
     // DFA Examples - Basic Concepts
     'AFD - Termina com A': _ExampleMetadata(
@@ -32,7 +33,7 @@ class ExamplesAssetDataSource {
       description:
           'DFA que reconhece palavras terminando com "a". Demonstra conceitos básicos de estados finais.',
       tags: ['dfa', 'basic', 'patterns', 'ending'],
-      estimatedComplexity: ComplexityLevel.low,
+      estimatedComplexity: ExampleComplexityLevel.low,
     ),
     'AFD - Binário divisível por 3': _ExampleMetadata(
       fileName: 'afd_binary_divisible_by_3.json',
@@ -41,7 +42,7 @@ class ExamplesAssetDataSource {
       description:
           'DFA que reconhece números binários divisíveis por 3. Usa aritmética modular.',
       tags: ['dfa', 'modular', 'binary', 'division'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
     'AFD - Paridade AB': _ExampleMetadata(
       fileName: 'afd_parity_AB.json',
@@ -50,7 +51,7 @@ class ExamplesAssetDataSource {
       description:
           'DFA que verifica se há número par de "a"s e "b"s. Demonstra contagem simultânea.',
       tags: ['dfa', 'parity', 'counting', 'multiple-counters'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
 
     // NFA Examples - Non-deterministic concepts
@@ -61,7 +62,7 @@ class ExamplesAssetDataSource {
       description:
           'NFA com ramificação ε para explorar "ab" e transição explícita de "a" para aceitação imediata.',
       tags: ['nfa', 'epsilon', 'choice', 'non-deterministic'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
 
     // Grammar Examples - Context-Free concepts
@@ -72,7 +73,7 @@ class ExamplesAssetDataSource {
       description:
           'Gramática livre de contexto para palíndromos. Demonstra recursão.',
       tags: ['cfg', 'palindrome', 'recursion', 'context-free'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
     'GLC - Parênteses balanceados': _ExampleMetadata(
       fileName: 'glc_balanced_parentheses.json',
@@ -81,7 +82,7 @@ class ExamplesAssetDataSource {
       description:
           'GLC que gera strings de parênteses balanceados. Simula comportamento de pilha.',
       tags: ['cfg', 'parentheses', 'balanced', 'stack'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
 
     // PDA Examples - Pushdown concepts
@@ -92,7 +93,7 @@ class ExamplesAssetDataSource {
       description:
           'Autômato de pilha que reconhece cadeias de parênteses balanceados usando a pilha para rastrear aberturas pendentes.',
       tags: ['pda', 'parentheses', 'balanced', 'stack'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
     'APD - a^n b^n': _ExampleMetadata(
       fileName: 'apda_anbn.json',
@@ -101,7 +102,7 @@ class ExamplesAssetDataSource {
       description:
           'Autômato de pilha que reconhece a linguagem a^n b^n ao empilhar símbolos para cada a e desempilhar para cada b.',
       tags: ['pda', 'anbn', 'stack', 'context-free'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
     'APD - Palíndromo': _ExampleMetadata(
       fileName: 'apda_palindrome.json',
@@ -110,7 +111,7 @@ class ExamplesAssetDataSource {
       description:
           'Autômato de pilha não determinístico que empilha a primeira metade da palavra e desempilha a segunda para validar palíndromos.',
       tags: ['pda', 'palindrome', 'stack', 'non-deterministic', 'mirroring'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
 
     // Turing Machine Examples - Computational power
@@ -121,7 +122,7 @@ class ExamplesAssetDataSource {
       description:
           'Máquina de Turing que reconhece a linguagem a^n b^n marcando pares correspondentes de a e b na fita.',
       tags: ['tm', 'anbn', 'language', 'recognition'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
     'MT - Binário para unário': _ExampleMetadata(
       fileName: 'tm_binary_to_unary.json',
@@ -130,7 +131,7 @@ class ExamplesAssetDataSource {
       description:
           'Máquina de Turing que converte números binários para unários.',
       tags: ['tm', 'conversion', 'binary', 'unary'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
     'MT - Cópia de string': _ExampleMetadata(
       fileName: 'tm_copy_string.json',
@@ -139,7 +140,7 @@ class ExamplesAssetDataSource {
       description:
           'Máquina de Turing que copia uma string binária para uma nova região da fita.',
       tags: ['tm', 'copy', 'string', 'tape'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
     'MT - Incremento binário': _ExampleMetadata(
       fileName: 'tm_increment.json',
@@ -148,7 +149,7 @@ class ExamplesAssetDataSource {
       description:
           'Máquina de Turing que incrementa um número binário em uma unidade.',
       tags: ['tm', 'binary', 'increment', 'arithmetic'],
-      estimatedComplexity: ComplexityLevel.medium,
+      estimatedComplexity: ExampleComplexityLevel.medium,
     ),
     'MT - Verificador de palíndromo': _ExampleMetadata(
       fileName: 'tm_palindrome.json',
@@ -157,10 +158,11 @@ class ExamplesAssetDataSource {
       description:
           'Máquina de Turing que verifica se uma string binária é um palíndromo.',
       tags: ['tm', 'palindrome', 'binary', 'verification'],
-      estimatedComplexity: ComplexityLevel.high,
+      estimatedComplexity: ExampleComplexityLevel.high,
     ),
   };
 
+  @override
   Future<Result<AssetExample<FSA>>> loadTypedFsaExample(String name) {
     return _loadTypedExample(
       name,
@@ -169,6 +171,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<Result<AssetExample<Grammar>>> loadTypedCfgExample(String name) {
     return _loadTypedExample(
       name,
@@ -177,6 +180,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<Result<AssetExample<PDA>>> loadTypedPdaExample(String name) {
     return _loadTypedExample(
       name,
@@ -185,6 +189,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<Result<AssetExample<TM>>> loadTypedTmExample(String name) {
     return _loadTypedExample(
       name,
@@ -193,6 +198,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<ListResult<AssetExample<FSA>>> loadAllTypedFsaExamples() {
     return _loadAllTypedExamples(
       {ExampleCategory.dfa, ExampleCategory.nfa},
@@ -200,6 +206,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<ListResult<AssetExample<Grammar>>> loadAllTypedCfgExamples() {
     return _loadAllTypedExamples(
       {ExampleCategory.cfg},
@@ -207,6 +214,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<ListResult<AssetExample<PDA>>> loadAllTypedPdaExamples() {
     return _loadAllTypedExamples(
       {ExampleCategory.pda},
@@ -214,6 +222,7 @@ class ExamplesAssetDataSource {
     );
   }
 
+  @override
   Future<ListResult<AssetExample<TM>>> loadAllTypedTmExamples() {
     return _loadAllTypedExamples(
       {ExampleCategory.tm},
@@ -254,7 +263,8 @@ class ExamplesAssetDataSource {
 
     if (!categories.contains(metadata.category)) {
       return Failure(
-        'Example "$name" belongs to ${metadata.category.displayName}, not ${categories.map((category) => category.displayName).join('/')}',
+        'Example "$name" belongs to ${metadata.category.name.toUpperCase()}, '
+        'not ${categories.map((category) => category.name.toUpperCase()).join('/')}',
       );
     }
 
@@ -350,7 +360,7 @@ class _ExampleMetadata {
   final DifficultyLevel difficulty;
   final String description;
   final List<String> tags;
-  final ComplexityLevel estimatedComplexity;
+  final ExampleComplexityLevel estimatedComplexity;
 
   const _ExampleMetadata({
     required this.fileName,

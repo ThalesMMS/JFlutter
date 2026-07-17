@@ -19,6 +19,7 @@ import '../models/state.dart';
 import '../models/fsa_transition.dart';
 import '../models/transition.dart';
 import '../result.dart';
+import '../utils/epsilon_utils.dart';
 import 'dfa_completer.dart';
 import 'nfa_to_dfa_converter.dart';
 
@@ -458,7 +459,7 @@ class FSAOperations {
 
       final epsilonClosures = <String, Set<State>>{
         for (final state in automaton.states)
-          state.id: _epsilonClosure(automaton, state),
+          state.id: automaton.getEpsilonClosure(state),
       };
 
       final acceptingStates = <State>{};
@@ -473,7 +474,7 @@ class FSAOperations {
       });
 
       final alphabet = automaton.alphabet
-          .where((symbol) => !_isLambdaSymbol(symbol))
+          .where((symbol) => !isEpsilonSymbol(symbol))
           .toSet();
       final newTransitions = <FSATransition>{};
 
@@ -536,33 +537,5 @@ class FSAOperations {
     } catch (e) {
       return ResultFactory.failure('Erro ao remover transições lambda: $e');
     }
-  }
-
-  static Set<State> _epsilonClosure(FSA automaton, State start) {
-    final closure = <State>{start};
-    final queue = Queue<State>()..add(start);
-
-    while (queue.isNotEmpty) {
-      final state = queue.removeFirst();
-      final epsilonTransitions = automaton.fsaTransitions.where(
-        (transition) =>
-            transition.isEpsilonTransition &&
-            transition.fromState.id == state.id,
-      );
-
-      for (final transition in epsilonTransitions) {
-        final target = transition.toState;
-        if (closure.add(target)) {
-          queue.add(target);
-        }
-      }
-    }
-
-    return closure;
-  }
-
-  static bool _isLambdaSymbol(String symbol) {
-    final normalized = symbol.trim().toLowerCase();
-    return normalized == 'ε' || normalized == 'λ' || normalized == 'lambda';
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jflutter/core/models/simulation_result.dart';
 import 'package:jflutter/core/models/simulation_step.dart';
+import 'package:jflutter/core/repositories/trace_repository.dart';
 import 'package:jflutter/data/services/trace_persistence_service.dart';
 import 'package:jflutter/presentation/providers/unified_trace_provider.dart';
 
@@ -27,8 +29,58 @@ SimulationResult _trace({String input = 'abba'}) {
 }
 
 Future<void> _flushAsyncWork() async {
-  await Future<void>.delayed(Duration.zero);
-  await Future<void>.delayed(Duration.zero);
+  await pumpEventQueue(times: 10);
+}
+
+Future<void> _waitUntil(bool Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 2));
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('Timed out waiting for asynchronous notifier work');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+}
+
+class _DeferredTraceRepository implements TraceRepository {
+  final history = Completer<List<Map<String, dynamic>>>();
+
+  @override
+  Future<void> clearAllTraces() async {}
+
+  @override
+  Future<void> clearCurrentTrace() async {}
+
+  @override
+  Future<String> exportTraceHistory() async => '[]';
+
+  @override
+  Future<Map<String, dynamic>?> getCurrentTrace() async => null;
+
+  @override
+  Future<List<Map<String, dynamic>>> getTraceHistory() => history.future;
+
+  @override
+  Future<Map<String, dynamic>?> getTraceById(String traceId) async => null;
+
+  @override
+  Future<Map<String, dynamic>> getTraceStatistics() async => const {};
+
+  @override
+  Future<void> importTraceHistory(String jsonData) async {}
+
+  @override
+  Future<void> saveCurrentTrace(
+    SimulationResult trace,
+    int currentStepIndex,
+  ) async {}
+
+  @override
+  Future<void> saveTraceToHistory(
+    SimulationResult trace, {
+    String? automatonType,
+    String? automatonId,
+  }) async {}
 }
 
 void main() {
@@ -84,6 +136,23 @@ void main() {
       service = TracePersistenceService(prefs);
     });
 
+    test('ignores constructor loads that finish after disposal', () async {
+      final repository = _DeferredTraceRepository();
+      final asyncErrors = <Object>[];
+
+      await runZonedGuarded(
+        () async {
+          final notifier = UnifiedTraceNotifier(repository);
+          notifier.dispose();
+          repository.history.complete(const []);
+          await _flushAsyncWork();
+        },
+        (error, stackTrace) => asyncErrors.add(error),
+      );
+
+      expect(asyncErrors, isEmpty);
+    });
+
     test('restores persisted current trace and step index on startup',
         () async {
       final trace = _trace();
@@ -92,7 +161,11 @@ void main() {
       final notifier = UnifiedTraceNotifier(service);
       addTearDown(notifier.dispose);
 
-      await _flushAsyncWork();
+      await _waitUntil(
+        () =>
+            notifier.state.currentTrace != null &&
+            notifier.state.traceStatistics.containsKey('totalTraces'),
+      );
 
       expect(notifier.state.currentTrace, isNotNull);
       expect(
@@ -109,7 +182,7 @@ void main() {
       addTearDown(notifier.dispose);
 
       await notifier.setTrace(trace);
-      await _flushAsyncWork();
+      await _waitUntil(() => notifier.state.traceHistory.length == 1);
 
       final restored = await service.getCurrentTrace();
       expect(restored, isNotNull);
@@ -133,7 +206,11 @@ void main() {
       addTearDown(notifier.dispose);
 
       notifier.setAutomatonContext(automatonType: 'dfa', automatonId: 'dfa-1');
-      await _flushAsyncWork();
+      await _waitUntil(
+        () =>
+            notifier.state.tracesForCurrentAutomaton.isNotEmpty &&
+            notifier.state.traceStatistics.containsKey('typeCounts'),
+      );
 
       final statistics = notifier.traceStatisticsSnapshot;
       final automatonTraces = notifier.currentAutomatonTracesSnapshot;
@@ -178,7 +255,7 @@ void main() {
       final notifier = UnifiedTraceNotifier(service);
       addTearDown(notifier.dispose);
 
-      await _flushAsyncWork();
+      await _waitUntil(() => notifier.state.currentTrace != null);
 
       expect(notifier.state.currentTrace, isNotNull);
       expect(

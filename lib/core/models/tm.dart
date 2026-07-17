@@ -123,15 +123,22 @@ class TM extends Automaton {
   factory TM.fromJson(Map<String, dynamic> json) {
     final boundsData = (json['bounds'] as Map?)?.cast<String, dynamic>();
     final panOffsetData = (json['panOffset'] as Map?)?.cast<String, dynamic>();
+    final states = (json['states'] as List)
+        .map((s) => State.fromJson(s as Map<String, dynamic>))
+        .toSet();
+    final statesById = {for (final state in states) state.id: state};
 
     return TM(
       id: json['id'] as String,
       name: json['name'] as String,
-      states: (json['states'] as List)
-          .map((s) => State.fromJson(s as Map<String, dynamic>))
-          .toSet(),
+      states: states,
       transitions: (json['transitions'] as List)
-          .map((t) => TMTransition.fromJson(t as Map<String, dynamic>))
+          .map(
+            (t) => TMTransition.fromJson(
+              t as Map<String, dynamic>,
+              statesById: statesById,
+            ),
+          )
           .toSet(),
       alphabet: Set<String>.from(json['alphabet'] as List),
       initialState: json['initialState'] != null

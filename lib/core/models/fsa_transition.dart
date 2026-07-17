@@ -11,8 +11,10 @@
 //  Thales Matheus Mendonça Santos - October 2025
 //
 import 'package:vector_math/vector_math_64.dart';
+import 'serialized_state_resolver.dart';
 import 'state.dart';
 import 'transition.dart';
+import '../utils/epsilon_utils.dart';
 
 /// Transition for Finite State Automata (FSA)
 class FSATransition extends Transition {
@@ -39,31 +41,29 @@ class FSATransition extends Transition {
     Set<String>? inputSymbols,
     this.lambdaSymbol,
     String? symbol,
-  }) : inputSymbols = Set<String>.unmodifiable(
-         (inputSymbols ??
-                 (symbol != null ? <String>{symbol} : const <String>{}))
-             .toSet(),
-       ),
-       super(
-         label:
-             label ??
-             (lambdaSymbol != null
-                 ? (label ?? 'ε')
-                 : (symbol ??
-                       ((inputSymbols != null && inputSymbols.isNotEmpty)
-                           ? inputSymbols.join(',')
-                           : ''))),
-         type:
-             type ??
-             (() {
-               if (lambdaSymbol != null) return TransitionType.epsilon;
-               final count =
-                   (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
-               return count <= 1
-                   ? TransitionType.deterministic
-                   : TransitionType.nondeterministic;
-             }()),
-       );
+  })  : inputSymbols = Set<String>.unmodifiable(
+          (inputSymbols ??
+                  (symbol != null ? <String>{symbol} : const <String>{}))
+              .toSet(),
+        ),
+        super(
+          label: label ??
+              (lambdaSymbol != null
+                  ? 'ε'
+                  : (symbol ??
+                      ((inputSymbols != null && inputSymbols.isNotEmpty)
+                          ? inputSymbols.join(',')
+                          : ''))),
+          type: type ??
+              (() {
+                if (lambdaSymbol != null) return TransitionType.epsilon;
+                final count =
+                    (inputSymbols ?? (symbol != null ? {symbol} : {})).length;
+                return count <= 1
+                    ? TransitionType.deterministic
+                    : TransitionType.nondeterministic;
+              }()),
+        );
 
   /// Creates a copy of this FSA transition with updated properties
   @override
@@ -112,22 +112,24 @@ class FSATransition extends Transition {
     Map<String, dynamic> json, {
     Map<String, State>? statesById,
   }) {
-    final controlPointData = (json['controlPoint'] as Map?)
-        ?.cast<String, dynamic>();
+    final controlPointData =
+        (json['controlPoint'] as Map?)?.cast<String, dynamic>();
     final controlPointX = (controlPointData?['x'] as num?)?.toDouble() ?? 0.0;
     final controlPointY = (controlPointData?['y'] as num?)?.toDouble() ?? 0.0;
 
     return FSATransition(
       id: json['id'] as String,
-      fromState: _resolveSerializedState(
+      fromState: resolveSerializedState(
         json['fromState'],
         statesById,
         'fromState',
+        'FSA',
       ),
-      toState: _resolveSerializedState(
+      toState: resolveSerializedState(
         json['toState'],
         statesById,
         'toState',
+        'FSA',
       ),
       label: json['label'] as String,
       controlPoint: Vector2(controlPointX, controlPointY),
@@ -191,30 +193,28 @@ class FSATransition extends Transition {
   }
 
   /// Checks if this is an epsilon transition
-  bool get isEpsilonTransition => lambdaSymbol != null;
+  bool get isEpsilonTransition =>
+      lambdaSymbol != null || inputSymbols.any(isEpsilonSymbol);
 
   /// Checks if this transition accepts the given symbol
   bool acceptsSymbol(String symbol) {
-    if (isEpsilonTransition) {
-      return symbol == lambdaSymbol;
-    }
-    return inputSymbols.contains(symbol);
+    return isEpsilonSymbol(symbol)
+        ? isEpsilonTransition
+        : inputSymbols.contains(symbol);
   }
 
   /// Checks if this transition accepts any of the given symbols
   bool acceptsAnySymbol(Set<String> symbols) {
-    if (isEpsilonTransition) {
-      return symbols.contains(lambdaSymbol);
-    }
-    return inputSymbols.intersection(symbols).isNotEmpty;
+    return symbols.any(acceptsSymbol);
   }
 
   /// Gets all symbols that this transition accepts
   Set<String> get acceptedSymbols {
-    if (isEpsilonTransition) {
-      return {lambdaSymbol!};
-    }
-    return inputSymbols;
+    return {
+      for (final symbol in inputSymbols)
+        if (isEpsilonSymbol(symbol)) kEpsilonSymbol else symbol,
+      if (lambdaSymbol != null) kEpsilonSymbol,
+    };
   }
 
   /// Checks if this transition is deterministic
@@ -288,29 +288,4 @@ class FSATransition extends Transition {
       lambdaSymbol: null,
     );
   }
-}
-
-State _resolveSerializedState(
-  Object? value,
-  Map<String, State>? statesById,
-  String fieldName,
-) {
-  if (value is String) {
-    final state = statesById?[value];
-    if (state == null) {
-      throw ArgumentError(
-        'Unknown $fieldName state id "$value" in FSA transition JSON',
-      );
-    }
-    return state;
-  }
-
-  if (value is Map) {
-    final state = State.fromJson(value.cast<String, dynamic>());
-    return statesById?[state.id] ?? state;
-  }
-
-  throw ArgumentError(
-    'Expected $fieldName to be a state object or state id string',
-  );
 }

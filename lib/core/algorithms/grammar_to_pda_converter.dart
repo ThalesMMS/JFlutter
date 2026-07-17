@@ -18,6 +18,7 @@ import '../models/pda.dart';
 import '../models/state.dart';
 import '../models/pda_transition.dart';
 import '../result.dart';
+import 'cfg/cfg_toolkit.dart';
 
 /// Converts context-free grammars to pushdown automata
 class GrammarToPDAConverter {
@@ -112,6 +113,14 @@ class GrammarToPDAConverter {
 
   /// Creates a PDA from grammar using the standard CFG-to-PDA construction
   static PDA _createStandardPDA(Grammar grammar) {
+    return _createPDA(grammar, greibach: false);
+  }
+
+  static PDA _createGreibachPDA(Grammar grammar) {
+    return _createPDA(grammar, greibach: true);
+  }
+
+  static PDA _createPDA(Grammar grammar, {required bool greibach}) {
     final now = DateTime.now();
 
     // Create states
@@ -153,6 +162,8 @@ class GrammarToPDAConverter {
         inputSymbol: '',
         popSymbol: 'Z',
         pushSymbol: '${grammar.startSymbol}Z',
+        pushSymbols: [grammar.startSymbol, 'Z'],
+        isLambdaInput: true,
       ),
     );
 
@@ -164,14 +175,18 @@ class GrammarToPDAConverter {
 
         // Create transition: (q1, ε, A) → (q1, α^R)
         // Handle both non-empty and empty right sides
-        String pushString;
-        if (rightSide.isEmpty || production.isLambda) {
+        final isLambdaProduction = rightSide.isEmpty || production.isLambda;
+        final inputSymbol =
+            greibach && !isLambdaProduction ? rightSide.first : '';
+        final pushSymbols = isLambdaProduction
+            ? const <String>[]
+            : (greibach ? rightSide.skip(1).toList() : rightSide);
+        final String pushString;
+        if (pushSymbols.isEmpty) {
           // For A → ε, just pop A without pushing anything
           pushString = '';
         } else {
-          // For A → α, push α in the same order
-          // The standard CFG-to-PDA construction pushes α^R, but we need to push α
-          pushString = rightSide.join('');
+          pushString = pushSymbols.join();
         }
 
         transitions.add(
@@ -179,28 +194,35 @@ class GrammarToPDAConverter {
             id: 't${transitionId++}',
             fromState: q1,
             toState: q1,
-            label: 'ε,$leftSide/$pushString',
-            inputSymbol: '',
+            label:
+                '${inputSymbol.isEmpty ? 'ε' : inputSymbol},$leftSide/$pushString',
+            inputSymbol: inputSymbol,
             popSymbol: leftSide,
             pushSymbol: pushString,
+            pushSymbols: pushSymbols,
+            isLambdaInput: inputSymbol.isEmpty,
+            isLambdaPush: pushSymbols.isEmpty,
           ),
         );
       }
     }
 
     // Add transitions for each terminal a: (q1, a, a) → (q1, ε)
-    for (final terminal in grammar.terminals) {
-      transitions.add(
-        PDATransition(
-          id: 't${transitionId++}',
-          fromState: q1,
-          toState: q1,
-          label: '$terminal,$terminal/ε',
-          inputSymbol: terminal,
-          popSymbol: terminal,
-          pushSymbol: '',
-        ),
-      );
+    if (!greibach) {
+      for (final terminal in grammar.terminals) {
+        transitions.add(
+          PDATransition(
+            id: 't${transitionId++}',
+            fromState: q1,
+            toState: q1,
+            label: '$terminal,$terminal/ε',
+            inputSymbol: terminal,
+            popSymbol: terminal,
+            pushSymbol: '',
+            isLambdaPush: true,
+          ),
+        );
+      }
     }
 
     // Transition from q1 to q2: pop initial stack symbol (accept by empty stack)
@@ -213,12 +235,14 @@ class GrammarToPDAConverter {
         inputSymbol: '',
         popSymbol: 'Z',
         pushSymbol: '',
+        isLambdaInput: true,
+        isLambdaPush: true,
       ),
     );
 
     return PDA(
       id: 'pda_${DateTime.now().millisecondsSinceEpoch}',
-      name: 'PDA from Grammar',
+      name: greibach ? 'PDA from Grammar (Greibach)' : 'PDA from Grammar',
       states: {q0, q1, q2},
       transitions: transitions.toSet(),
       alphabet: grammar.terminals,
@@ -277,7 +301,6 @@ class GrammarToPDAConverter {
         return ResultFactory.failure('Grammar must have a start symbol');
       }
 
-      // Create a simple PDA
       final result = _createStandardPDA(grammar);
 
       stopwatch.stop();
@@ -317,8 +340,21 @@ class GrammarToPDAConverter {
         return ResultFactory.failure('Grammar must have a start symbol');
       }
 
-      // Create a simple PDA
-      final result = _createStandardPDA(grammar);
+      final gnfResult = CFGToolkit.toGNF(grammar);
+      if (!gnfResult.isSuccess || gnfResult.data == null) {
+        return ResultFactory.failure(
+          gnfResult.error ??
+              'Failed to convert grammar to Greibach normal form',
+        );
+      }
+      final gnfGrammar = gnfResult.data!;
+      if (!CFGToolkit.isGNF(gnfGrammar)) {
+        return ResultFactory.failure(
+          'Greibach conversion did not produce a valid GNF grammar',
+        );
+      }
+
+      final result = _createGreibachPDA(gnfGrammar);
 
       stopwatch.stop();
       if (stopwatch.elapsed > timeout) {

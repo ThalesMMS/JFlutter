@@ -17,41 +17,149 @@
     "description": "Label for the algorithms section."
   },
   "homeHelpTooltip": "Help",
+  "@homeHelpTooltip": {
+    "description": "Tooltip for opening the app help page from the home page."
+  },
   "homeSettingsTooltip": "Settings",
+  "@homeSettingsTooltip": {
+    "description": "Tooltip for opening app settings from the home page."
+  },
   "homeNavigationFsaLabel": "FSA",
+  "@homeNavigationFsaLabel": {
+    "description": "Navigation label for the finite state automata workspace."
+  },
   "homeNavigationFsaDescription": "Finite State Automata",
+  "@homeNavigationFsaDescription": {
+    "description": "Short navigation description for the finite state automata workspace."
+  },
   "homeNavigationGrammarLabel": "Grammar",
+  "@homeNavigationGrammarLabel": {
+    "description": "Navigation label for the grammar workspace."
+  },
   "homeNavigationGrammarDescription": "Context-Free Grammars",
+  "@homeNavigationGrammarDescription": {
+    "description": "Short navigation description for the grammar workspace."
+  },
   "homeNavigationPdaLabel": "PDA",
+  "@homeNavigationPdaLabel": {
+    "description": "Navigation label for the pushdown automata workspace."
+  },
   "homeNavigationPdaDescription": "Pushdown Automata",
+  "@homeNavigationPdaDescription": {
+    "description": "Short navigation description for the pushdown automata workspace."
+  },
   "homeNavigationTmLabel": "TM",
+  "@homeNavigationTmLabel": {
+    "description": "Navigation label for the Turing machine workspace."
+  },
   "homeNavigationTmDescription": "Turing Machines",
+  "@homeNavigationTmDescription": {
+    "description": "Short navigation description for the Turing machine workspace."
+  },
   "homeNavigationRegexLabel": "Regex",
+  "@homeNavigationRegexLabel": {
+    "description": "Navigation label for the regular expression workspace."
+  },
   "homeNavigationRegexDescription": "Regular Expressions",
+  "@homeNavigationRegexDescription": {
+    "description": "Short navigation description for the regular expression workspace."
+  },
   "homeNavigationPumpingLabel": "Pumping",
+  "@homeNavigationPumpingLabel": {
+    "description": "Navigation label for the pumping lemma workspace."
+  },
   "homeNavigationPumpingDescription": "Pumping Lemma",
+  "@homeNavigationPumpingDescription": {
+    "description": "Short navigation description for the pumping lemma workspace."
+  },
   "helpPageTitle": "Help & Documentation",
+  "@helpPageTitle": {
+    "description": "Title for the help and documentation page."
+  },
   "helpSearchTooltip": "Search Help",
+  "@helpSearchTooltip": {
+    "description": "Tooltip for opening help search."
+  },
   "helpQuickStartTitle": "Quick Start Guide",
+  "@helpQuickStartTitle": {
+    "description": "Title for the quick start help dialog."
+  },
   "helpQuickStartBody": "Welcome to JFlutter. Here is a quick way to get started:\n\n1. Choose a workspace such as FSA, Grammar, PDA, TM, or Regex.\n2. Start with a blank workspace or open a supported example or file.\n3. Use the editor to build your machine or grammar. Double-tap a state for quick actions.\n4. Run simulations to test your work.\n5. Use algorithms to transform structures.\n\nTips:\n• Use navigation tabs or section chips to switch workspaces quickly.\n• Double-tap a state to open its quick action menu.\n• Pinch to zoom on the canvas.\n• Tap the Quick Start icon whenever you need a refresher.",
+  "@helpQuickStartBody": {
+    "description": "Body text for the quick start help dialog."
+  },
   "helpGotIt": "Got it!",
+  "@helpGotIt": {
+    "description": "Confirmation button label for dismissing help dialogs."
+  },
   "helpSearchFieldLabel": "Search help...",
+  "@helpSearchFieldLabel": {
+    "description": "Placeholder label for the help search field."
+  },
   "helpSearchClear": "Clear search",
+  "@helpSearchClear": {
+    "description": "Tooltip for clearing the help search query."
+  },
   "helpSearchClose": "Close search",
+  "@helpSearchClose": {
+    "description": "Tooltip for closing help search."
+  },
   "helpSearchTitle": "Search Help",
+  "@helpSearchTitle": {
+    "description": "Title shown in the help search view."
+  },
   "helpSearchSubtitle": "Find tutorials, shortcuts, and theory explanations",
+  "@helpSearchSubtitle": {
+    "description": "Subtitle shown in the help search view."
+  },
   "helpSearchNoResults": "No results found",
+  "@helpSearchNoResults": {
+    "description": "Message title shown when help search has no matches."
+  },
   "helpSearchNoResultsDescription": "Try different keywords or check your spelling",
+  "@helpSearchNoResultsDescription": {
+    "description": "Suggestion shown when help search has no matches."
+  },
   "helpSectionGettingStarted": "Getting Started",
+  "@helpSectionGettingStarted": {
+    "description": "Help section label for getting started documentation."
+  },
   "helpSectionFsa": "FSA",
+  "@helpSectionFsa": {
+    "description": "Help section label for finite state automata documentation."
+  },
   "helpSectionGrammar": "Grammar",
+  "@helpSectionGrammar": {
+    "description": "Help section label for grammar documentation."
+  },
   "helpSectionPda": "PDA",
+  "@helpSectionPda": {
+    "description": "Help section label for pushdown automata documentation."
+  },
   "helpSectionTm": "Turing Machine",
+  "@helpSectionTm": {
+    "description": "Help section label for Turing machine documentation."
+  },
   "helpSectionRegex": "Regular Expression",
+  "@helpSectionRegex": {
+    "description": "Help section label for regular expression documentation."
+  },
   "helpSectionPumping": "Pumping Lemma",
+  "@helpSectionPumping": {
+    "description": "Help section label for pumping lemma documentation."
+  },
   "helpSectionFileOperations": "File Operations",
+  "@helpSectionFileOperations": {
+    "description": "Help section label for file operation documentation."
+  },
   "helpSectionTroubleshooting": "Troubleshooting",
+  "@helpSectionTroubleshooting": {
+    "description": "Help section label for troubleshooting documentation."
+  },
   "helpSectionLicenses": "Licenses",
+  "@helpSectionLicenses": {
+    "description": "Help section label for license documentation."
+  },
   "regularExpressionTitle": "Regular Expression",
   "@regularExpressionTitle": {
     "description": "Title for the regular expression page."
@@ -264,11 +372,11 @@
   "@ofLabel": {
     "description": "Separator label between current and total step counts."
   },
-  "previousStep": "Previous step",
+  "previousStep": "Previous Step",
   "@previousStep": {
     "description": "Tooltip or button label for moving to the previous simplification step."
   },
-  "nextStep": "Next step",
+  "nextStep": "Next Step",
   "@nextStep": {
     "description": "Tooltip or button label for moving to the next simplification step."
   },
@@ -303,5 +411,125 @@
   "operators": "Operators",
   "@operators": {
     "description": "Metric label for the number of regex operators."
+  },
+  "conversionComparisonUnavailable": "Conversion comparison unavailable. Saved snapshots could not be read.",
+  "@conversionComparisonUnavailable": {
+    "description": "Warning shown when saved before/after conversion snapshots cannot be deserialized."
+  },
+  "conversionComparisonResult": "Conversion result",
+  "@conversionComparisonResult": {
+    "description": "Label for the before-and-after automaton conversion comparison."
+  },
+  "simulation": "Simulation",
+  "inputString": "Input String",
+  "simulationInputHint": "Leave blank for ε; whitespace is preserved",
+  "simulationInputString": "Simulation input string",
+  "simulate": "Simulate",
+  "simulating": "Simulating...",
+  "cancelSimulation": "Cancel simulation",
+  "runSimulation": "Run simulation",
+  "runSimulationHint": "Runs the machine using the currently entered input string.",
+  "simulationInputSemantics": "Simulation input: {label}",
+  "@simulationInputSemantics": {"placeholders": {"label": {"type": "String"}}},
+  "simulationEditHint": "{hint}. Double tap to edit.",
+  "@simulationEditHint": {"placeholders": {"hint": {"type": "String"}}},
+  "simulationResult": "Simulation Result",
+  "regexResult": "Regex Result",
+  "regularExpression": "Regular Expression",
+  "stepByStepMode": "Step-by-Step Mode",
+  "stepByStepModeSemantics": "Step-by-step mode",
+  "stepByStepExecution": "Step-by-Step Execution",
+  "play": "Play",
+  "pause": "Pause",
+  "reset": "Reset",
+  "expand": "Expand",
+  "collapse": "Collapse",
+  "noStepsRecorded": "No steps recorded",
+  "noStepsAvailable": "No steps available",
+  "noSteps": "No steps",
+  "timeline": "Timeline",
+  "timelineScrubber": "Timeline scrubber",
+  "timelineNavigationHint": "Drag to navigate through simulation steps",
+  "stepOf": "Step {current} of {total}",
+  "@stepOf": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "activeStepOf": "Active step {current} of {total}",
+  "@activeStepOf": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "pdaTrace": "PDA Trace ({count} steps)",
+  "@pdaTrace": {"placeholders": {"count": {"type": "int"}}},
+  "tmTrace": "TM Trace ({count} steps)",
+  "@tmTrace": {"placeholders": {"count": {"type": "int"}}},
+  "traceRemaining": "rem",
+  "traceStack": "stack",
+  "traceTape": "tape",
+  "timeout": "Timeout",
+  "infiniteLoop": "Infinite Loop",
+  "steps": "Steps",
+  "states": "States",
+  "executionPath": "Execution Path",
+  "transitions": "Transitions",
+  "animationSpeed": "Animation speed",
+  "selectPlaybackSpeed": "Select playback speed",
+  "speed": "Speed:",
+  "slowSpeed": "Slow {speed}",
+  "@slowSpeed": {"placeholders": {"speed": {"type": "String"}}},
+  "normalSpeed": "Normal speed",
+  "fastSpeed": "Fast {speed}",
+  "@fastSpeed": {"placeholders": {"speed": {"type": "String"}}},
+  "on": "On",
+  "off": "Off",
+  "stepByStepToggleHint": "Turns manual simulation review on or off for the current result.",
+  "simulationStartDescription": "Start at {state} with input {input}.",
+  "@simulationStartDescription": {"placeholders": {"state": {"type": "String"}, "input": {"type": "String"}}},
+  "simulationFinalDescription": "Final configuration {state} – input {verdict}.",
+  "@simulationFinalDescription": {"placeholders": {"state": {"type": "String"}, "verdict": {"type": "String"}}},
+  "simulationReadDescription": "Read \"{consumed}\" from {state} → {nextState} with {remaining}.",
+  "@simulationReadDescription": {"placeholders": {"consumed": {"type": "String"}, "state": {"type": "String"}, "nextState": {"type": "String"}, "remaining": {"type": "String"}}},
+  "noInputRemaining": "no input remaining",
+  "remainingQuoted": "remaining \"{input}\"",
+  "@remainingQuoted": {"placeholders": {"input": {"type": "String"}}},
+  "consumedValue": "Consumed: \"{value}\"",
+  "@consumedValue": {"placeholders": {"value": {"type": "String"}}},
+  "nextStateValue": "Next state: {state}",
+  "@nextStateValue": {"placeholders": {"state": {"type": "String"}}},
+  "remainingInputValue": "Remaining input: {input}",
+  "@remainingInputValue": {"placeholders": {"input": {"type": "String"}}},
+  "previousSimulationStep": "Previous simulation step",
+  "previousSimulationStepHint": "Moves to the prior recorded simulation step.",
+  "nextSimulationStep": "Next simulation step",
+  "nextSimulationStepHint": "Advances to the next recorded simulation step.",
+  "playSimulationSteps": "Play simulation steps",
+  "pauseSimulationPlayback": "Pause simulation playback",
+  "playSimulationHint": "Automatically advances through the recorded simulation steps.",
+  "pauseSimulationHint": "Pauses automatic playback of simulation steps.",
+  "resetSimulationSteps": "Reset simulation steps",
+  "resetSimulationStepsHint": "Returns the step-by-step view to the first recorded step.",
+  "resetToFirst": "Reset to First",
+  "jumpToLast": "Jump to Last",
+  "previousStepLower": "Previous step",
+  "nextStepLower": "Next step",
+  "hiddenStepsSummary": "{before} before, {after} after hidden",
+  "@hiddenStepsSummary": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "noSimulationResults": "No simulation results yet",
+  "simulationEmptyHint": "Enter an input string and activate Simulate to see results",
+  "accepted": "Accepted",
+  "rejected": "Rejected",
+  "acceptedLower": "accepted",
+  "rejectedLower": "rejected",
+  "regexAlphabetLabel": "Alphabet / universe",
+  "regexAlphabetHelper": "Characters used by ., \\D, \\W, and \\S (spaces count).",
+  "regexAlphabetEmptyError": "Alphabet cannot be empty.",
+  "suggestedFixes": "Suggested fixes",
+  "algorithmAction": "Algorithm action: {title}",
+  "@algorithmAction": {"placeholders": {"title": {"type": "String"}}},
+  "algorithmUnavailableHint": "Unavailable. {description}",
+  "@algorithmUnavailableHint": {"placeholders": {"description": {"type": "String"}}},
+  "algorithmStartHint": "Double tap to start. {description}",
+  "@algorithmStartHint": {"placeholders": {"description": {"type": "String"}}},
+  "executing": "Executing",
+  "selected": "Selected",
+  "workflowLegacyText": "{text}",
+  "@workflowLegacyText": {
+    "description": "Transitional adapter for legacy algorithm prose localized at render time.",
+    "placeholders": {"text": {"type": "String"}}
   }
 }

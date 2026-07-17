@@ -12,6 +12,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/app_localizations_resolver.dart';
+
 /// Control widget for adjusting simulation animation speed.
 ///
 /// This widget provides a compact interface for selecting animation playback
@@ -40,11 +43,11 @@ class SimulationSpeedControl extends StatelessWidget {
     super.key,
     required this.currentSpeed,
     required this.onSpeedChanged,
-  }) : assert(currentSpeed > 0, 'currentSpeed must be positive'),
-       assert(
-         currentSpeed >= 0.25 && currentSpeed <= 4.0,
-         'currentSpeed should be between 0.25 and 4.0',
-       );
+  })  : assert(currentSpeed > 0, 'currentSpeed must be positive'),
+        assert(
+          currentSpeed >= 0.25 && currentSpeed <= 4.0,
+          'currentSpeed should be between 0.25 and 4.0',
+        );
 
   /// Current animation speed multiplier.
   ///
@@ -70,34 +73,35 @@ class SimulationSpeedControl extends StatelessWidget {
   }
 
   /// Get semantic label for a speed value.
-  static String _getSpeedLabel(double speed) {
+  static String _getSpeedLabel(AppLocalizations l10n, double speed) {
     if (speed < 1.0) {
-      return 'Slow ${_formatSpeed(speed)}';
+      return l10n.slowSpeed(_formatSpeed(speed));
     } else if (speed == 1.0) {
-      return 'Normal speed';
+      return l10n.normalSpeed;
     } else {
-      return 'Fast ${_formatSpeed(speed)}';
+      return l10n.fastSpeed(_formatSpeed(speed));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = appLocalizationsOf(context);
 
     return Semantics(
-      label: 'Animation speed',
-      value: _getSpeedLabel(currentSpeed),
-      hint: 'Select playback speed',
+      label: l10n.animationSpeed,
+      value: _getSpeedLabel(l10n, currentSpeed),
+      hint: l10n.selectPlaybackSpeed,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.speed, size: 16, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Text(
-            'Speed:',
+            l10n.speed,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+                  color: colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(width: 8),
           ..._speedOptions.map(
@@ -119,7 +123,7 @@ class SimulationSpeedControl extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Semantics(
-        label: _getSpeedLabel(speed),
+        label: _getSpeedLabel(appLocalizationsOf(context), speed),
         selected: isSelected,
         button: true,
         child: InkWell(
@@ -142,11 +146,12 @@ class SimulationSpeedControl extends StatelessWidget {
             child: Text(
               _formatSpeed(speed),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+                    color: isSelected
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
             ),
           ),
         ),

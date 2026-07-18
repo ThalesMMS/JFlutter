@@ -319,6 +319,7 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
 
   bool _isSynchronizing = false;
   bool _isRestoringHistory = false;
+  bool _isDisposed = false;
   String? _pendingDomainEchoSignature;
 
   final List<_GraphHistoryEntry> _undoHistory = [];
@@ -450,8 +451,12 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     return world;
   }
 
-  /// Releases the resources owned by the controller.
+  /// Releases the resources owned by the controller. Safe to call twice.
   void dispose() {
+    if (_isDisposed) {
+      return;
+    }
+    _isDisposed = true;
     _logGraphViewBase(
       'Disposing controller '
       '(ownsTransformation=$_ownsTransformationController, '
@@ -463,8 +468,10 @@ abstract class BaseGraphViewCanvasController<TNotifier, TSnapshot>
     highlightedTransitionIds.clear();
     _evictGraphCaches(notifyGraph: false);
     disposeViewportHighlight();
-    if (_ownsTransformationController && !graphController.hasAttachedView) {
-      graphController.transformationController?.dispose();
+    // The GraphViewController owns its TransformationController; it disposes
+    // it exactly once (deferred while a view is still attached).
+    if (_ownsTransformationController) {
+      graphController.dispose();
     }
   }
 

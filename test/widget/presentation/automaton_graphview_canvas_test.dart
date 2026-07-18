@@ -383,7 +383,8 @@ void main() {
     });
 
     testWidgets(
-      'mounted GraphView disposes controller-owned transformation on teardown',
+      'keeps controller-owned transformation usable after teardown until the '
+      'controller is disposed',
       (tester) async {
         final transformation =
             controller.graphController.transformationController!;
@@ -420,6 +421,15 @@ void main() {
 
         await tester.pump();
         await tester.pumpWidget(const SizedBox.shrink());
+
+        // The view detaching must not dispose the transformation controller:
+        // the canvas controller owns it and may attach another view later.
+        expect(
+          () => transformation.value = Matrix4.identity(),
+          returnsNormally,
+        );
+
+        controller.dispose();
 
         expect(
           () => transformation.value = Matrix4.identity()

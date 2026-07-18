@@ -5,6 +5,8 @@ class GraphViewController {
   final TransformationController? transformationController;
   final bool _ownsTransformationController;
   bool _hasAttachedView = false;
+  bool _disposeRequested = false;
+  bool _transformationControllerDisposed = false;
 
   final Map<Node, bool> collapsedNodes = {};
   final Map<Node, bool> expandingNodes = {};
@@ -30,9 +32,28 @@ class GraphViewController {
   void _detach() {
     _state = null;
     _hasAttachedView = false;
+    if (_disposeRequested) {
+      _disposeOwnedTransformationController();
+    }
   }
 
-  void dispose() => _detach();
+  void _disposeOwnedTransformationController() {
+    if (_ownsTransformationController && !_transformationControllerDisposed) {
+      _transformationControllerDisposed = true;
+      transformationController?.dispose();
+    }
+  }
+
+  /// Releases this controller. Disposes the [transformationController] when
+  /// this controller owns it; if a view is still attached, disposal is
+  /// deferred until the view detaches. Safe to call more than once.
+  void dispose() {
+    _disposeRequested = true;
+    if (_hasAttachedView) {
+      return;
+    }
+    _detach();
+  }
 
   void animateToNode(ValueKey key) => _state?.jumpToNodeUsingKey(key, true);
 

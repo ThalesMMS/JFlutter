@@ -32,6 +32,11 @@ class HelpPage extends ConsumerStatefulWidget {
 class _HelpPageState extends ConsumerState<HelpPage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
+
+  /// Keeps the PageView element identity stable when the layout moves it
+  /// between the mobile and desktop subtrees, so its scroll position is
+  /// reparented instead of re-attached to [_pageController].
+  final GlobalKey _pageViewKey = GlobalKey(debugLabel: 'help-page-view');
   final ScrollController _chipScrollController = ScrollController();
   late final List<GlobalKey> _chipKeys;
   bool _chipKeysInitialized = false;
@@ -219,6 +224,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
           child: SafeArea(
             top: false,
             child: PageView(
+              key: _pageViewKey,
               controller: _pageController,
               onPageChanged: (index) {
                 _updateSelectedIndex(index);
@@ -255,6 +261,7 @@ class _HelpPageState extends ConsumerState<HelpPage> {
         const VerticalDivider(width: 1),
         Expanded(
           child: PageView(
+            key: _pageViewKey,
             controller: _pageController,
             onPageChanged: (index) => _updateSelectedIndex(index),
             children: helpSections.map((section) => section.content).toList(),

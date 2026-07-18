@@ -130,8 +130,9 @@ class _GraphViewState extends State<GraphView> with TickerProviderStateMixin {
     }
     nextController?._attach(this);
 
-    final shouldDisposePrevious =
-        previousController?._ownsTransformationController ?? true;
+    // Same single-owner rule as dispose(): a previous external controller
+    // keeps ownership of its TransformationController.
+    final shouldDisposePrevious = previousController == null;
     if (shouldDisposePrevious &&
         !identical(
           previousTransformationController,
@@ -146,7 +147,10 @@ class _GraphViewState extends State<GraphView> with TickerProviderStateMixin {
     widget.controller?._detach();
     _panController.dispose();
     _nodeController.dispose();
-    if (widget.controller?._ownsTransformationController ?? true) {
+    // Only dispose a TransformationController this State created itself. An
+    // external GraphViewController owns its own controller and may outlive
+    // this view; disposing it here double-disposes when the owner cleans up.
+    if (widget.controller == null) {
       _transformationController.dispose();
     }
     super.dispose();

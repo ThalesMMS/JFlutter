@@ -199,8 +199,9 @@ void main() {
       transformationController.dispose();
     });
 
-    testWidgets('disposes explicitly owned transformation controller',
-        (WidgetTester tester) async {
+    testWidgets(
+        'keeps owned transformation controller alive until the controller '
+        'is disposed', (WidgetTester tester) async {
       final graph = Graph();
       final node = Node.Id('target');
       graph.addNode(node);
@@ -220,6 +221,59 @@ void main() {
             builder: (node) => const SizedBox(width: 20, height: 20),
           ),
         ),
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      // The view detaching must not dispose an owned controller: the
+      // GraphViewController may still be reattached to another view.
+      expect(
+        () => transformationController.value = Matrix4.identity(),
+        returnsNormally,
+      );
+
+      controller.dispose();
+
+      expect(
+        () => transformationController.value = Matrix4.identity()
+          ..translateByDouble(1.0, 0.0, 0.0, 1.0),
+        throwsFlutterError,
+      );
+
+      // Disposing again is a no-op.
+      expect(controller.dispose, returnsNormally);
+    });
+
+    testWidgets(
+        'defers owned transformation controller disposal while a view is '
+        'attached', (WidgetTester tester) async {
+      final graph = Graph();
+      final node = Node.Id('target');
+      graph.addNode(node);
+
+      final transformationController = TransformationController();
+      final controller = GraphViewController(
+        transformationController: transformationController,
+        ownsTransformationController: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GraphView.builder(
+            graph: graph,
+            algorithm: buildTestAlgorithm(),
+            controller: controller,
+            builder: (node) => const SizedBox(width: 20, height: 20),
+          ),
+        ),
+      );
+
+      // Dispose while the view is still attached: the transformation
+      // controller must stay usable until the view detaches.
+      controller.dispose();
+      expect(
+        () => transformationController.value = Matrix4.identity(),
+        returnsNormally,
       );
 
       await tester.pumpWidget(const SizedBox.shrink());

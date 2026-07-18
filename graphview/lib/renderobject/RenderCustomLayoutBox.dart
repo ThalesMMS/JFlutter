@@ -3,7 +3,8 @@ part of graphview;
 class RenderCustomLayoutBox extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, NodeBoxData>,
-        RenderBoxContainerDefaultsMixin<RenderBox, NodeBoxData> {
+        RenderBoxContainerDefaultsMixin<RenderBox, NodeBoxData>
+    implements GraphObserver {
   late Paint _paint;
   late AnimationController _nodeAnimationController;
   late GraphChildDelegate _delegate;
@@ -12,6 +13,7 @@ class RenderCustomLayoutBox extends RenderBox
   Size? _cachedSize;
   bool _isInitialized = false;
   bool _needsFullRecalculation = false;
+  Graph? _observedGraph;
   late bool enableAnimation;
   final opacityPaint = Paint();
 
@@ -85,8 +87,26 @@ class RenderCustomLayoutBox extends RenderBox
     _needsFullRecalculation = true;
     _isInitialized = false;
     _delegate = value;
+    if (attached) {
+      _observeSourceGraph(value.graph);
+    }
     markNeedsLayout();
     // }
+  }
+
+  // Observes the delegate's source graph (not the derived visible graph) so
+  // in-place position updates followed by Graph.notifyGraphObserver() trigger
+  // a repaint, e.g. live node-drag previews driven by the host app.
+  void _observeSourceGraph(Graph? value) {
+    if (identical(_observedGraph, value)) return;
+    _observedGraph?.graphObserver.remove(this);
+    _observedGraph = value;
+    value?.graphObserver.add(this);
+  }
+
+  @override
+  void notifyGraphInvalidated() {
+    markNeedsPaint();
   }
 
   void markNeedsRecalculation() {
@@ -99,10 +119,12 @@ class RenderCustomLayoutBox extends RenderBox
   void attach(PipelineOwner owner) {
     super.attach(owner);
     _nodeAnimationController.addListener(_onAnimationTick);
+    _observeSourceGraph(_delegate.graph);
   }
 
   @override
   void detach() {
+    _observeSourceGraph(null);
     _nodeAnimationController.removeListener(_onAnimationTick);
     super.detach();
   }
@@ -254,6 +276,13 @@ class RenderCustomLayoutBox extends RenderBox
         final child = entry.value;
 
         if (_delegate.isNodeVisible(node)) {
+          // Keep hit-test offsets and animation anchors in sync with the live
+          // position so re-enabling animation later doesn't replay a move that
+          // was already painted (e.g. after a live drag preview).
+          final nodeData = child.parentData as NodeBoxData;
+          nodeData.offset = node.position;
+          nodeData.startOffset = node.position;
+          nodeData.targetOffset = node.position;
           context.paintChild(child, offset + node.position);
         }
       }

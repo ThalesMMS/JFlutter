@@ -39,6 +39,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   final SimulationHighlightService _fallbackHighlightService =
       SimulationHighlightService();
 
+  /// Keeps the PageView element identity stable when the layout moves it
+  /// between the mobile and desktop subtrees, so its scroll position is
+  /// reparented instead of re-attached to [_pageController].
+  final GlobalKey _pageViewKey = GlobalKey(debugLabel: 'home-page-view');
+
   List<NavigationItem> _navigationItems(AppLocalizations l10n) => [
         NavigationItem(
           label: l10n.homeNavigationLabel('fsa'),
@@ -117,6 +122,20 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
 
+  /// Reads the controller's current page only when exactly one PageView is
+  /// attached. Returns the initial page before the first attach and null
+  /// during a transient multi-attach (reading `page` would assert then).
+  int? _readSolePage() {
+    final positions = _pageController.positions;
+    if (positions.isEmpty) {
+      return _pageController.initialPage;
+    }
+    if (positions.length != 1) {
+      return null;
+    }
+    return _pageController.page?.round() ?? _pageController.initialPage;
+  }
+
   void _onPageChanged(int index) {
     ref.read(homeNavigationProvider.notifier).setIndex(index);
   }
@@ -172,18 +191,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       });
     }
 
-    if ((_pageController.hasClients
-            ? (_pageController.page?.round() ?? _pageController.initialPage)
-            : _pageController.initialPage) !=
-        visibleCurrentIndex) {
+    if (_readSolePage() != visibleCurrentIndex) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_pageController.hasClients) {
+        if (!mounted) {
           return;
         }
 
-        final currentPage =
-            _pageController.page?.round() ?? _pageController.initialPage;
-        if (currentPage == visibleCurrentIndex) {
+        final currentPage = _readSolePage();
+        if (currentPage == null || currentPage == visibleCurrentIndex) {
           return;
         }
 
@@ -193,6 +208,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final theme = Theme.of(context);
     final pageView = PageView(
+      key: _pageViewKey,
       controller: _pageController,
       onPageChanged: _onPageChanged,
       physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
@@ -297,16 +313,21 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
 
-    if (hasCanvasHighlight) {
-      return scaffold;
+    if (!hasCanvasHighlight) {
+      _fallbackHighlightService.clear();
     }
 
-    _fallbackHighlightService.clear();
-
+    // Always keep the ProviderScope in the tree: swapping it in and out
+    // rebuilt the entire subtree (destroying every page and transiently
+    // attaching two PageViews to _pageController, which crashes the `page`
+    // getter). Only the injected value changes between canvas and
+    // non-canvas tabs.
     return ProviderScope(
       overrides: [
         canvasHighlightServiceProvider.overrideWithValue(
-          _fallbackHighlightService,
+          hasCanvasHighlight
+              ? ref.watch(canvasHighlightServiceProvider)
+              : _fallbackHighlightService,
         ),
       ],
       child: scaffold,
